@@ -138,6 +138,30 @@ describe("PublicCmsPageView real SSR markup", () => {
     expect(imgAt).toBeLessThan(body.indexOf("Why a Kuwait Chat Room"));
     expect(imgAt).toBeLessThan(body.indexOf("custom-page-cta-button"));
   });
+
+  it("does not render stored tags as visible hashtags in the page body", () => {
+    const page = {
+      ...fixturePage,
+      tags: [
+        "Islamabad Chat Room",
+        "Islamabad Chat",
+        "Pakistan Chat",
+        "Pakistani Chat Room",
+        "Online Chat",
+        "Local Chat Room",
+        "Meet People Online",
+        "Make New Friends",
+        "Social Chat",
+        "Online Community",
+        "Chat With Pakistanis",
+        "Islamabad Community",
+      ],
+    };
+    const body = renderToString(React.createElement(PublicCmsPageView, { page }));
+    expect(body).not.toContain("#Islamabad Chat Room");
+    expect(body).not.toContain("#Pakistan Chat");
+    expect(body).not.toMatch(/#Meet People Online/);
+  });
 });
 
 describe("sanitizeHtml SSR module safety", () => {

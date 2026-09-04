@@ -7529,18 +7529,21 @@ export type Database = {
       }
       user_roles: {
         Row: {
+          can_edit_existing_content: boolean
           created_at: string
           id: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Insert: {
+          can_edit_existing_content?: boolean
           created_at?: string
           id?: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
+          can_edit_existing_content?: boolean
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
@@ -8987,6 +8990,7 @@ export type Database = {
         | "dj"
         | "rj"
         | "feed_moderator"
+        | "writer"
       ban_type: "ban" | "temp_ban" | "shadow_ban" | "ip_ban"
       community_member_role: "owner" | "moderator" | "member"
       community_member_status: "active" | "pending" | "banned" | "muted"
@@ -9231,6 +9235,7 @@ export const Constants = {
         "dj",
         "rj",
         "feed_moderator",
+        "writer",
       ],
       ban_type: ["ban", "temp_ban", "shadow_ban", "ip_ban"],
       community_member_role: ["owner", "moderator", "member"],

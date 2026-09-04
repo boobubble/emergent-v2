@@ -7,6 +7,7 @@ import { Trophy, Medal } from "lucide-react";
 import { MehfilShell } from "@/components/mehfil/MehfilShell";
 import { WriterRankBadge } from "@/components/mehfil/WriterRankBadge";
 import type { WriterRank } from "@/lib/mehfil-types";
+import { staticPublicHead } from "@/lib/seo";
 
 // Server function inline — public read of writer stats.
 export const getMehfilLeaderboard = createServerFn({ method: "GET" }).handler(async () => {
@@ -27,12 +28,12 @@ export const getMehfilLeaderboard = createServerFn({ method: "GET" }).handler(as
 });
 
 export const Route = createFileRoute("/poetry/leaderboard")({
-  head: () => ({
-    meta: [
-      { title: "Poetry Hub Leaderboard · Top Poets" },
-      { name: "description", content: "See the top writers on Poetry Hub ranked by upvotes, reads, and battle wins." },
-    ],
-  }),
+  head: () =>
+    staticPublicHead({
+      title: "Poetry Hub Leaderboard · Top Poets",
+      description: "See the top writers on Poetry Hub ranked by upvotes, reads, and battle wins.",
+      path: "/poetry/leaderboard",
+    }),
   component: LeaderboardPage,
 });
 

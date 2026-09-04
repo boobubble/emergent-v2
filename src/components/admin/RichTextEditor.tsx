@@ -1,16 +1,7 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import Underline from "@tiptap/extension-underline";
-import { ClassedLink, HtmlDiv, HtmlNav, EDITOR_LINK_OPTIONS, applyEditorTextLink, unsetEditorTextLink } from "@/lib/pages-cms/tiptap-html-blocks";
-import { CtaButton } from "@/lib/cta-button";
-import Placeholder from "@tiptap/extension-placeholder";
-import TaskList from "@tiptap/extension-task-list";
-import TaskItem from "@tiptap/extension-task-item";
-import { Table } from "@tiptap/extension-table";
-import { TableRow } from "@tiptap/extension-table-row";
-import { TableHeader } from "@tiptap/extension-table-header";
-import { TableCell } from "@tiptap/extension-table-cell";
+import { applyEditorTextLink, unsetEditorTextLink } from "@/lib/pages-cms/tiptap-html-blocks";
+import { EMPTY_PAGE_EDITOR_HTML, pageEditorExtensions } from "@/lib/pages-cms/page-editor-extensions";
 import { Button } from "@/components/ui/button";
 import {
   Bold, Italic, Underline as UnderlineIcon, Heading1, Heading2, Heading3,
@@ -18,7 +9,7 @@ import {
   Minus, Code2, Undo2, Redo2, Upload, Loader2, CheckSquare,
   Table as TableIcon, Info, ListTree, Eye, Pencil, MousePointerClick, CodeXml,
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { loadBrowserSupabase } from "@/integrations/supabase/load-browser";
 import { toast } from "sonner";
 import { sanitizeHtml } from "@/lib/pages-io";
 import { injectHeadingIds } from "@/lib/heading-ids";
@@ -33,7 +24,7 @@ import {
   updateEditorImage,
 } from "@/components/content-images/editor-images";
 import { optimizeImageFromUrl } from "@/lib/content-image-optimize";
-import { CmsImage, insertCmsEditorImage, rememberCmsImageInsertPos } from "@/lib/pages-cms/cms-image";
+import { insertCmsEditorImage, rememberCmsImageInsertPos } from "@/lib/pages-cms/cms-image";
 import { applyHtmlSource } from "@/lib/tiptap-html-source";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -59,7 +50,7 @@ interface Props {
 const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
 
 export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function RichTextEditor(
-  { value, onChange, placeholder, uploadFolder = "pages", ctaDefaults: _ctaDefaults },
+  { value, onChange, placeholder, uploadFolder = "pages", ctaDefaults },
   ref,
 ) {
   const fileRef = useRef<HTMLInputElement>(null);
@@ -79,34 +70,12 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
     detectPlainTextRef.current = detectPlainTextHeadings;
   }, [detectPlainTextHeadings]);
 
-  const lastEmittedHtml = useRef(value || "");
+  const lastEmittedHtml = useRef(value || EMPTY_PAGE_EDITOR_HTML);
 
   const editor = useEditor({
-    extensions: [
-      StarterKit.configure({
-        heading: { levels: [1, 2, 3] },
-        codeBlock: { HTMLAttributes: { class: "rounded-md bg-muted p-3 text-xs font-mono" } },
-        link: false,
-        underline: false,
-      }),
-      Underline,
-      ClassedLink.configure({
-        ...EDITOR_LINK_OPTIONS,
-        HTMLAttributes: { rel: "noopener noreferrer nofollow", target: "_blank" },
-      }),
-      CtaButton,
-      HtmlDiv,
-      HtmlNav,
-      CmsImage.configure({ inline: false, allowBase64: false }),
-      Placeholder.configure({ placeholder: placeholder ?? "Write your page content…" }),
-      TaskList.configure({ HTMLAttributes: { class: "not-prose space-y-1" } }),
-      TaskItem.configure({ nested: true, HTMLAttributes: { class: "flex gap-2 items-start" } }),
-      Table.configure({ resizable: true, HTMLAttributes: { class: "border-collapse w-full my-3" } }),
-      TableRow,
-      TableHeader.configure({ HTMLAttributes: { class: "border border-border bg-muted px-2 py-1 text-left font-semibold" } }),
-      TableCell.configure({ HTMLAttributes: { class: "border border-border px-2 py-1 align-top" } }),
-    ],
-    content: value || "",
+    immediatelyRender: false,
+    extensions: pageEditorExtensions(placeholder),
+    content: value || EMPTY_PAGE_EDITOR_HTML,
     editorProps: {
       attributes: {
         class:
@@ -168,7 +137,12 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
     },
   });
 
-  const ctaDialog = useCtaButtonDialog(editor);
+  const ctaDialog = useCtaButtonDialog(
+    editor,
+    ctaDefaults
+      ? { label: ctaDefaults.buttonText, href: ctaDefaults.href }
+      : undefined,
+  );
 
   // Keep editor in sync when external value changes (e.g., draft restore / save normalize).
   // Skip when the incoming HTML is what this editor just emitted — getHTML() is not a
@@ -178,7 +152,7 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
     if (value === lastEmittedHtml.current) return;
     const current = editor.getHTML();
     if (value !== current && !editor.isFocused) {
-      editor.commands.setContent(value || "", { emitUpdate: false });
+      editor.commands.setContent(value || EMPTY_PAGE_EDITOR_HTML, { emitUpdate: false });
       lastEmittedHtml.current = editor.getHTML();
     }
   }, [value, editor, mode]);
@@ -188,6 +162,7 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
     if (file.size > MAX_UPLOAD_BYTES) { toast.error("Image must be under 8 MB"); return null; }
     setUploading(true);
     try {
+      const supabase = await loadBrowserSupabase();
       const { data: auth } = await supabase.auth.getUser();
       const uid = auth.user?.id;
       if (!uid) { toast.error("You must be signed in to upload"); return null; }

@@ -1,22 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { staticPublicHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/trust")({
-  head: () => ({
-    meta: [
-      { title: "Trust, Security & Privacy" },
-      {
-        name: "description",
-        content:
-          "How we protect your account, your messages, and your data on this community platform.",
-      },
-      { property: "og:title", content: "Trust, Security & Privacy" },
-      {
-        property: "og:description",
-        content:
-          "Our approach to authentication, data protection, moderation, and user privacy.",
-      },
-    ],
-  }),
+  head: () =>
+    staticPublicHead({
+      title: "Trust, Security & Privacy",
+      description: "How we protect your account, your messages, and your data on this community platform.",
+      path: "/trust",
+    }),
   component: TrustPage,
 });
 

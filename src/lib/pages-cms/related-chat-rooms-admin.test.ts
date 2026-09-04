@@ -58,7 +58,7 @@ describe("related_chat_rooms config", () => {
     expect(defaultRelatedChatRoomsConfig()).toEqual({ auto_fill: true, items: [] });
   });
 
-  it("parses and dedupes items; caps at max 8", () => {
+  it("parses and dedupes items; caps at max related rooms", () => {
     const items = Array.from({ length: 10 }).map((_, i) => ({
       id: `i${i}`,
       target_page_id: `00000000-0000-4000-8000-00000000000${i % 9}`,

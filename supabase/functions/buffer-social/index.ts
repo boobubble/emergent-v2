@@ -800,9 +800,9 @@ async function createSignupPost(
   const displayName = profile.display_name?.trim() || username;
   const profileUrl = `${base}/u/${encodeURIComponent(username)}`;
 
-  // CRITICAL: only approved avatars may be sent to Buffer.
+  // Use profile avatar unless admin-rejected.
   const moderationStatus = String(profile.avatar_moderation_status ?? "none");
-  const avatarAllowedForBuffer = moderationStatus === "approved";
+  const avatarAllowedForBuffer = moderationStatus !== "rejected";
   const resolved = resolveSocialMedia({
     avatarUrl: avatarAllowedForBuffer ? profile.avatar_url : null,
     defaultMediaUrl: settings.default_media_url,
@@ -1020,30 +1020,23 @@ async function processQueue(
       break;
     }
 
-    // Avatar upload settle + moderation wait (non-blocking for signup).
-    // Unapproved avatars are never sent to Buffer (see createSignupPost gate).
+    // Avatar upload settle (non-blocking for signup).
     {
       const lastErr = String(item.last_error ?? "");
-      const modWaitN = lastErr.startsWith("avatar_moderation_wait_")
-        ? Number(lastErr.replace("avatar_moderation_wait_", "")) || 0
-        : 0;
 
       const { data: settleProfile } = await admin
         .from("profiles")
-        .select("avatar_url, created_at, allow_social_feature, avatar_moderation_status")
+        .select("avatar_url, created_at, allow_social_feature")
         .eq("id", item.user_id)
         .maybeSingle();
 
       if (settleProfile?.allow_social_feature !== false && settleProfile?.created_at) {
         const ageMs = Date.now() - new Date(settleProfile.created_at).getTime();
-        const withinModWindow = ageMs < 10 * 60 * 1000;
 
         // Upload still settling (no public URL yet) — one short defer
         if (
           lastErr !== "avatar_settle_retry" &&
-          !lastErr.startsWith("avatar_moderation_wait_") &&
           !validPublicMediaUrl(settleProfile.avatar_url) &&
-          settleProfile.avatar_moderation_status !== "approved" &&
           ageMs < 15 * 60 * 1000
         ) {
           await admin
@@ -1055,25 +1048,6 @@ async function processQueue(
             })
             .eq("id", item.id);
           outcomes.push({ id: item.id, deferred: "avatar_settle_retry" });
-          continue;
-        }
-
-        // Moderation still pending — wait ~2 minutes, max ~10 minutes from signup
-        if (
-          settleProfile.avatar_moderation_status === "pending" &&
-          withinModWindow &&
-          modWaitN < 5
-        ) {
-          const nextWait = modWaitN + 1;
-          await admin
-            .from("social_post_queue")
-            .update({
-              status: "pending",
-              last_error: `avatar_moderation_wait_${nextWait}`,
-              next_attempt_at: new Date(Date.now() + 2 * 60 * 1000).toISOString(),
-            })
-            .eq("id", item.id);
-          outcomes.push({ id: item.id, deferred: `avatar_moderation_wait_${nextWait}` });
           continue;
         }
       }

@@ -120,3 +120,65 @@ export function chatroomShellLayoutAttr(layout: ChatroomShellLayout): "ssr" | "d
   if (!layout.clientMounted) return "ssr";
   return layout.isDesktop ? "desktop" : "mobile";
 }
+
+/**
+ * Pixel height for the mobile chat shell. Desktop returns null so CSS `h-dvh`
+ * stays in charge. Mobile uses the visual viewport (not `100vh`) so the
+ * composer stays above the on-screen keyboard instead of jumping/clipping.
+ */
+export function chatShellVisualViewportHeightPx(input: {
+  isDesktop: boolean;
+  visualViewportHeight?: number;
+  innerHeight: number;
+}): number | null {
+  if (input.isDesktop) return null;
+  return Math.round(input.visualViewportHeight ?? input.innerHeight);
+}
+
+/**
+ * Keep the chat shell sized to the visible viewport on mobile.
+ * Applies height via the element so keyboard animation does not re-render React.
+ * Desktop clears inline height so `h-dvh` from CSS is used.
+ */
+export function bindChatShellToVisualViewport(el: HTMLElement): () => void {
+  let raf = 0;
+  const view = globalThis;
+
+  const apply = () => {
+    const px = chatShellVisualViewportHeightPx({
+      isDesktop: view.matchMedia(CHATROOM_MD_MQ).matches,
+      visualViewportHeight: view.visualViewport?.height,
+      innerHeight: view.innerHeight,
+    });
+    if (px == null) {
+      el.style.removeProperty("height");
+      el.style.removeProperty("max-height");
+      return;
+    }
+    el.style.height = `${px}px`;
+    el.style.maxHeight = `${px}px`;
+  };
+
+  const onChange = () => {
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(apply);
+  };
+
+  apply();
+  const vv = view.visualViewport;
+  vv?.addEventListener("resize", onChange);
+  vv?.addEventListener("scroll", onChange);
+  view.addEventListener("resize", onChange);
+  const mq = view.matchMedia(CHATROOM_MD_MQ);
+  mq.addEventListener("change", onChange);
+
+  return () => {
+    cancelAnimationFrame(raf);
+    vv?.removeEventListener("resize", onChange);
+    vv?.removeEventListener("scroll", onChange);
+    view.removeEventListener("resize", onChange);
+    mq.removeEventListener("change", onChange);
+    el.style.removeProperty("height");
+    el.style.removeProperty("max-height");
+  };
+}

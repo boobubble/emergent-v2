@@ -22,20 +22,19 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Search, ShieldCheck, Shield, Hammer, Ban, Trash2, ShieldOff, UserCircle2, Pencil, Check, X, KeyRound, Copy, Coins, ImageIcon } from "lucide-react";
+import { Search, ShieldCheck, Shield, Hammer, Ban, Trash2, ShieldOff, UserCircle2, Pencil, Check, X, KeyRound, Copy, Coins, ImageIcon, FileText } from "lucide-react";
 import {
-  getMyRoles, listUsersWithRoles, setUserRole,
+  getMyRoles, listUsersWithRoles, setUserRole, setWriterEditExisting,
   banUser, unbanUser, deleteUser, updateUserUsername, adminResetUserPassword, adminGrantCoins,
 } from "@/lib/admin.functions";
 import {
-  adminApproveAvatar,
   adminDisableSocialFeaturing,
   adminRejectAvatar,
   adminRemoveProfilePicture,
 } from "@/lib/avatar-moderation.functions";
 export const Route = createFileRoute("/admin/users")({ component: UsersPage });
 
-type ManagedRole = "super_admin" | "admin" | "moderator" | "dj" | "rj";
+type ManagedRole = "super_admin" | "admin" | "moderator" | "dj" | "rj" | "writer";
 type FilterKey = "all" | "members" | "guests" | "banned" | "staff";
 
 const ROLE_META: Record<ManagedRole, { label: string; color: string; icon: typeof Shield }> = {
@@ -44,6 +43,7 @@ const ROLE_META: Record<ManagedRole, { label: string; color: string; icon: typeo
   moderator: { label: "Moderator", color: "text-amber-500", icon: Hammer },
   dj: { label: "DJ", color: "text-fuchsia-500", icon: Shield },
   rj: { label: "RJ", color: "text-cyan-500", icon: Shield },
+  writer: { label: "Writer", color: "text-emerald-500", icon: FileText },
 };
 
 
@@ -75,6 +75,7 @@ function UsersPage() {
   const qc = useQueryClient();
   const listFn = useServerFn(listUsersWithRoles);
   const setRoleFn = useServerFn(setUserRole);
+  const setWriterEditFn = useServerFn(setWriterEditExisting);
   const myRolesFn = useServerFn(getMyRoles);
   const banFn = useServerFn(banUser);
   const unbanFn = useServerFn(unbanUser);
@@ -101,7 +102,6 @@ function UsersPage() {
   } | null>(null);
   const [removeAvatarConfirm, setRemoveAvatarConfirm] = useState(false);
 
-  const approveAvatarFn = useServerFn(adminApproveAvatar);
   const rejectAvatarFn = useServerFn(adminRejectAvatar);
   const removeAvatarFn = useServerFn(adminRemoveProfilePicture);
   const disableSocialFn = useServerFn(adminDisableSocialFeaturing);
@@ -127,6 +127,16 @@ function UsersPage() {
       setRoleFn({ data: vars }),
     onSuccess: (_d, vars) => {
       toast.success(`${vars.grant ? "Granted" : "Revoked"} ${ROLE_META[vars.role].label}`);
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const writerEditMut = useMutation({
+    mutationFn: (vars: { user_id: string; grant: boolean }) =>
+      setWriterEditFn({ data: vars }),
+    onSuccess: (_d, vars) => {
+      toast.success(vars.grant ? "Writer can edit existing content" : "Writer create-only");
       invalidate();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -176,11 +186,6 @@ function UsersPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const avatarApproveMut = useMutation({
-    mutationFn: (userId: string) => approveAvatarFn({ data: { userId } }),
-    onSuccess: () => { toast.success("Avatar approved"); setAvatarTarget(null); invalidate(); },
-    onError: (e: Error) => toast.error(e.message),
-  });
   const avatarRejectMut = useMutation({
     mutationFn: (userId: string) => rejectAvatarFn({ data: { userId, reason: "admin_rejected" } }),
     onSuccess: () => { toast.success("Avatar rejected"); setAvatarTarget(null); invalidate(); },
@@ -206,7 +211,7 @@ function UsersPage() {
 
   const users = usersQ.data ?? [];
   const totals = useMemo(() => {
-    const t: Record<ManagedRole, number> = { super_admin: 0, admin: 0, moderator: 0, dj: 0, rj: 0 };
+    const t: Record<ManagedRole, number> = { super_admin: 0, admin: 0, moderator: 0, dj: 0, rj: 0, writer: 0 };
     for (const u of users) for (const r of u.roles) if (r in t) (t as any)[r]++;
     return t;
   }, [users]);
@@ -284,6 +289,7 @@ function UsersPage() {
                   <th className="py-2 pr-3 font-medium">Mod</th>
                   <th className="py-2 pr-3 font-medium" title="Grants /broadcaster access (broadcaster.access + broadcaster.manage)">DJ</th>
                   <th className="py-2 pr-3 font-medium" title="Grants /broadcaster access (broadcaster.access + broadcaster.manage)">RJ</th>
+                  <th className="py-2 pr-3 font-medium" title="Create blog posts and pages. Nested toggle grants editing existing content.">Writer</th>
                   <th className="py-2 pr-3 font-medium text-right">Actions</th>
                 </tr>
               </thead>
@@ -291,11 +297,11 @@ function UsersPage() {
                 {usersQ.isLoading &&
                   Array.from({ length: 6 }).map((_, i) => (
                     <tr key={i} className="border-b">
-                      <td colSpan={10} className="py-2"><Skeleton className="h-8 w-full" /></td>
+                      <td colSpan={11} className="py-2"><Skeleton className="h-8 w-full" /></td>
                     </tr>
                   ))}
                 {!usersQ.isLoading && users.length === 0 && (
-                  <tr><td colSpan={10} className="py-8 text-center text-sm text-muted-foreground">No users found.</td></tr>
+                  <tr><td colSpan={11} className="py-8 text-center text-sm text-muted-foreground">No users found.</td></tr>
                 )}
                 {users.map((u) => (
                   <tr key={u.id} className="group border-b align-top hover:bg-muted/30">
@@ -380,11 +386,23 @@ function UsersPage() {
                       const has = u.roles.includes(role);
                       return (
                         <td key={role} className="py-2 pr-3">
-                          <Switch
-                            checked={has}
-                            disabled={!isSuperAdmin || roleMut.isPending}
-                            onCheckedChange={(v) => roleMut.mutate({ user_id: u.id, role, grant: v })}
-                          />
+                          <div className="space-y-1">
+                            <Switch
+                              checked={has}
+                              disabled={!isSuperAdmin || roleMut.isPending}
+                              onCheckedChange={(v) => roleMut.mutate({ user_id: u.id, role, grant: v })}
+                            />
+                            {role === "writer" && has && (
+                              <label className="flex items-center gap-1.5 text-[10px] leading-tight text-muted-foreground">
+                                <Switch
+                                  checked={!!u.writer_can_edit_existing}
+                                  disabled={!isSuperAdmin || writerEditMut.isPending}
+                                  onCheckedChange={(v) => writerEditMut.mutate({ user_id: u.id, grant: v })}
+                                />
+                                Can edit existing content
+                              </label>
+                            )}
+                          </div>
                         </td>
                       );
                     })}
@@ -669,7 +687,7 @@ function UsersPage() {
           <DialogHeader>
             <DialogTitle>Profile Image Moderation</DialogTitle>
             <DialogDescription>
-              @{avatarTarget?.username ?? "user"} — only approved avatars can be sent to Buffer.
+              @{avatarTarget?.username ?? "user"} — remove inappropriate profile pictures after the fact.
             </DialogDescription>
           </DialogHeader>
           {avatarTarget && (
@@ -698,10 +716,6 @@ function UsersPage() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Button size="sm" variant="secondary" disabled={avatarApproveMut.isPending}
-                  onClick={() => avatarApproveMut.mutate(avatarTarget.id)}>
-                  Approve Image
-                </Button>
                 <Button size="sm" variant="outline" disabled={avatarRejectMut.isPending}
                   onClick={() => avatarRejectMut.mutate(avatarTarget.id)}>
                   Reject Image

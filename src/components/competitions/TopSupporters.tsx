@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Users, BadgeCheck } from "lucide-react";
 import { listRecentCompetitionVoters } from "@/lib/competitions.functions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { supabase } from "@/integrations/supabase/client";
+import { useCompetitionRealtimeEffect } from "@/lib/competition-realtime";
 
 interface Voter {
   voter_id: string;
@@ -28,14 +28,13 @@ export function TopSupporters({ competitionId }: { competitionId: string }) {
     staleTime: 20_000,
   });
 
-  useEffect(() => {
-    if (!competitionId) return;
+  useCompetitionRealtimeEffect(!!competitionId, (supabase) => {
     const ch = supabase
       .channel(`comp-broadcast:${competitionId}`, { config: { broadcast: { self: false } } })
       .on("broadcast", { event: "vote" }, () => refetch())
       .subscribe();
     return () => {
-      supabase.removeChannel(ch);
+      void supabase.removeChannel(ch);
     };
   }, [competitionId, refetch]);
 

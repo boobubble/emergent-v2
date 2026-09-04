@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { loadUserRoleState } from "@/lib/content-roles.server";
 import { withRateLimit } from "./rate-limit-middleware";
 
 async function getSupabaseAdmin() {
@@ -35,17 +36,7 @@ async function assertSuperAdmin(userId: string) {
 export const getMyRoles = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .handler(async ({ context }) => {
-    const { data, error } = await supabaseAdmin
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", context.userId);
-    if (error) throw new Error(error.message);
-    const roles = (data ?? []).map((r) => r.role as string);
-    return {
-      roles,
-      isAdmin: roles.includes("super_admin") || roles.includes("admin"),
-      isSuperAdmin: roles.includes("super_admin"),
-    };
+    return loadUserRoleState(context.userId);
   });
 
 // Keys that hold secrets or staff-only configuration. Mirrors the
@@ -503,16 +494,20 @@ export const listUsersWithRoles = createServerFn({ method: "GET" })
     if (data.filter === "members") query = query.not("username", "ilike", "guest-%");
     const [{ data: profiles, error: pErr }, { data: roles, error: rErr }, { data: bans, error: bErr }] = await Promise.all([
       query,
-      (await getSupabaseAdmin()).from("user_roles").select("user_id, role"),
+      (await getSupabaseAdmin()).from("user_roles").select("user_id, role, can_edit_existing_content"),
       (await getSupabaseAdmin()).from("user_bans").select("user_id, reason, expires_at, created_at").eq("active", true),
     ]);
     if (pErr) throw new Error(pErr.message);
     if (rErr) throw new Error(rErr.message);
     if (bErr) throw new Error(bErr.message);
     const roleMap: Record<string, string[]> = {};
+    const writerEditMap: Record<string, boolean> = {};
     for (const r of roles ?? []) {
-      const row = r as { user_id: string; role: string };
+      const row = r as { user_id: string; role: string; can_edit_existing_content?: boolean };
       (roleMap[row.user_id] ??= []).push(row.role);
+      if (row.role === "writer" && row.can_edit_existing_content) {
+        writerEditMap[row.user_id] = true;
+      }
     }
     const banMap: Record<string, { reason: string | null; expires_at: string | null }> = {};
     const now = Date.now();
@@ -526,6 +521,7 @@ export const listUsersWithRoles = createServerFn({ method: "GET" })
     let rows = (profiles ?? []).map((p) => ({
       ...p,
       roles: roleMap[p.id] ?? [],
+      writer_can_edit_existing: !!writerEditMap[p.id],
       banned: !!banMap[p.id],
       ban_reason: banMap[p.id]?.reason ?? null,
       ban_expires_at: banMap[p.id]?.expires_at ?? null,
@@ -541,16 +537,20 @@ export const setUserRole = createServerFn({ method: "POST" })
   .inputValidator((input) =>
     z.object({
       user_id: z.string().uuid(),
-      role: z.enum(["super_admin", "admin", "moderator", "dj", "rj"]),
+      role: z.enum(["super_admin", "admin", "moderator", "dj", "rj", "writer"]),
       grant: z.boolean(),
     }).parse(input),
   )
   .handler(async ({ data, context }) => {
     await assertSuperAdmin(context.userId);
     if (data.grant) {
+      const row =
+        data.role === "writer"
+          ? { user_id: data.user_id, role: data.role, can_edit_existing_content: false }
+          : { user_id: data.user_id, role: data.role };
       const { error } = await supabaseAdmin
         .from("user_roles")
-        .upsert({ user_id: data.user_id, role: data.role }, { onConflict: "user_id,role" });
+        .upsert(row, { onConflict: "user_id,role" });
       if (error) throw new Error(error.message);
     } else {
       const { error } = await supabaseAdmin
@@ -560,6 +560,33 @@ export const setUserRole = createServerFn({ method: "POST" })
         .eq("role", data.role);
       if (error) throw new Error(error.message);
     }
+    return { ok: true };
+  });
+
+export const setWriterEditExisting = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
+  .inputValidator((input) =>
+    z.object({
+      user_id: z.string().uuid(),
+      grant: z.boolean(),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context.userId);
+    const { data: writerRow, error: findErr } = await supabaseAdmin
+      .from("user_roles")
+      .select("user_id")
+      .eq("user_id", data.user_id)
+      .eq("role", "writer")
+      .maybeSingle();
+    if (findErr) throw new Error(findErr.message);
+    if (!writerRow) throw new Error("Grant the Writer role before enabling edit-existing permission");
+    const { error } = await supabaseAdmin
+      .from("user_roles")
+      .update({ can_edit_existing_content: data.grant })
+      .eq("user_id", data.user_id)
+      .eq("role", "writer");
+    if (error) throw new Error(error.message);
     return { ok: true };
   });
 

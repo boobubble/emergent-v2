@@ -8,6 +8,8 @@ import {
   chatroomSidebarToggleVisible,
   chatroomSidebarBackdropVisible,
   readChatroomShellLayout,
+  chatShellVisualViewportHeightPx,
+  bindChatShellToVisualViewport,
 } from "@/components/chat/chatroom-shell";
 
 const src = resolve(process.cwd(), "src");
@@ -105,5 +107,130 @@ describe("desktop app layout CSS split", () => {
   it("mobile feed still declares the bottom nav for small screens", () => {
     expect(feed).toContain("lg:hidden pb-[env(safe-area-inset-bottom)]");
     expect(feed).toContain("pb-24 lg:pb-0");
+  });
+});
+
+describe("mobile chat composer viewport", () => {
+  const chat = read("components/chat/ChatApp.tsx");
+  const shell = read("components/chat/chatroom-shell.ts");
+  const input = read("components/chat/MessageInput.tsx");
+
+  it("does not size the chat shell with 100vh / h-screen", () => {
+    expect(chat).not.toMatch(/\bh-screen\b/);
+    expect(chat).toContain("h-dvh");
+    expect(chat).toContain("bindChatShellToVisualViewport");
+    expect(shell).toContain("visualViewport");
+  });
+
+  it("keeps the composer in flex flow instead of sticky-to-layout-viewport", () => {
+    expect(chat).toContain('style={{ position: "relative", bottom: "auto" }}');
+    expect(input).toContain("transition-[border-color,box-shadow]");
+    expect(input).not.toMatch(/chat-composer-glow[^\n]*transition-all/);
+  });
+
+  it("uses visual viewport height on mobile and leaves desktop to CSS", () => {
+    expect(chatShellVisualViewportHeightPx({ isDesktop: true, innerHeight: 900 })).toBeNull();
+    expect(chatShellVisualViewportHeightPx({
+      isDesktop: false,
+      visualViewportHeight: 412.4,
+      innerHeight: 800,
+    })).toBe(412);
+    expect(chatShellVisualViewportHeightPx({
+      isDesktop: false,
+      innerHeight: 720,
+    })).toBe(720);
+  });
+
+  it("bindChatShellToVisualViewport resizes the shell when the keyboard covers the visual viewport", () => {
+    const g = globalThis as typeof globalThis & {
+      visualViewport?: VisualViewport | null;
+    };
+    const orig = {
+      matchMedia: g.matchMedia,
+      visualViewport: g.visualViewport,
+      innerHeight: Object.getOwnPropertyDescriptor(g, "innerHeight"),
+      addEventListener: g.addEventListener,
+      removeEventListener: g.removeEventListener,
+      raf: g.requestAnimationFrame,
+      caf: g.cancelAnimationFrame,
+    };
+
+    const resizeHandlers: Array<() => void> = [];
+    let vvHeight = 480;
+    const vv = {
+      get height() {
+        return vvHeight;
+      },
+      addEventListener(_type: string, fn: EventListenerOrEventListenerObject) {
+        if (typeof fn === "function") resizeHandlers.push(fn as () => void);
+      },
+      removeEventListener(_type: string, fn: EventListenerOrEventListenerObject) {
+        const i = resizeHandlers.indexOf(fn as () => void);
+        if (i >= 0) resizeHandlers.splice(i, 1);
+      },
+    };
+
+    g.matchMedia = ((query: string) =>
+      ({
+        matches: false,
+        media: query,
+        addEventListener() {},
+        removeEventListener() {},
+      })) as typeof matchMedia;
+    g.visualViewport = vv as unknown as VisualViewport;
+    Object.defineProperty(g, "innerHeight", { configurable: true, value: 844 });
+    g.addEventListener = (() => {}) as typeof addEventListener;
+    g.removeEventListener = (() => {}) as typeof removeEventListener;
+    g.requestAnimationFrame = ((cb: FrameRequestCallback) => {
+      cb(0);
+      return 1;
+    }) as typeof requestAnimationFrame;
+    g.cancelAnimationFrame = (() => {}) as typeof cancelAnimationFrame;
+
+    const style: { height: string; maxHeight: string } = { height: "", maxHeight: "" };
+    const el = {
+      style: {
+        get height() {
+          return style.height;
+        },
+        set height(v: string) {
+          style.height = v;
+        },
+        get maxHeight() {
+          return style.maxHeight;
+        },
+        set maxHeight(v: string) {
+          style.maxHeight = v;
+        },
+        removeProperty(name: string) {
+          if (name === "height") style.height = "";
+          if (name === "max-height") style.maxHeight = "";
+          return "";
+        },
+      },
+    };
+
+    try {
+      const unbind = bindChatShellToVisualViewport(el as unknown as HTMLElement);
+      expect(style.height).toBe("480px");
+      expect(style.maxHeight).toBe("480px");
+
+      vvHeight = 360;
+      resizeHandlers.forEach((fn) => fn());
+      expect(style.height).toBe("360px");
+
+      unbind();
+      expect(style.height).toBe("");
+      expect(style.maxHeight).toBe("");
+    } finally {
+      g.matchMedia = orig.matchMedia;
+      g.visualViewport = orig.visualViewport;
+      if (orig.innerHeight) Object.defineProperty(g, "innerHeight", orig.innerHeight);
+      else delete (g as { innerHeight?: number }).innerHeight;
+      g.addEventListener = orig.addEventListener;
+      g.removeEventListener = orig.removeEventListener;
+      g.requestAnimationFrame = orig.raf;
+      g.cancelAnimationFrame = orig.caf;
+    }
   });
 });

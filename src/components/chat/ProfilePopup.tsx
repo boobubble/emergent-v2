@@ -322,6 +322,7 @@ export function ProfilePopup({
                   const isMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches;
                   if (isMobile) startDM(userId);
                   else window.dispatchEvent(new CustomEvent("palrgo:openMiniDM", { detail: { peerId: userId } }));
+                  closeNow("action");
                 });
               }}
               className="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-full bg-primary px-3 text-xs font-bold text-primary-foreground hover:opacity-90"

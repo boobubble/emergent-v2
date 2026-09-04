@@ -6,14 +6,15 @@ import { Swords, Users, Clock, Trophy } from "lucide-react";
 import { listPoetryBattles, type PoetryBattle } from "@/lib/mehfil-battles.functions";
 import { MehfilShell } from "@/components/mehfil/MehfilShell";
 import { isNavigableSlug } from "@/lib/route-slug";
+import { staticPublicHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/poetry/challenges")({
-  head: () => ({
-    meta: [
-      { title: "Poetry Battles · Poetry Hub" },
-      { name: "description", content: "Live and upcoming poetry battles. Submit your verse and compete for the top spot." },
-    ],
-  }),
+  head: () =>
+    staticPublicHead({
+      title: "Poetry Battles · Poetry Hub",
+      description: "Live and upcoming poetry battles. Submit your verse and compete for the top spot.",
+      path: "/poetry/challenges",
+    }),
   component: ChallengesPage,
 });
 

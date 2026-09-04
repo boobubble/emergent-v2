@@ -2,7 +2,14 @@ import { useMemo, useState, useEffect } from "react";
 import { Search } from "lucide-react";
 import { EMOJI_CATEGORIES, getRecentEmojis, pushRecentEmoji } from "@/lib/emoji-data";
 
-export function EmojiPicker({ onPick }: { onPick: (e: string) => void }) {
+export function EmojiPicker({
+  onPick,
+  onClose,
+}: {
+  onPick: (e: string) => void;
+  /** When set, picking an emoji (and clicking the backdrop) dismisses the picker. */
+  onClose?: () => void;
+}) {
   const [cat, setCat] = useState<string>("smileys");
   const [q, setQ] = useState("");
   const [recent, setRecent] = useState<string[]>([]);
@@ -25,10 +32,22 @@ export function EmojiPicker({ onPick }: { onPick: (e: string) => void }) {
     pushRecentEmoji(e);
     setRecent(getRecentEmojis());
     onPick(e);
+    onClose?.();
   }
 
   return (
-    <div className="w-[300px] overflow-hidden rounded-xl border border-border bg-card shadow-lg">
+    <>
+    {onClose && (
+      <div
+        className="fixed inset-0 z-40"
+        aria-hidden
+        onPointerDown={(ev) => {
+          ev.preventDefault();
+          onClose();
+        }}
+      />
+    )}
+    <div className="relative z-50 w-[300px] overflow-hidden rounded-xl border border-border bg-card shadow-lg">
       <div className="flex items-center gap-0.5 border-b border-border px-1.5 py-1 overflow-x-auto">
         {categories.map(c => {
           if (c.id === "recent" && recent.length === 0) return null;
@@ -59,8 +78,16 @@ export function EmojiPicker({ onPick }: { onPick: (e: string) => void }) {
         <div className="grid grid-cols-9 gap-0.5">
           {visible.map((e, i) => (
             <button
+              type="button"
               key={`${e}-${i}`}
-              onClick={() => pick(e)}
+              onPointerDown={(ev) => {
+                if (ev.pointerType === "mouse" && ev.button !== 0) return;
+                ev.preventDefault();
+                pick(e);
+              }}
+              onClick={(ev) => {
+                if (ev.detail === 0) pick(e);
+              }}
               className="grid h-6 w-6 place-items-center rounded-md text-base transition-transform hover:scale-110 hover:bg-white/5 active:scale-95"
               title={e}
             >
@@ -73,5 +100,6 @@ export function EmojiPicker({ onPick }: { onPick: (e: string) => void }) {
         </div>
       </div>
     </div>
+    </>
   );
 }

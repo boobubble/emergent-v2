@@ -15,6 +15,12 @@ import {
 } from "./guest-nickname";
 import { assertGuestLobbyPlainText } from "./guest-nickname";
 import { newVisitorId } from "./visitor-session";
+import {
+  GUEST_LOBBY_ROW_EVENT,
+  fallbackGuestAuthor,
+  mergeGuestLobbyRows,
+  type GuestLobbyRow,
+} from "./guest-lobby-feed";
 
 const testDir = dirname(fileURLToPath(import.meta.url));
 const srcRoot = resolve(testDir, "..");
@@ -220,10 +226,53 @@ describe("no auth-guest regression", () => {
     expect(src).toMatch(/isEphemeralGuest|visitor_/);
   });
 
+  it("own guest bubbles keep opaque primary contrast in light and dark", () => {
+    const src = readFileSync(resolve(srcRoot, "components/chat/MessageList.tsx"), "utf8");
+    const own = src.match(/isOwnGuest\s*\?\s*"(msg-mine[^"]+)"/);
+    expect(own?.[1]).toBeTruthy();
+    const cls = own![1];
+    expect(cls).toMatch(/\bbg-primary\b/);
+    expect(cls).not.toMatch(/bg-primary\//);
+    expect(cls).toMatch(/\btext-primary-foreground\b/);
+    expect(cls).not.toMatch(/text-transparent|opacity-0|text-background|text-muted/);
+    expect(src).toMatch(/data-message-role=\{isOwnGuest \? "me" : undefined\}/);
+    expect(src).toMatch(/backgroundColor:\s*"var\(--primary\)"/);
+    expect(src).toMatch(/color:\s*"var\(--primary-foreground\)"/);
+    expect(src).toMatch(/\[color:inherit\]/);
+    const other = src.match(/isOwnGuest\s*\?\s*"msg-mine[^"]+"\s*:\s*"([^"]+)"/);
+    expect(other?.[1]).toMatch(/text-foreground\/90/);
+    expect(other?.[1]).not.toMatch(/text-primary-foreground/);
+    expect(src).toMatch(/rounded-tr-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground/);
+    expect(src).not.toMatch(/bg-primary\/90 px-3 py-2 text-xs font-medium text-primary-foreground/);
+  });
+
   it("Admin chatrooms includes Guest Chat settings", () => {
     const src = readFileSync(resolve(srcRoot, "routes/admin.chatrooms.tsx"), "utf8");
     expect(src).toMatch(/Guest Chat/);
     expect(src).toMatch(/GUEST_CHAT_SETTING_KEY|guest_chat/);
+  });
+
+  it("guest lobby history merges by id instead of replacing client state", () => {
+    const src = readFileSync(resolve(srcRoot, "lib/use-guest-lobby-feed.ts"), "utf8");
+    expect(src).toMatch(/mergeGuestLobbyRows\(/);
+    expect(src).not.toMatch(/if \(!cancelled\) setRows\(data\)/);
+    expect(src).not.toMatch(/if \(!cancelled\) setRows\(\[\]\)/);
+    expect(src).toMatch(/Keep whatever realtime/);
+    expect(src).toMatch(/GUEST_LOBBY_ROW_EVENT/);
+    const helpers = readFileSync(resolve(srcRoot, "lib/guest-lobby-feed.ts"), "utf8");
+    expect(helpers).toMatch(/export function mergeGuestLobbyRows/);
+    expect(helpers).toMatch(/yaarzo:guest-lobby-row/);
+    const input = readFileSync(resolve(srcRoot, "components/chat/MessageInput.tsx"), "utf8");
+    expect(input).toMatch(/publishGuestLobbyRow\(row\)/);
+    expect(input).toMatch(/appendGuestOptimistic/);
+    const list = readFileSync(resolve(srcRoot, "components/chat/MessageList.tsx"), "utf8");
+    expect(list).toMatch(/resolveMessageAuthor/);
+    expect(list).not.toMatch(/if \(!author\) return null/);
+    const model = readFileSync(resolve(srcRoot, "lib/message-list-model.ts"), "utf8");
+    expect(model).toMatch(/fallbackGuestAuthor/);
+    const app = readFileSync(resolve(srcRoot, "components/chat/ChatApp.tsx"), "utf8");
+    expect(app).toMatch(/channelId !== GUEST_LOBBY_CHANNEL_ID/);
+    expect(app).toMatch(/useGuestLobbyFeed/);
   });
 });
 
@@ -244,5 +293,88 @@ describe("guest lobby optimistic UI", () => {
     expect(src).toMatch(/SendStatusBits/);
     expect(src).toMatch(/Couldn't send/);
     expect(src).toMatch(/retrySend/);
+  });
+});
+
+function guestRow(partial: Partial<GuestLobbyRow> & Pick<GuestLobbyRow, "id" | "text">): GuestLobbyRow {
+  return {
+    channelId: "lobby",
+    visitorId: "visitor_abc",
+    displayName: "Guest-Test",
+    createdAt: "2026-09-03T04:00:00.000Z",
+    expiresAt: "2026-09-03T06:00:00.000Z",
+    ...partial,
+  };
+}
+
+describe("guest lobby feed merge", () => {
+  const now = Date.parse("2026-09-03T04:30:00.000Z");
+
+  it("keeps a realtime/post-send row that a stale history snapshot omitted", () => {
+    const live = guestRow({
+      id: "live-1",
+      text: "guest-test-001",
+      createdAt: "2026-09-03T04:20:00.000Z",
+    });
+    const staleHistory = [
+      guestRow({
+        id: "old-1",
+        text: "hello",
+        createdAt: "2026-09-03T04:00:00.000Z",
+      }),
+    ];
+    const merged = mergeGuestLobbyRows([live], staleHistory, now);
+    expect(merged.map((r) => r.id)).toEqual(["old-1", "live-1"]);
+    expect(merged.find((r) => r.id === "live-1")?.text).toBe("guest-test-001");
+  });
+
+  it("does not duplicate the same id from history and realtime", () => {
+    const row = guestRow({ id: "same-1", text: "hi" });
+    const merged = mergeGuestLobbyRows([row], [row], now);
+    expect(merged).toHaveLength(1);
+    expect(merged[0].id).toBe("same-1");
+  });
+
+  it("does not clear existing rows when incoming history is empty", () => {
+    const live = guestRow({ id: "keep-me", text: "still here" });
+    expect(mergeGuestLobbyRows([live], [], now).map((r) => r.id)).toEqual(["keep-me"]);
+  });
+
+  it("drops expired rows from both sides", () => {
+    const expired = guestRow({
+      id: "expired-1",
+      text: "gone",
+      expiresAt: "2026-09-03T04:10:00.000Z",
+    });
+    const live = guestRow({ id: "live-2", text: "ok" });
+    const merged = mergeGuestLobbyRows([expired, live], [expired], now);
+    expect(merged.map((r) => r.id)).toEqual(["live-2"]);
+  });
+
+  it("replaces a temp optimistic row when the confirmed server row arrives", () => {
+    const opt = guestRow({
+      id: "opt-abc",
+      text: "hello now",
+      sendStatus: "sending",
+    });
+    const real = guestRow({
+      id: "real-abc",
+      text: "hello now",
+      createdAt: "2026-09-03T04:21:00.000Z",
+    });
+    const merged = mergeGuestLobbyRows([opt], [real], now);
+    expect(merged.map((r) => r.id)).toEqual(["real-abc"]);
+    expect(merged[0].sendStatus).toBeUndefined();
+  });
+
+  it("publish event name is stable for MessageInput → MessageList", () => {
+    expect(GUEST_LOBBY_ROW_EVENT).toBe("yaarzo:guest-lobby-row");
+  });
+
+  it("fallback author still renders visitor messages without a user map entry", () => {
+    const u = fallbackGuestAuthor("visitor_missing");
+    expect(u.isGuest).toBe(true);
+    expect(u.showGuestBadge).toBe(true);
+    expect(u.name).toBe("Guest");
   });
 });

@@ -20,9 +20,16 @@ export function useDmUrlMask() {
   const fetchList = useServerFn(getUrlAllowList);
   const q = useQuery({
     queryKey: ["url-allow-list"],
-    queryFn: () => fetchList(),
+    queryFn: async () => {
+      try {
+        return await fetchList();
+      } catch {
+        return { allowed: [] as string[], blocked: [] as string[] };
+      }
+    },
     staleTime: 5 * 60_000,
     gcTime: 30 * 60_000,
+    throwOnError: false,
   });
   const mask = useMemo(() => {
     const allowed = new Set(q.data?.allowed ?? []);

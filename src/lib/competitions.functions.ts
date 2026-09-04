@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { fetchCompetitionCore } from "@/lib/competitions.public";
 import { withRateLimit } from "./rate-limit-middleware";
 
 async function publicClient() {
@@ -46,35 +47,6 @@ export const adminListAllCompetitions = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     return data ?? [];
   });
-
-async function fetchCompetitionCore(sb: any, filter: { id?: string; slug?: string }) {
-  let q = sb.from("competitions").select("*, category:competition_categories(id,name,slug,color,icon_url)");
-  if (filter.id) q = q.eq("id", filter.id);
-  else if (filter.slug) q = q.eq("slug", filter.slug);
-  const { data: comp, error } = await q.maybeSingle();
-  if (error) throw new Error(error.message);
-  if (!comp) return null;
-  const [{ data: participants }, { data: awards }, { data: competitors }] = await Promise.all([
-    sb.from("competition_participants")
-      .select("id,user_id,status,vote_count,rank,joined_at, profile:profiles(id,username,avatar_url,avatar_color)")
-      .eq("competition_id", comp.id)
-      .order("vote_count", { ascending: false }),
-    sb.from("competition_awards")
-      .select("*, profile:profiles(id,username,avatar_url,avatar_color)")
-      .eq("competition_id", comp.id)
-      .order("place", { ascending: true }),
-    sb.from("competition_competitors")
-      .select("*, linked_profile:profiles!competition_competitors_linked_user_id_fkey(id,username,avatar_url,avatar_color)")
-      .eq("competition_id", comp.id)
-      .order("sort_order", { ascending: true }),
-  ]);
-  return {
-    competition: comp,
-    participants: participants ?? [],
-    awards: awards ?? [],
-    competitors: competitors ?? [],
-  };
-}
 
 export const getCompetition = createServerFn({ method: "GET" })
   .inputValidator((data: { id: string }) => data)

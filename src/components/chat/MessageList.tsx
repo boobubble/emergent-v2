@@ -20,6 +20,12 @@ import { GUEST_LOBBY_CHANNEL_ID } from "@/lib/guest-chat-config";
 import { useGuestChat } from "@/lib/guest-chat-context";
 import { sendGuestLobbyMessage } from "@/lib/guest-chat.functions";
 import { isPresenceSystemMessage as isRoomPresenceLine } from "@/lib/presence-ui";
+import { useRemoteProfiles } from "@/lib/use-remote-profiles";
+import {
+  filterChatMessages,
+  resolveMessageAuthor,
+  safeMessageText,
+} from "@/lib/message-list-model";
 
 function PresenceSystemLine({ text }: { text: string }) {
   return (
@@ -76,12 +82,12 @@ function formatTime(ts: number) {
 
 function renderText(text: string) {
   const parts: React.ReactNode[] = [];
-  const lines = text.split("\n");
+  const lines = safeMessageText(text).split("\n");
   lines.forEach((line, li) => {
     const tokens = line.split(/(\*\*[^*]+\*\*|`[^`]+`|_[^_]+_)/g);
     tokens.forEach((t, i) => {
       if (/^\*\*.+\*\*$/.test(t))
-        parts.push(<strong key={`${li}-${i}`} className="font-semibold text-foreground">{linkify(t.slice(2, -2), `${li}-${i}`)}</strong>);
+        parts.push(<strong key={`${li}-${i}`} className="font-semibold">{linkify(t.slice(2, -2), `${li}-${i}`)}</strong>);
       else if (/^`.+`$/.test(t))
         parts.push(<code key={`${li}-${i}`} className="rounded-md bg-white/5 px-1.5 py-0.5 font-mono text-xs text-primary">{t.slice(1, -1)}</code>);
       else if (/^_.+_$/.test(t))
@@ -170,13 +176,14 @@ export function MessageList({ channelId }: { channelId: string }) {
   const { channelMessages, state, setReplyingTo, findMessage, isDM, dmPeerReadAt, replyingTo, retrySend } = useChat();
   const { isIgnored } = useIgnore();
   const { isGuestChatting, session } = useGuestChat();
-  const guestFeed = useGuestLobbyFeed(true);
+  const { profiles } = useRemoteProfiles();
+  const guestFeed = useGuestLobbyFeed(channelId === GUEST_LOBBY_CHANNEL_ID);
   const sendGuest = useServerFn(sendGuestLobbyMessage);
   const maskDmUrls = useDmUrlMask();
-  const isDmChan = isDM(channelId);
+  const isDmChan = typeof channelId === "string" && isDM(channelId);
   const applyMask = (authorId: string, text: string) =>
-    isDmChan && authorId !== "me" ? maskDmUrls(text) : text;
-  const baseMsgs = channelMessages(channelId);
+    isDmChan && authorId !== "me" ? maskDmUrls(safeMessageText(text)) : safeMessageText(text);
+  const baseMsgs = typeof channelId === "string" ? channelMessages(channelId) : [];
   const allMsgs = useMemo(() => {
     if (channelId !== GUEST_LOBBY_CHANNEL_ID) return baseMsgs;
     const merged = [...baseMsgs, ...guestFeed.messages];
@@ -190,15 +197,11 @@ export function MessageList({ channelId }: { channelId: string }) {
       .sort((a, b) => a.ts - b.ts);
   }, [baseMsgs, guestFeed.messages, channelId]);
   const usersById = useMemo(
-    () => ({ ...state.users, ...guestFeed.users }),
-    [state.users, guestFeed.users],
+    () => ({ ...profiles, ...state.users, ...guestFeed.users }),
+    [profiles, state.users, guestFeed.users],
   );
   const msgs = useMemo(
-    () => allMsgs.filter(m => {
-      const u = usersById[m.authorId];
-      if (!u || m.authorId === "me" || m.authorId.startsWith("visitor_")) return true;
-      return !isIgnored(m.authorId, u.isBot);
-    }),
+    () => filterChatMessages(allMsgs, usersById, isIgnored),
     [allMsgs, usersById, isIgnored],
   );
   const peerReadAt = isDM(channelId) ? dmPeerReadAt(channelId) : 0;
@@ -294,8 +297,7 @@ export function MessageList({ channelId }: { channelId: string }) {
           if (isPresenceSystemMessage(g[0])) {
             return <PresenceSystemLine key={g[0].id} text={g[0].text} />;
           }
-          const author = usersById[g[0].authorId];
-          if (!author) return null;
+          const author = resolveMessageAuthor(usersById, g[0].authorId);
           const isEphemeralGuest = Boolean(author.isGuest || author.id.startsWith("visitor_"));
           const isOwnGuest = Boolean(isGuestChatting && session && author.id === session.visitorId);
           const isMe = author.id === "me" || isOwnGuest;
@@ -312,18 +314,28 @@ export function MessageList({ channelId }: { channelId: string }) {
                     </span>
                     <Time ts={g[0].ts} />
                   </div>
+                  {/* Own-guest fill must be opaque `bg-primary` (not /90). The guest
+                      stylesheet only emits hover:bg-primary/90, not standalone
+                      .bg-primary/90. Light + purple sets --primary-foreground to
+                      near-white, so missing fill = invisible text until selected. */}
                   <div className={`flex flex-col gap-1 ${isOwnGuest ? "items-end" : ""}`}>
                     {g.map((m) => (
                       <div key={m.id} className={`flex flex-col ${isOwnGuest ? "items-end" : ""}`}>
                         <div
+                          data-message-role={isOwnGuest ? "me" : undefined}
                           className={bubblePendingClass(
                             m,
                             isOwnGuest
-                              ? "max-w-[min(80%,20rem)] rounded-2xl rounded-tr-md bg-primary/90 px-3 py-2 text-xs font-medium text-primary-foreground"
+                              ? "msg-mine max-w-[min(80%,20rem)] rounded-2xl rounded-tr-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground shadow-lg shadow-primary/20 chat-bubble-in"
                               : "max-w-[min(80%,20rem)] rounded-2xl rounded-tl-md border border-border bg-muted/40 px-3 py-2 text-xs leading-snug text-foreground/90",
                           )}
+                          style={
+                            isOwnGuest
+                              ? { backgroundColor: "var(--primary)", color: "var(--primary-foreground)" }
+                              : undefined
+                          }
                         >
-                          <div className="whitespace-pre-wrap break-words">{renderText(m.text)}</div>
+                          <div className="whitespace-pre-wrap break-words [color:inherit]">{renderText(m.text)}</div>
                         </div>
                         {isOwnGuest && (
                           <SendStatusBits m={m} onRetry={() => void retryGuestMessage(m)} />

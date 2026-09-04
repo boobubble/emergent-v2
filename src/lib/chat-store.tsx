@@ -36,6 +36,7 @@ import { runCommand } from "./commands";
 import { evaluateBadges, todayKey, daysBetween } from "./achievements";
 import { supabase } from "@/integrations/supabase/client";
 import { rtLog } from "./realtime-debug";
+import { extraRemoteDmChannelsToFetch } from "./mini-dm";
 import { useRemoteProfiles } from "./use-remote-profiles";
 import { playDmPing, playMentionPing, playPublicChatTick } from "./sounds";
 import {
@@ -546,6 +547,8 @@ interface Ctx {
   isDM: (id: string) => boolean;
   dmUser: (id: string) => User | undefined;
   dmChannelFor: (peerId: string) => string | null;
+  /** Ensure a desktop mini-DM channel is included in the history fetch. */
+  watchRemoteChannel: (channelId: string | null | undefined) => void;
   replyingTo: Message | null;
   setReplyingTo: (m: Message | null) => void;
   findMessage: (id: string) => Message | undefined;
@@ -930,6 +933,13 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
 
   // Bump this to trigger a re-fetch of the active channel's messages.
   const [resyncTick, setResyncTick] = useState(0);
+  // Desktop mini-DMs stay on the public room; still fetch those DM threads.
+  const [watchedRemoteChannels, setWatchedRemoteChannels] = useState<string[]>([]);
+  const watchRemoteChannel = useCallback((channelId: string | null | undefined) => {
+    if (!channelId || !authUserId) return;
+    if (!isRemoteChannel(channelId, authUserId)) return;
+    setWatchedRemoteChannels((prev) => (prev.includes(channelId) ? prev : [...prev, channelId]));
+  }, [authUserId]);
 
   // When the tab becomes visible again or the network reconnects, resync
   // missed messages. Realtime can drop events while a tab is suspended
@@ -969,6 +979,9 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       channelsToFetch.add("games");
       if (isRemoteChannel(state.activeChannel, authUserId) && !channelsToFetch.has(state.activeChannel)) {
         channelsToFetch.add(state.activeChannel);
+      }
+      for (const ch of extraRemoteDmChannelsToFetch(authUserId, watchedRemoteChannels)) {
+        channelsToFetch.add(ch);
       }
     }
     (async () => {
@@ -1024,7 +1037,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       }
     })();
     return () => { cancelled = true; };
-  }, [authUserId, state.activeChannel, resyncTick]);
+  }, [authUserId, state.activeChannel, resyncTick, watchedRemoteChannels]);
 
   // Realtime subscription to new messages (RLS scopes us to lobby + our DMs).
   // Public browse also subscribes to Lobby inserts (anon SELECT policy).
@@ -2100,22 +2113,23 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     isFriend: (id) => (state.me.friends ?? []).includes(id),
     isBlocked: (id) => (state.me.blocked ?? []).includes(id),
     reset,
-    channelMessages: (id) => filterVisibleMessages(id, state.messages[id] || []),
+    channelMessages: (id) => filterVisibleMessages(id, (state.messages || {})[id] || []),
     channelLabel: (id) => {
-      if (id.startsWith("dm:")) {
+      if (typeof id === "string" && id.startsWith("dm:")) {
         const { peerId } = parseDmChannel(id, authUserId);
         const u = peerId ? state.users[peerId] : undefined;
         return u ? u.name : "Direct Message";
       }
       return state.rooms[id]?.name || id;
     },
-    isDM: (id) => id.startsWith("dm:"),
+    isDM: (id) => typeof id === "string" && id.startsWith("dm:"),
     dmUser: (id) => {
-      if (!id.startsWith("dm:")) return undefined;
+      if (typeof id !== "string" || !id.startsWith("dm:")) return undefined;
       const { peerId } = parseDmChannel(id, authUserId);
       return peerId ? state.users[peerId] : undefined;
     },
     dmChannelFor: (peerId: string) => dmChannelFor(authUserId, peerId),
+    watchRemoteChannel,
     replyingTo, setReplyingTo,
     findMessage,
     dmPeerReadAt: (channelId: string) => {
@@ -2156,7 +2170,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     staffLocalMute,
     markDmRead,
     roomUnread,
-  }), [state, setActive, send, retrySend, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser, reset, replyingTo, findMessage, authUserId, dmReads, dmLatestTs, staffKick, staffLocalMute, pushSystem, pushPresenceEvent, wipeChannel, deleteRoom, syncAdminChannels, registerCommunityRoom, leaveCommunityRoom, markDmRead, roomUnread]);
+  }), [state, setActive, send, retrySend, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser, reset, replyingTo, findMessage, authUserId, dmReads, dmLatestTs, staffKick, staffLocalMute, pushSystem, pushPresenceEvent, wipeChannel, deleteRoom, syncAdminChannels, registerCommunityRoom, leaveCommunityRoom, markDmRead, roomUnread, watchRemoteChannel]);
 
 
   return <ChatCtx.Provider value={value}>{children}</ChatCtx.Provider>;

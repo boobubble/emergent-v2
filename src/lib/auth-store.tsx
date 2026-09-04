@@ -117,17 +117,11 @@ async function flushPendingAvatar(userId: string, email?: string) {
     const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
     await supabase.from("profiles").update({
       avatar_url: pub.publicUrl,
-      avatar_moderation_status: "pending",
-      avatar_moderation_reason: "scanning",
+      avatar_moderation_status: "approved",
+      avatar_moderation_reason: "auto_approved",
+      avatar_moderated_at: new Date().toISOString(),
     } as never).eq("id", userId);
     try { sessionStorage.removeItem(key); } catch { /* ignore */ }
-    // Server-side scan (secrets never on client). Non-blocking for signup.
-    try {
-      const { moderateMyAvatar } = await import("@/lib/avatar-moderation.functions");
-      await moderateMyAvatar({ data: { avatarUrl: pub.publicUrl } });
-    } catch (modErr) {
-      console.error("avatar moderation failed", modErr);
-    }
   } catch (e) {
     console.error("avatar upload failed", e);
   }

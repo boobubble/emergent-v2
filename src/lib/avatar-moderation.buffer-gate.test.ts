@@ -1,7 +1,6 @@
 /**
  * Avatar → Buffer media resolution rules (unit-style, no network).
- * Mirrors supabase/functions/buffer-social gate:
- * only avatar_moderation_status === "approved" may use profiles.avatar_url.
+ * Any https avatar may be used unless admin-rejected.
  */
 
 export type { AvatarModStatus } from "./avatar-social-media";
@@ -38,13 +37,13 @@ export function runAvatarBufferGateTests() {
     "B failed",
   );
 
-  // C) pending → never user avatar
+  // C) pending → user avatar (no approval gate)
   assert(
     resolveAvatarForBuffer({
       avatarUrl: USER,
       avatarModerationStatus: "pending",
       defaultMediaUrl: DEFAULT,
-    }).mediaSource === "default_image",
+    }).mediaSource === "user_avatar",
     "C failed",
   );
 
@@ -58,13 +57,13 @@ export function runAvatarBufferGateTests() {
     "D failed",
   );
 
-  // E) needs_review → default
+  // E) needs_review → user avatar
   assert(
     resolveAvatarForBuffer({
       avatarUrl: USER,
       avatarModerationStatus: "needs_review",
       defaultMediaUrl: DEFAULT,
-    }).mediaSource === "default_image",
+    }).mediaSource === "user_avatar",
     "E failed",
   );
 
@@ -78,15 +77,22 @@ export function runAvatarBufferGateTests() {
     "F failed",
   );
 
-  // H) fail-closed: non-approved never sends user image even if URL present
-  for (const status of ["pending", "needs_review", "rejected", "none"] as const) {
+  // H) only rejected never sends user image even if URL present
+  for (const status of ["pending", "needs_review", "none", "approved"] as const) {
     const r = resolveAvatarForBuffer({
       avatarUrl: USER,
       avatarModerationStatus: status,
       defaultMediaUrl: DEFAULT,
     });
-    assert(r.mediaSource !== "user_avatar", `H failed for ${status}`);
+    assert(r.mediaSource === "user_avatar", `H failed for ${status}`);
   }
+
+  const rejected = resolveAvatarForBuffer({
+    avatarUrl: USER,
+    avatarModerationStatus: "rejected",
+    defaultMediaUrl: DEFAULT,
+  });
+  assert(rejected.mediaSource !== "user_avatar", "H failed for rejected");
 
   console.log("avatar buffer gate tests: OK (A–F, H)");
 }

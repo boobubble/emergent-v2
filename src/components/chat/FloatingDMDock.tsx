@@ -1,20 +1,20 @@
-import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
-import { Minus, X, MessageCircle, Send, Smile, Paperclip, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Minus, X, MessageCircle, Trash2 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { deleteMyDmConversation } from "@/lib/account-dm.functions";
 
 import { useChat } from "@/lib/chat-store";
 import { isRemoteDmChannel } from "@/lib/dm-utils";
 import { useAuth } from "@/lib/auth-store";
+import { useRemoteProfiles } from "@/lib/use-remote-profiles";
+import { resolveMiniDmPeer } from "@/lib/mini-dm";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MessageList } from "./MessageList";
-import { TypingIndicator } from "./TypingIndicator";
-import { useTyping } from "@/lib/use-typing";
+import { MessageInput } from "./MessageInput";
 import { FrameAvatar, CosmeticName } from "@/components/cosmetics/CosmeticBits";
-import type { Attachment } from "@/lib/chat-types";
+import { ChatErrorBoundary } from "@/components/ChatErrorBoundary";
 
 const MAX_OPEN = 2;
-const MAX_ATTACHMENT_BYTES = 2 * 1024 * 1024;
 
 /**
  * Floating mini-DM dock (desktop only).
@@ -23,7 +23,7 @@ const MAX_ATTACHMENT_BYTES = 2 * 1024 * 1024;
  */
 export function FloatingDMDock() {
   const chat = useChat();
-  const { state, send, dmChannelFor, startDM, setActive, markDmRead } = chat;
+  const { state, dmChannelFor, startDM, setActive, markDmRead, watchRemoteChannel } = chat;
   const { user: authUser } = useAuth();
   const isMobile = useIsMobile();
 
@@ -198,8 +198,8 @@ export function FloatingDMDock() {
               if (ch) setActive(ch);
             }}
             onActivity={() => bumpToTop(peerId)}
-            send={send}
             dmChannelFor={dmChannelFor}
+            watchRemoteChannel={watchRemoteChannel}
           />
         ))}
       </div>
@@ -214,8 +214,8 @@ function MiniDMWindow({
   onMinimize,
   onOpenFull,
   onActivity,
-  send,
   dmChannelFor,
+  watchRemoteChannel,
 }: {
   peerId: string;
   leavingMode?: "minimize" | "close";
@@ -223,70 +223,26 @@ function MiniDMWindow({
   onMinimize: () => void;
   onOpenFull: () => void;
   onActivity: () => void;
-  send: (text: string, opts?: { channelId?: string; attachment?: Attachment }) => void;
   dmChannelFor: (peerId: string) => string | null;
+  watchRemoteChannel: (channelId: string | null | undefined) => void;
 }) {
+  // Hooks must run on every render. MembersPanel can open a DM for a remote
+  // profile that is not in chat-store.users yet; returning before these hooks
+  // crashed /chatroom with the Chatrooms AppErrorBoundary.
   const chat = useChat();
   const { state } = chat;
   const unread = chat.isDmUnread(peerId);
-  const u = state.users[peerId];
+  const { profiles } = useRemoteProfiles();
   const channelId = dmChannelFor(peerId);
-  if (!channelId || !u) return null;
-  const me = state.users.me;
-  const meForTyping = me && !me.isGuest ? { id: me.id, name: me.name } : null;
-  const { typers, sendTyping } = useTyping(channelId, meForTyping, !!meForTyping);
-  const [text, setText] = useState("");
-  const [attachment, setAttachment] = useState<Attachment | null>(null);
-  const [attachError, setAttachError] = useState("");
+  const u = resolveMiniDmPeer(peerId, state.users, profiles, channelId);
   const [deleting, setDeleting] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
   const deleteDm = useServerFn(deleteMyDmConversation);
 
-
   useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+    watchRemoteChannel(channelId);
+  }, [channelId, watchRemoteChannel]);
 
-  if (!u) return null;
-
-  const submit = () => {
-    const t = text.trim();
-    if (!t && !attachment) return;
-    send(t, { channelId, attachment: attachment ?? undefined });
-    setText("");
-    setAttachment(null);
-    setAttachError("");
-    onActivity();
-  };
-
-  async function onFile(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
-    setAttachError("");
-    if (file.size > MAX_ATTACHMENT_BYTES) {
-      setAttachError(`Max ${(MAX_ATTACHMENT_BYTES / 1024 / 1024).toFixed(0)}MB`);
-      return;
-    }
-    try {
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const r = new FileReader();
-        r.onload = () => resolve(String(r.result));
-        r.onerror = () => reject(r.error);
-        r.readAsDataURL(file);
-      });
-      setAttachment({
-        kind: file.type.startsWith("image/") ? "image" : "file",
-        name: file.name.slice(0, 120),
-        mime: file.type || "application/octet-stream",
-        size: file.size,
-        dataUrl,
-      });
-    } catch {
-      setAttachError("Couldn't read file");
-    }
-  }
+  if (!channelId || !u) return null;
 
   const isLeaving = !!leavingMode;
 
@@ -363,79 +319,19 @@ function MiniDMWindow({
 
       {/* Body — reuse existing MessageList for full feature parity */}
       <div className="flex min-h-0 flex-1 flex-col">
-        <MessageList channelId={channelId} />
+        <ChatErrorBoundary label="mini-dm-messages">
+          <MessageList channelId={channelId} />
+        </ChatErrorBoundary>
       </div>
 
-      {/* Attachment preview */}
-      {attachment && (
-        <div className="mx-2 mb-1 mt-1 flex items-center gap-2 rounded-xl border border-border bg-white/5 px-2 py-1.5">
-          {attachment.kind === "image" ? (
-            <img src={attachment.dataUrl} alt={attachment.name} className="h-9 w-9 rounded-md object-cover" />
-          ) : (
-            <div className="grid h-9 w-9 place-items-center rounded-md bg-white/5 text-base">📎</div>
-          )}
-          <div className="min-w-0 flex-1 text-[11px]">
-            <div className="truncate font-medium">{attachment.name}</div>
-            <div className="text-muted-foreground">{(attachment.size / 1024).toFixed(1)} KB</div>
-          </div>
-          <button
-            onClick={() => setAttachment(null)}
-            className="text-muted-foreground hover:text-destructive"
-            aria-label="Remove attachment"
-          >
-            <X className="h-3.5 w-3.5" />
-          </button>
-        </div>
-      )}
-      {attachError && <div className="px-3 pb-1 text-[11px] text-destructive">{attachError}</div>}
-
-      <TypingIndicator typers={typers} />
-
-      {/* Footer */}
-      <div className="flex items-center gap-1.5 border-t border-border bg-card/70 px-2 py-2">
-        <input
-          ref={fileRef}
-          type="file"
-          onChange={onFile}
-          className="hidden"
-          accept="image/*,application/pdf,text/plain,.zip,.doc,.docx"
-        />
-        <button
-          title="Attach file"
-          onClick={() => fileRef.current?.click()}
-          className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-primary"
-        >
-          <Paperclip className="h-4 w-4" />
-        </button>
-        <button
-          title="Emoji"
-          className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
-          onClick={() => setText(t => t + "😊")}
-        >
-          <Smile className="h-4 w-4" />
-        </button>
-        <input
-          ref={inputRef}
-          value={text}
-          onChange={(e) => { setText(e.target.value); sendTyping(); }}
-          onFocus={onActivity}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              submit();
-            }
-          }}
+      <div className="shrink-0 border-t border-border bg-card/70">
+        <MessageInput
+          channelId={channelId}
+          compact
+          autoFocus
+          onActivity={onActivity}
           placeholder={`Message ${u.name}…`}
-          className="min-w-0 flex-1 rounded-full bg-muted/40 px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/70 outline-none ring-0 focus:bg-muted/60"
         />
-        <button
-          onClick={submit}
-          disabled={!text.trim() && !attachment}
-          title="Send"
-          className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground transition-all hover:scale-105 disabled:opacity-40 disabled:hover:scale-100"
-        >
-          <Send className="h-4 w-4" />
-        </button>
       </div>
     </div>
   );

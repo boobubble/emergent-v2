@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Flame, TrendingUp, TrendingDown, Minus, Crown, PartyPopper, Rocket, Trophy, Sparkles } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { useCompetitionRealtimeEffect } from "@/lib/competition-realtime";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import type { Competitor } from "@/components/competitions/CompetitorGrid";
@@ -122,24 +122,27 @@ export function BattleIntensityMeter({ competitionId }: { competitionId: string 
   const bucketRef = useRef<number[]>([]);
   const [rate, setRate] = useState(0);
 
-  useEffect(() => {
-    if (!competitionId) return;
-    const ch = supabase
-      .channel(`comp-broadcast:${competitionId}`, { config: { broadcast: { self: true } } })
-      .on("broadcast", { event: "vote" }, () => {
-        bucketRef.current.push(Date.now());
-      })
-      .subscribe();
-    const iv = setInterval(() => {
-      const cutoff = Date.now() - 60_000;
-      bucketRef.current = bucketRef.current.filter((t) => t >= cutoff);
-      setRate(bucketRef.current.length);
-    }, 1000);
-    return () => {
-      clearInterval(iv);
-      supabase.removeChannel(ch);
-    };
-  }, [competitionId]);
+  useCompetitionRealtimeEffect(
+    Boolean(competitionId),
+    (supabase) => {
+      const ch = supabase
+        .channel(`comp-broadcast:${competitionId}`, { config: { broadcast: { self: true } } })
+        .on("broadcast", { event: "vote" }, () => {
+          bucketRef.current.push(Date.now());
+        })
+        .subscribe();
+      const iv = setInterval(() => {
+        const cutoff = Date.now() - 60_000;
+        bucketRef.current = bucketRef.current.filter((t) => t >= cutoff);
+        setRate(bucketRef.current.length);
+      }, 1000);
+      return () => {
+        clearInterval(iv);
+        supabase.removeChannel(ch);
+      };
+    },
+    [competitionId],
+  );
 
   const { label, color, pct } = useMemo(() => {
     if (rate >= 30) return { label: "Extreme", color: "from-rose-500 via-orange-500 to-amber-400", pct: 100 };
@@ -275,35 +278,38 @@ export function useCompetitorMomentum(competitionId: string): Record<string, "ri
   const [map, setMap] = useState<Record<string, "rising" | "falling" | "stable">>({});
   const bucketRef = useRef<{ name: string; t: number }[]>([]);
 
-  useEffect(() => {
-    if (!competitionId) return;
-    const ch = supabase
-      .channel(`comp-broadcast:${competitionId}`, { config: { broadcast: { self: true } } })
-      .on("broadcast", { event: "vote" }, (msg: any) => {
-        const name = msg?.payload?.target as string | null;
-        if (name) bucketRef.current.push({ name, t: Date.now() });
-      })
-      .subscribe();
-    const iv = setInterval(() => {
-      const cutoff = Date.now() - 120_000; // 2 min window
-      bucketRef.current = bucketRef.current.filter((x) => x.t >= cutoff);
-      const counts: Record<string, number> = {};
-      for (const x of bucketRef.current) counts[x.name] = (counts[x.name] ?? 0) + 1;
-      const total = Object.values(counts).reduce((a, b) => a + b, 0) || 1;
-      const next: Record<string, "rising" | "falling" | "stable"> = {};
-      for (const [name, n] of Object.entries(counts)) {
-        const share = n / total;
-        if (share >= 0.4 && n >= 3) next[name] = "rising";
-        else if (n === 0) next[name] = "falling";
-        else next[name] = "stable";
-      }
-      setMap(next);
-    }, 2000);
-    return () => {
-      clearInterval(iv);
-      supabase.removeChannel(ch);
-    };
-  }, [competitionId]);
+  useCompetitionRealtimeEffect(
+    Boolean(competitionId),
+    (supabase) => {
+      const ch = supabase
+        .channel(`comp-broadcast:${competitionId}`, { config: { broadcast: { self: true } } })
+        .on("broadcast", { event: "vote" }, (msg: { payload?: { target?: string } }) => {
+          const name = msg?.payload?.target ?? null;
+          if (name) bucketRef.current.push({ name, t: Date.now() });
+        })
+        .subscribe();
+      const iv = setInterval(() => {
+        const cutoff = Date.now() - 120_000; // 2 min window
+        bucketRef.current = bucketRef.current.filter((x) => x.t >= cutoff);
+        const counts: Record<string, number> = {};
+        for (const x of bucketRef.current) counts[x.name] = (counts[x.name] ?? 0) + 1;
+        const total = Object.values(counts).reduce((a, b) => a + b, 0) || 1;
+        const next: Record<string, "rising" | "falling" | "stable"> = {};
+        for (const [name, n] of Object.entries(counts)) {
+          const share = n / total;
+          if (share >= 0.4 && n >= 3) next[name] = "rising";
+          else if (n === 0) next[name] = "falling";
+          else next[name] = "stable";
+        }
+        setMap(next);
+      }, 2000);
+      return () => {
+        clearInterval(iv);
+        supabase.removeChannel(ch);
+      };
+    },
+    [competitionId],
+  );
 
   return map;
 }

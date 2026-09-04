@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import {
   CHAT_NOTIFICATION_ICON_PATH,
@@ -205,6 +205,17 @@ describe("source wiring", () => {
     expect(src).not.toMatch(/favicon-red\.png/);
     expect(existsSync(resolve(process.cwd(), "public/notification-icon.png"))).toBe(true);
     expect(existsSync(resolve(process.cwd(), "public/chat-notifications/sw.js"))).toBe(true);
+  });
+
+  it("notification icon is 512×512 RGBA with a transparent canvas", () => {
+    const png = readFileSync(resolve(process.cwd(), "public/notification-icon.png"));
+    expect([...png.subarray(0, 8)]).toEqual([137, 80, 78, 71, 13, 10, 26, 10]);
+    // IHDR payload starts immediately after signature + length + type
+    expect(png.toString("ascii", 12, 16)).toBe("IHDR");
+    expect(png.readUInt32BE(16)).toBe(512);
+    expect(png.readUInt32BE(20)).toBe(512);
+    expect(png[24]).toBe(8); // bit depth
+    expect(png[25]).toBe(6); // color type RGBA — transparent background, red mark only
   });
 });
 

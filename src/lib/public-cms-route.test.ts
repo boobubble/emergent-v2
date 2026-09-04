@@ -161,7 +161,9 @@ describe("CMS / blog route contracts", () => {
     expect(src).toContain("getPublishedBlogBySlug");
     expect(src).toContain("if (!post) throw notFound()");
     expect(src).toContain("notFoundSeoHead");
-    expect(src).not.toContain("@/integrations/supabase/client");
+    expect(src).toContain('import("@/integrations/supabase/client.server")');
+    expect(src).not.toContain('from "@/integrations/supabase/client"');
+    expect(src).not.toContain("loadBrowserSupabase");
   });
 
   it("treats /blog and /blog/yahoo as public guest paths", () => {
@@ -169,5 +171,21 @@ describe("CMS / blog route contracts", () => {
     expect(isReadOnlyPublicAppPath("/blog/yahoo")).toBe(true);
     expect(isPublicPath("/blog")).toBe(true);
     expect(isPublicPath("/blog/yahoo")).toBe(true);
+  });
+
+  it("blog and site-directory heads include a self-referencing canonical", () => {
+    const blog = readFileSync(resolve(process.cwd(), "src/routes/blog.index.tsx"), "utf8");
+    const achievements = readFileSync(resolve(process.cwd(), "src/routes/achievements.tsx"), "utf8");
+    const directory = readFileSync(resolve(process.cwd(), "src/routes/site-directory.tsx"), "utf8");
+    expect(blog).toContain("staticPublicHead");
+    expect(blog).toContain('path: "/blog"');
+    expect(achievements).toContain('path: "/achievements"');
+    expect(directory).toContain('path: "/site-directory"');
+  });
+
+  it("$slug JSON-LD is built from page content FAQs", () => {
+    const src = readFileSync(resolve(process.cwd(), "src/routes/$slug.tsx"), "utf8");
+    expect(src).toContain("buildCmsPageJsonLd");
+    expect(src).toContain("extractFaqItems");
   });
 });

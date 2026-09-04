@@ -4,6 +4,8 @@ import {
   isReadOnlyPublicAppPath,
   isPrivateUtilityPath,
   READ_ONLY_PUBLIC_APP_PREFIXES,
+  needsGuestChatShell,
+  publicSsrHeading,
 } from "./public-routes";
 
 describe("public routes — logged-out browse allowlist", () => {
@@ -52,11 +54,28 @@ describe("public routes — logged-out browse allowlist", () => {
       "/community",
       "/communities",
       "/blog",
+      "/find-friends",
+      "/games",
+      "/achievements",
+      "/site-directory",
     ];
     for (const path of required) {
       expect(READ_ONLY_PUBLIC_APP_PREFIXES).toContain(path);
       expect(isPublicPath(path)).toBe(true);
     }
+  });
+
+  it("keeps chat-backed routes in the guest chat shell and SSR-headings", () => {
+    expect(needsGuestChatShell("/chatroom")).toBe(true);
+    expect(needsGuestChatShell("/feed")).toBe(true);
+    expect(needsGuestChatShell("/blog")).toBe(false);
+    expect(needsGuestChatShell("/poetry")).toBe(false);
+    expect(needsGuestChatShell("/site-directory")).toBe(false);
+    expect(publicSsrHeading("/chatroom")).toBe("Chatrooms");
+    expect(publicSsrHeading("/feed")).toBe("Community Feed");
+    expect(publicSsrHeading("/leaderboard")).toBe("Leaderboard");
+    expect(publicSsrHeading("/achievements")).toBe("Achievements");
+    expect(publicSsrHeading("/blog")).toBeNull();
   });
 
   it("allows switching between public routes without treating them as private", () => {

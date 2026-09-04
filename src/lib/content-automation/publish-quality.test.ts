@@ -160,8 +160,8 @@ describe("master content rules + city/country validation", () => {
     expect(YAARZO_MASTER_SYSTEM_PROMPT).toContain('Never output "/p/{slug}"');
     expect(YAARZO_MASTER_SYSTEM_PROMPT).toContain("Never invent a URL or slug");
     expect(YAARZO_MASTER_SYSTEM_PROMPT).toContain("peer-geography");
-    expect(YAARZO_MASTER_SYSTEM_PROMPT).toContain("8–10 internal links");
-    expect(YAARZO_MASTER_SYSTEM_PROMPT).toContain("4–5 internal links");
+    expect(YAARZO_MASTER_SYSTEM_PROMPT).toContain("4–5 in-body internal links");
+    expect(YAARZO_MASTER_SYSTEM_PROMPT).toContain("2–3 internal links");
     expect(YAARZO_MASTER_SYSTEM_PROMPT).not.toMatch(/use \/chatrooms as the hub/i);
   });
 
@@ -169,8 +169,7 @@ describe("master content rules + city/country validation", () => {
     const html =
       `<p>${"word ".repeat(200)}</p><h2>How it works</h2>` +
       `<p>Meet people in the <a href="/friendship-chat-room">friendship rooms</a> and <a href="/chatroom">the chat hub</a>.</p>` +
-      `<p><a href="https://yaarzo.com/signup">sign up on Yaarzo</a>, browse the <a href="https://yaarzo.com/feed">community feed</a>, or <a href="https://yaarzo.com/find-friends">find friends</a>.</p>` +
-      `<p>Visit the <a href="/girls-chat-room">girls room</a>, the <a href="/international-chat-room">international room</a>, or <a href="/poetry">poetry hub</a>.</p>`;
+      `<p>Visit the <a href="/international-chat-room">international room</a>.</p>`;
     const withPeers = ensurePeerGeoLinks(html, [
       { href: "/pakistan-chat-room", label: "Pakistan" },
     ]);
@@ -206,12 +205,11 @@ describe("master content rules + city/country validation", () => {
     expect(q.warnings).toEqual([]);
   });
 
-  it("enforces 4-5 internal links on a sample blog post", () => {
+  it("enforces 2-3 internal links on a sample blog post", () => {
     const html =
       `<p>${"word ".repeat(200)}</p><h2>How it works</h2>` +
       `<p><a href="https://yaarzo.com/signup">create your free account</a></p>` +
-      `<p>Try the <a href="/friendship-chat-room">friendship room</a> or <a href="/chatroom">the chat hub</a>.</p>` +
-      `<p>See this <a href="https://yaarzo.com/blog/how-to-make-real-friends-online-10-proven-tips">related read</a>.</p>`;
+      `<p>Try the <a href="/friendship-chat-room">friendship room</a> or <a href="/chatroom">the chat hub</a>.</p>`;
     const prepared = preparePublishablePage({
       slug: "how-to-make-friends-online",
       title: "How to Make Friends Online",
@@ -231,7 +229,7 @@ describe("master content rules + city/country validation", () => {
     expect(hasRepeatedAnchorText(prepared.content)).toBe(false);
   });
 
-  it("pads thin HTML up to the static 8-10 range", () => {
+  it("pads thin HTML up to the static in-body range", () => {
     const thin = `<p>${"word ".repeat(200)}</p><h2>How it works</h2><p><a href="/signup">join free</a></p>`;
     const extras = [
       { href: "/friendship-chat-room", label: "friendship room" },

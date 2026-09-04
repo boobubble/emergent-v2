@@ -39,6 +39,7 @@ import {
 import { SORT_FIELDS } from "@/lib/pages-cms/schemas";
 import type { ListPagesQuery } from "@/lib/pages-cms/schemas";
 import type { PaginatedResult } from "@/lib/pages-cms/list-query";
+import { useMyRoles } from "@/lib/use-my-role";
 
 export const Route = createFileRoute("/admin/pages/all")({
   component: AllPagesPage,
@@ -96,6 +97,8 @@ function emptyFilters(): FilterState {
 
 function AllPagesPage() {
   const urlSearch = Route.useSearch();
+  const { isAdmin, loaded: rolesLoaded } = useMyRoles();
+  const canDelete = rolesLoaded && isAdmin;
   const listFn = useServerFn(listPages);
   const deleteFn = useServerFn(deletePage);
   const listCountriesFn = useServerFn(listPageCountries);
@@ -292,7 +295,9 @@ function AllPagesPage() {
               <Button size="sm"><Plus className="mr-1 h-4 w-4" />New page</Button>
             </Link>
             <Button size="sm" variant="outline" onClick={resetFilters}>Reset filters</Button>
+            {canDelete && (
             <Button size="sm" variant="outline" onClick={() => setSaveViewOpen(true)}>Save view</Button>
+            )}
           </div>
 
           <div className="flex flex-wrap gap-1.5">
@@ -550,9 +555,11 @@ function AllPagesPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b text-left text-xs text-muted-foreground">
+                  {canDelete && (
                   <th className="p-2 w-8">
                     <Checkbox checked={allSelected} onCheckedChange={() => toggleAll()} />
                   </th>
+                  )}
                   <th className="p-2">Page</th>
                   <th className="p-2">Slug</th>
                   <th className="p-2 hidden sm:table-cell">Image</th>
@@ -575,9 +582,11 @@ function AllPagesPage() {
               <tbody>
                 {rows.map((r) => (
                   <tr key={r.id} className="border-b last:border-0 hover:bg-muted/30">
+                    {canDelete && (
                     <td className="p-2">
                       <Checkbox checked={selected.has(r.id)} onCheckedChange={() => toggleOne(r.id)} />
                     </td>
+                    )}
                     <td className="p-2 max-w-[160px]">
                       <Link
                         to="/pages-editor/$id"
@@ -636,6 +645,7 @@ function AllPagesPage() {
                         <Link to="/pages-editor/$id" params={{ id: r.id }}>
                           <Button size="icon" variant="ghost"><Pencil className="h-4 w-4" /></Button>
                         </Link>
+                        {canDelete && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -643,6 +653,7 @@ function AllPagesPage() {
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
+                        )}
                       </div>
                     </td>
                   </tr>

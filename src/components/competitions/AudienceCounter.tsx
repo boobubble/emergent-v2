@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Eye } from "lucide-react";
 import { motion } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
+import { useCompetitionRealtimeEffect } from "@/lib/competition-realtime";
 import { useAuth } from "@/lib/auth-store";
 import { AnimatedCounter } from "./AnimatedCounter";
 
@@ -14,8 +14,7 @@ export function AudienceCounter({ competitionId }: { competitionId: string }) {
   const { user } = useAuth();
   const [count, setCount] = useState(1);
 
-  useEffect(() => {
-    if (!competitionId) return;
+  useCompetitionRealtimeEffect(!!competitionId, (supabase) => {
     const key = user?.id ?? `visitor-${Math.random().toString(36).slice(2, 10)}`;
     const channel = supabase.channel(`comp-presence:${competitionId}`, {
       config: { presence: { key } },
@@ -38,7 +37,7 @@ export function AudienceCounter({ competitionId }: { competitionId: string }) {
       });
 
     return () => {
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     };
   }, [competitionId, user?.id]);
 

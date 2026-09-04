@@ -1,6 +1,12 @@
 import { publishedLookupResult } from "@/lib/fetch-published-page";
+import { extractContentImages, isSafeContentImageSrc } from "@/lib/content-image-seo";
 
 export type PublicBlogCategory = { id: string; name: string; slug: string };
+
+export type BlogCoverImage = {
+  src: string;
+  alt: string;
+};
 
 export type PublicBlogListItem = {
   title: string;
@@ -8,6 +14,7 @@ export type PublicBlogListItem = {
   meta_description: string | null;
   published_at: string | null;
   categories: { name: string; slug: string } | null;
+  cover_image: BlogCoverImage | null;
 };
 
 export type PublicBlogPost = {
@@ -18,6 +25,7 @@ export type PublicBlogPost = {
   published_at: string | null;
   tags: string[];
   categories: { name: string; slug: string } | null;
+  cover_image: BlogCoverImage | null;
 };
 
 type BlogRow = {
@@ -29,6 +37,25 @@ type BlogRow = {
   category_id: string | null;
   tags?: string[] | null;
 };
+
+/**
+ * Single source of truth for list thumbnails and article og:image.
+ * blog_posts has no featured_image column — the first safe <img> in content is the cover.
+ */
+export function firstBlogCoverImage(html: string | null | undefined): BlogCoverImage | null {
+  for (const attrs of extractContentImages(html)) {
+    const src = (attrs.src || "").trim();
+    if (!isSafeContentImageSrc(src)) continue;
+    return { src, alt: (attrs.alt || "").trim() };
+  }
+  return null;
+}
+
+export function absolutizeBlogCoverSrc(src: string, origin = "https://yaarzo.com"): string {
+  if (/^https?:\/\//i.test(src)) return src;
+  if (src.startsWith("/")) return `${origin.replace(/\/$/, "")}${src}`;
+  return src;
+}
 
 /** Older posts with null/missing tags still render. */
 export function publicBlogTags(raw: unknown): string[] {
@@ -65,7 +92,7 @@ export async function listPublishedBlogIndex(): Promise<{
   const [postsResult, categories] = await Promise.all([
     db
       .from("blog_posts")
-      .select("title, slug, meta_description, published_at, category_id")
+      .select("title, slug, meta_description, published_at, category_id, content")
       .eq("status", "published")
       .order("published_at", { ascending: false }),
     loadBlogCategories(db),
@@ -81,6 +108,7 @@ export async function listPublishedBlogIndex(): Promise<{
     meta_description: row.meta_description,
     published_at: row.published_at,
     categories: attachCategory(row, categories),
+    cover_image: firstBlogCoverImage(row.content),
   }));
   return { posts, categories };
 }
@@ -102,13 +130,15 @@ export async function getPublishedBlogBySlug(slug: string): Promise<PublicBlogPo
   ]);
   const row = publishedLookupResult(data as BlogRow | null, error, "Failed to load blog post");
   if (!row) return null;
+  const content = row.content ?? "";
   return {
     title: row.title,
     slug: row.slug,
     meta_description: row.meta_description,
-    content: row.content ?? "",
+    content,
     published_at: row.published_at,
     tags: publicBlogTags(row.tags),
     categories: attachCategory(row, categories),
+    cover_image: firstBlogCoverImage(content),
   };
 }

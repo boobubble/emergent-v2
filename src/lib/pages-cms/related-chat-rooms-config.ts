@@ -10,7 +10,7 @@
 
 import { z } from "zod";
 
-export const RELATED_CHAT_ROOMS_CONFIG_MAX = 8;
+export const RELATED_CHAT_ROOMS_CONFIG_MAX = 4;
 
 export const relatedChatRoomItemSchema = z.object({
   id: z.string().min(1).max(80),

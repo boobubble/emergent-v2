@@ -1187,9 +1187,9 @@ function FeedPage() {
             >
               <div className="space-y-4">
                 <div className="feed-card p-4">
-                  <h1 className="flex items-center gap-2 text-lg font-black tracking-tight">
+                  <h2 className="flex items-center gap-2 text-lg font-black tracking-tight">
                     <Compass className="h-5 w-5 text-primary" /> Explore
-                  </h1>
+                  </h2>
                   <p className="mt-1 text-xs text-muted-foreground">
                     Discover people, groups and trending communities.
                     <span className="ml-1 hidden sm:inline">Pull down to refresh.</span>
@@ -1552,7 +1552,7 @@ function SideNavLink({ to, icon: Icon, label, badge, color }: { to: string; icon
 
 function UserMenu({ username, onProfile, onSettings }: { username: string; onProfile: () => void; onSettings: () => void }) {
   const { mode, setMode } = useThemeMode();
-  const { isAdmin } = useMyRoles();
+  const { isAdmin, isWriter, canEditExistingContent } = useMyRoles();
   const isDark = mode === "dark";
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
@@ -1603,6 +1603,42 @@ function UserMenu({ username, onProfile, onSettings }: { username: string; onPro
           >
             <Shield className="h-4 w-4 text-rose-400" /> Admin Panel
           </a>
+        )}
+        {isWriter && !isAdmin && (
+          <>
+            <a
+              href="/blog/write"
+              onClick={close}
+              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-accent transition"
+            >
+              <PenLine className="h-4 w-4 text-emerald-500" /> Write blog
+            </a>
+            <a
+              href="/pages-editor/new"
+              onClick={close}
+              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-accent transition"
+            >
+              <FileText className="h-4 w-4 text-emerald-500" /> New page
+            </a>
+            {canEditExistingContent && (
+              <>
+                <a
+                  href="/admin/blog/moderate"
+                  onClick={close}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-accent transition"
+                >
+                  <Newspaper className="h-4 w-4 text-emerald-500" /> Blogs
+                </a>
+                <a
+                  href="/admin/pages/all"
+                  onClick={close}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-accent transition"
+                >
+                  <FileText className="h-4 w-4 text-emerald-500" /> Pages
+                </a>
+              </>
+            )}
+          </>
         )}
       </PopoverContent>
     </Popover>

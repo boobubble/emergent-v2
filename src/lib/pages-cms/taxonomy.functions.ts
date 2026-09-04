@@ -4,15 +4,10 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { withRateLimit } from "@/lib/rate-limit-middleware";
 import { slugifyPageSlug } from "@/lib/page-slug";
+import { assertAdminUser, assertContentEditor } from "@/lib/content-roles.server";
 
 async function assertAdmin(userId: string) {
-  const { data, error } = await supabaseAdmin
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId)
-    .in("role", ["super_admin", "admin"]);
-  if (error) throw new Error(error.message);
-  if (!data || data.length === 0) throw new Error("Forbidden: admin only");
+  await assertAdminUser(userId);
 }
 
 const listOpts = z.object({
@@ -120,7 +115,7 @@ export const listPageCountries = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth, withRateLimit("admin.read")])
   .inputValidator((input) => listOpts.parse(input ?? {}))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.userId);
+    await assertContentEditor(context.userId);
     const from = (data.page - 1) * data.pageSize;
     const to = from + data.pageSize - 1;
     let q = supabaseAdmin
@@ -184,7 +179,7 @@ export const listPageStates = createServerFn({ method: "GET" })
     listOpts.extend({ country_id: z.string().uuid().optional() }).parse(input ?? {}),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.userId);
+    await assertContentEditor(context.userId);
     const from = (data.page - 1) * data.pageSize;
     const to = from + data.pageSize - 1;
     let q = supabaseAdmin
@@ -255,7 +250,7 @@ export const listPageCities = createServerFn({ method: "GET" })
       .parse(input ?? {}),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.userId);
+    await assertContentEditor(context.userId);
     const from = (data.page - 1) * data.pageSize;
     const to = from + data.pageSize - 1;
     let q = supabaseAdmin
@@ -322,7 +317,7 @@ export const listPageCategories = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth, withRateLimit("admin.read")])
   .inputValidator((input) => listOpts.parse(input ?? {}))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.userId);
+    await assertContentEditor(context.userId);
     const from = (data.page - 1) * data.pageSize;
     const to = from + data.pageSize - 1;
     let q = supabaseAdmin
@@ -383,7 +378,7 @@ export const listPageKeywordGroups = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth, withRateLimit("admin.read")])
   .inputValidator((input) => listOpts.parse(input ?? {}))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.userId);
+    await assertContentEditor(context.userId);
     const from = (data.page - 1) * data.pageSize;
     const to = from + data.pageSize - 1;
     let q = supabaseAdmin
@@ -445,7 +440,7 @@ export const listPageTemplates = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth, withRateLimit("admin.read")])
   .inputValidator((input) => listOpts.parse(input ?? {}))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.userId);
+    await assertContentEditor(context.userId);
     const from = (data.page - 1) * data.pageSize;
     const to = from + data.pageSize - 1;
     let q = supabaseAdmin

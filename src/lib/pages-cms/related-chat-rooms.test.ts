@@ -131,7 +131,7 @@ function lahoreLinks(): RelatedRoomInternalLink[] {
 }
 
 describe("related-chat-rooms selection", () => {
-  it("selects up to 8 published related rooms for a Pakistan city page", () => {
+  it("selects up to 4 published related rooms for a Pakistan city page", () => {
     const all = [...pkTargets, indiaLeak, indiaHub, draftTarget, noindexTarget];
     const selected = selectRelatedChatRooms({
       source: lahoreSource,
@@ -139,16 +139,12 @@ describe("related-chat-rooms selection", () => {
       ...mapsFrom(all),
       max: RELATED_CHAT_ROOMS_MAX,
     });
-    expect(selected.length).toBe(8);
+    expect(selected.length).toBe(4);
     expect(selected.map((l) => l.slug)).toEqual([
       "pakistan-chat-room",
       "karachi-chat-room",
       "islamabad-chat-room",
       "rawalpindi-chat-room",
-      "faisalabad-chat-room",
-      "multan-chat-room",
-      "girls-chat-room",
-      "friendship-chat-room",
     ]);
     expect(selected.every((l) => l.href.startsWith("/") && !l.href.startsWith("/p/"))).toBe(true);
   });
@@ -222,9 +218,9 @@ describe("related-chat-rooms selection", () => {
       ],
       ...mapsFrom(pkTargets),
       fillCandidates: [...pkTargets, indiaLeak, indiaHub, draftTarget],
-      max: 8,
+      max: RELATED_CHAT_ROOMS_MAX,
     });
-    expect(selected.length).toBe(8);
+    expect(selected.length).toBe(RELATED_CHAT_ROOMS_MAX);
     expect(selected.some((l) => l.slug === "delhi-chat-room")).toBe(false);
     expect(selected.some((l) => l.slug === "india-chat-room")).toBe(false);
     expect(selected.some((l) => l.slug === "pakistan-chat-room")).toBe(true);
@@ -243,10 +239,10 @@ describe("RelatedChatRooms SSR markup", () => {
     const html = renderToString(React.createElement(RelatedChatRooms, { links }));
     expect(html).toContain(RELATED_CHAT_ROOMS_HEADING);
     expect(html).toContain("related-chat-rooms");
-    expect(html.match(/<a\b/gi)?.length ?? 0).toBe(8);
+    expect(html.match(/<a\b/gi)?.length ?? 0).toBe(RELATED_CHAT_ROOMS_MAX);
     expect(html).toContain('href="/pakistan-chat-room"');
     expect(html).toContain('href="/karachi-chat-room"');
-    expect(html).toContain('href="/friendship-chat-room"');
+    expect(html).toContain('href="/islamabad-chat-room"');
     expect(html).not.toContain("onclick");
     expect(html).not.toContain("/p/");
   });

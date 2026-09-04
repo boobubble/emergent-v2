@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Flame, Award, PanelLeftOpen, Star, X, MessageSquare } from "lucide-react";
 import { CommunityHub, useHubBadge } from "@/components/chat/CommunityHub";
 import { ChatThemeStore } from "@/components/chat/ChatThemeStore";
+import { ChatErrorBoundary } from "@/components/ChatErrorBoundary";
 import { useActiveChatTheme } from "@/lib/chat-themes";
 import { useOptionalChat } from "@/lib/chat-store";
 import { useHomePageMode } from "@/lib/use-home-page-mode";
@@ -12,6 +13,7 @@ import { Sidebar } from "@/components/chat/Sidebar";
 import { ChatHeader } from "@/components/chat/ChatHeader";
 import { MessageList } from "@/components/chat/MessageList";
 import { MessageInput } from "@/components/chat/MessageInput";
+import { GUEST_LOBBY_CHANNEL_ID } from "@/lib/guest-chat-config";
 import { GameRoomCanvas } from "@/components/chat/GameRoomCanvas";
 import { DMChatBackground } from "@/components/chat/DMChatBackground";
 import { GamingArenaHero } from "@/components/chat/GamingArenaHero";
@@ -49,6 +51,7 @@ import {
   chatroomSidebarStyle,
   chatroomSidebarToggleVisible,
   chatroomShellLayoutAttr,
+  bindChatShellToVisualViewport,
   isClientLargeDesktopShell,
   isClientDesktopShell,
   readChatroomShellLayout,
@@ -252,6 +255,12 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
 
   const rootRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el) return;
+    return bindChatShellToVisualViewport(el);
+  }, []);
+
 
 
   useEffect(() => {
@@ -370,7 +379,7 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
         data-theme-variant={chatVariantFor(chatTheme)}
         data-chatroom-shell=""
         data-chatroom-layout={chatroomShellLayoutAttr(shellLayout)}
-        className="flex h-screen w-full overflow-hidden bg-background text-foreground"
+        className="flex h-dvh w-full overflow-hidden overscroll-none bg-background text-foreground"
       >
         <DjPlayerHost />
         {chatroomSidebarBackdropVisible(shellLayout, sidebarOpen) && (
@@ -400,7 +409,7 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
             />
           </SidebarPanelBoundary>
         </div>
-        <main className="relative flex h-full min-w-0 flex-1 flex-col">
+        <main className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col">
           {chatroomSidebarToggleVisible(shellLayout, sidebarOpen) && (
             <button
               data-chatroom-sidebar-toggle=""
@@ -423,12 +432,14 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
             return (
               <>
                 {!(chatTheme === "gaming_arena" && !activeIsDM) && (
-                  <ChatHeader
-                    onOpenHub={() => setHubOpen(true)}
-                    hubOpen={hubOpen}
-                    desktopShell={isClientDesktopShell(shellLayout)}
-                    largeDesktop={isClientLargeDesktopShell(shellLayout)}
-                  />
+                  <ChatErrorBoundary label="chat-header">
+                    <ChatHeader
+                      onOpenHub={() => setHubOpen(true)}
+                      hubOpen={hubOpen}
+                      desktopShell={isClientDesktopShell(shellLayout)}
+                      largeDesktop={isClientLargeDesktopShell(shellLayout)}
+                    />
+                  </ChatErrorBoundary>
                 )}
                 <div className="relative flex min-h-0 flex-1 flex-col">
                   {activeIsDM && (
@@ -444,7 +455,9 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
                   {!activeIsDM && chatTheme === "gaming_arena" && (
                     <GamingArenaHero channelId={state.activeChannel} />
                   )}
-                  <ChatChannelBody channelId={state.activeChannel} activeIsDM={activeIsDM} />
+                  <ChatErrorBoundary label="chat-messages">
+                    <ChatChannelBody channelId={state.activeChannel} activeIsDM={activeIsDM} />
+                  </ChatErrorBoundary>
                   <PresenceFeed channelId={state.activeChannel} />
 
                 </div>
@@ -480,7 +493,10 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
                   </div>
                 )}
 
-                <div className="chat-composer-footer shrink-0">
+                <div
+                  className="chat-composer-footer shrink-0"
+                  style={{ position: "relative", bottom: "auto" }}
+                >
                   <MessageInput />
                 </div>
               </>
@@ -493,7 +509,9 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
             forceDesktopColumn={isClientLargeDesktopShell(shellLayout)}
           />
         )}
-        <FloatingDMDock />
+        <ChatErrorBoundary label="floating-dm">
+          <FloatingDMDock />
+        </ChatErrorBoundary>
         <MobileDMMinimizedDock />
         <TrioRoomsDock />
         <ProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} />
@@ -587,7 +605,9 @@ function ChatChannelBody({ channelId, activeIsDM }: { channelId: string; activeI
     );
   }
 
-  if (!activeIsDM && messages.length === 0) {
+  // Lobby still has guest_chat_messages even when public.messages is empty.
+  // Skipping MessageList here would never mount useGuestLobbyFeed.
+  if (!activeIsDM && messages.length === 0 && channelId !== GUEST_LOBBY_CHANNEL_ID) {
     return (
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 p-6 text-center">
         <MessageSquare className="h-10 w-10 text-muted-foreground" aria-hidden />
