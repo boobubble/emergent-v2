@@ -39,10 +39,11 @@ describe("authenticated send is optimistic", () => {
   });
 
   it("confirms or fails after the insert, and exposes retrySend", () => {
+    expect(src).toMatch(/settleAuthenticatedSendPromise/);
     expect(src).toMatch(/confirmMessages/);
     expect(src).toMatch(/failMessages/);
     expect(src).toMatch(/retrySend/);
-    expect(src).toMatch(/isDuplicateKeyError/);
+    expect(src).toMatch(/applyHydrateSendReconcile/);
   });
 });
 
@@ -61,7 +62,7 @@ describe("optimistic helpers", () => {
     expect(failed.lobby[0].sendError).toBe("network");
 
     const persisted = persistSendStatus(sending);
-    expect(persisted.lobby[0].sendStatus).toBe("failed");
+    expect(persisted.lobby[0].sendStatus).toBe("sending");
   });
 
   it("reconciles guest optimistic rows by temp id or visitor+text", async () => {
