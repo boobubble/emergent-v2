@@ -90,7 +90,8 @@ describe("admin blog delete", () => {
 
   it("requires existing admin RLS and does not add service-role credentials", () => {
     const route = read("src/routes/admin.blog.moderate.tsx");
-    expect(route).toContain('in("role", ["admin", "super_admin"])');
+    expect(route).toContain('in("role", ["admin", "super_admin", "writer"])');
+    expect(route).toContain("canModerate={isAdmin}");
     expect(route).toContain('from("blog_posts")');
     expect(route + read("src/components/blog/BlogModerateView.tsx") + read("src/lib/blog-delete.ts")).not.toMatch(
       /service_role|SERVICE_ROLE|supabaseAdmin|getSupabaseAdmin/,

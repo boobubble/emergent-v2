@@ -9,6 +9,7 @@ export type RoleKey =
   | "vip"
   | "moderator"
   | "room_moderator"
+  | "writer"
   | "admin"
   | "super_admin"
   | "owner";
@@ -20,7 +21,7 @@ export interface RoleDefinition {
   /** Higher = more privileged. Used for comparisons in future guards. */
   rank: number;
   /** Maps to current public.app_role enum when applicable. */
-  dbRole?: "moderator" | "admin" | "super_admin";
+  dbRole?: "moderator" | "admin" | "super_admin" | "writer";
   builtin: boolean;
 }
 
@@ -31,6 +32,7 @@ export const ROLES: RoleDefinition[] = [
   { key: "vip",             label: "VIP",              rank: 30, description: "Premium / supporter tier.",                   builtin: true },
   { key: "room_moderator",  label: "Room Moderator",   rank: 40, description: "Moderation scoped to a single room.",         builtin: true },
   { key: "moderator",       label: "Moderator",        rank: 50, description: "Global community moderator.",                 builtin: true, dbRole: "moderator" },
+  { key: "writer",          label: "Writer",           rank: 55, description: "Create and edit blog posts and static pages.", builtin: true, dbRole: "writer" },
   { key: "admin",           label: "Admin",            rank: 80, description: "Manages settings and content.",               builtin: true, dbRole: "admin" },
   { key: "super_admin",     label: "Super Admin",      rank: 95, description: "Full configuration and system access.",       builtin: true, dbRole: "super_admin" },
   { key: "owner",           label: "Owner",            rank: 100, description: "Site owner. Cannot be demoted.",             builtin: true },

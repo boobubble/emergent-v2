@@ -226,6 +226,8 @@ function isStaticOrUnclassified(pageType: CmsPageType | null | undefined): boole
 }
 
 function PageEditorGate() {
+  const { id } = Route.useParams();
+  const isNew = id === "new";
   const { user, ready } = useAuth();
   const fetchRoles = useServerFn(getMyRoles);
   const { data, isLoading, isError } = useQuery({
@@ -238,7 +240,8 @@ function PageEditorGate() {
   if (!ready || isLoading) {
     return <div className="grid min-h-screen place-items-center bg-background text-sm text-muted-foreground">Checking access…</div>;
   }
-  if (isError || !data?.isAdmin) {
+  const allowed = isNew ? !!data?.canManageContent : !!data?.canEditExistingContent;
+  if (isError || !allowed) {
     return (
       <div className="grid min-h-screen place-items-center bg-background px-4">
         <div className="max-w-sm text-center">

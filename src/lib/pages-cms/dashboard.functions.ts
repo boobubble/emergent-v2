@@ -3,15 +3,10 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { withRateLimit } from "@/lib/rate-limit-middleware";
+import { assertAdminUser, assertExistingContentEditor } from "@/lib/content-roles.server";
 
 async function assertAdmin(userId: string) {
-  const { data, error } = await supabaseAdmin
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId)
-    .in("role", ["super_admin", "admin"]);
-  if (error) throw new Error(error.message);
-  if (!data || data.length === 0) throw new Error("Forbidden: admin only");
+  await assertAdminUser(userId);
 }
 
 async function countPages(filter: Record<string, unknown> = {}) {
@@ -180,7 +175,7 @@ const savedFilterSchema = z.object({
 export const listSavedPageFilters = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth, withRateLimit("admin.read")])
   .handler(async ({ context }) => {
-    await assertAdmin(context.userId);
+    await assertExistingContentEditor(context.userId);
     const { data, error } = await supabaseAdmin
       .from("page_saved_filters")
       .select("*")

@@ -72,11 +72,14 @@ export function BlogModerateView({
   loading,
   onUpdateStatus,
   onDelete,
+  canModerate = true,
 }: {
   posts: ModeratePost[];
   loading: boolean;
   onUpdateStatus: (id: string, status: "published" | "rejected") => void;
   onDelete: (id: string) => Promise<{ ok: boolean; error?: string }>;
+  /** Admins can approve/reject/delete. Writers browse and edit only. */
+  canModerate?: boolean;
 }) {
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -296,9 +299,11 @@ export function BlogModerateView({
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b text-left text-xs text-muted-foreground">
+                    {canModerate && (
                     <th className="w-8 p-2">
                       <Checkbox checked={allSelected} onCheckedChange={() => toggleAll()} />
                     </th>
+                    )}
                     <th className="p-2">Blog</th>
                     <th className="p-2">Slug</th>
                     <th className="p-2">Image</th>
@@ -328,6 +333,7 @@ export function BlogModerateView({
                         setDeleteTarget({ id: row.post.id, title: row.post.title || "(untitled)" });
                       }}
                       deleting={deleting}
+                      canModerate={canModerate}
                     />
                   ))}
                   {!pageRows.length && (
@@ -367,6 +373,7 @@ export function BlogModerateView({
                   setDeleteTarget({ id: row.post.id, title: row.post.title || "(untitled)" });
                 }}
                 deleting={deleting}
+                canModerate={canModerate}
               />
             ))}
           </div>
@@ -474,6 +481,7 @@ function BlogTableRow({
   onUpdateStatus,
   onRequestDelete,
   deleting,
+  canModerate,
 }: {
   row: RowModel;
   selected: boolean;
@@ -482,14 +490,17 @@ function BlogTableRow({
   onUpdateStatus: (id: string, status: "published" | "rejected") => void;
   onRequestDelete: () => void;
   deleting: boolean;
+  canModerate: boolean;
 }) {
   const pending = row.status === "pending";
   const extraTags = Math.max(0, row.tags.length - 2);
   return (
     <tr className="border-b last:border-0 hover:bg-muted/30">
+      {canModerate && (
       <td className="p-2">
         <Checkbox checked={selected} onCheckedChange={() => onToggle()} />
       </td>
+      )}
       <td className="max-w-[220px] p-2">
         <a href={editorHref(row.post.id)} className="block truncate font-medium hover:underline">
           {row.post.title || "(untitled)"}
@@ -531,6 +542,7 @@ function BlogTableRow({
           onUpdateStatus={onUpdateStatus}
           onRequestDelete={onRequestDelete}
           deleting={deleting}
+          canModerate={canModerate}
         />
       </td>
     </tr>
@@ -545,6 +557,7 @@ function BlogMobileCard({
   onUpdateStatus,
   onRequestDelete,
   deleting,
+  canModerate,
 }: {
   row: RowModel;
   selected: boolean;
@@ -553,13 +566,14 @@ function BlogMobileCard({
   onUpdateStatus: (id: string, status: "published" | "rejected") => void;
   onRequestDelete: () => void;
   deleting: boolean;
+  canModerate: boolean;
 }) {
   const pending = row.status === "pending";
   return (
     <Card>
       <CardContent className="space-y-2 p-3">
         <div className="flex items-start gap-2">
-          <Checkbox checked={selected} onCheckedChange={() => onToggle()} className="mt-1" />
+          {canModerate && <Checkbox checked={selected} onCheckedChange={() => onToggle()} className="mt-1" />}
           <div className="min-w-0 flex-1">
             <a href={editorHref(row.post.id)} className="font-medium hover:underline">
               {row.post.title || "(untitled)"}
@@ -586,6 +600,7 @@ function BlogMobileCard({
           onUpdateStatus={onUpdateStatus}
           onRequestDelete={onRequestDelete}
           deleting={deleting}
+          canModerate={canModerate}
         />
       </CardContent>
     </Card>
@@ -599,6 +614,7 @@ function RowActions({
   onUpdateStatus,
   onRequestDelete,
   deleting,
+  canModerate,
 }: {
   id: string;
   pending: boolean;
@@ -606,6 +622,7 @@ function RowActions({
   onUpdateStatus: (id: string, status: "published" | "rejected") => void;
   onRequestDelete: () => void;
   deleting: boolean;
+  canModerate: boolean;
 }) {
   return (
     <div className="flex flex-wrap items-center gap-0.5">
@@ -622,7 +639,7 @@ function RowActions({
           <ImageIcon className="h-4 w-4" />
         </Button>
       </a>
-      {pending && (
+      {canModerate && pending && (
         <>
           <Button
             size="icon"
@@ -642,6 +659,7 @@ function RowActions({
           </Button>
         </>
       )}
+      {canModerate && (
       <Button
         size="icon"
         variant="ghost"
@@ -652,6 +670,7 @@ function RowActions({
       >
         <Trash2 className="h-4 w-4" />
       </Button>
+      )}
     </div>
   );
 }
