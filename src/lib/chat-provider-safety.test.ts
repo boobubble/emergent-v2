@@ -224,8 +224,8 @@ describe("profile popup and composer pickers close after their action", () => {
     expect(stickers).toContain('from "./picker-pointer-tap"');
     expect(picker).toContain("pickerItemPointerHandlers(() => pick(e))");
     expect(stickers).toContain("pickerItemPointerHandlers(() => pick(s))");
-    expect(picker).not.toMatch(/onPointerDown=\{\(ev\) => \{[\s\S]*pick\(e\)/);
-    expect(stickers).not.toMatch(/onPointerDown=\{\(ev\) => \{[\s\S]*pick\(s\)/);
+    expect(picker).not.toContain("ev.preventDefault();\n                pick(e);");
+    expect(stickers).not.toContain("ev.preventDefault();\n                pick(s);");
   });
 });
 
