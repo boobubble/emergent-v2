@@ -28,7 +28,6 @@ import {
   banUser, unbanUser, deleteUser, updateUserUsername, adminResetUserPassword, adminGrantCoins,
 } from "@/lib/admin.functions";
 import {
-  adminApproveAvatar,
   adminDisableSocialFeaturing,
   adminRejectAvatar,
   adminRemoveProfilePicture,
@@ -101,7 +100,6 @@ function UsersPage() {
   } | null>(null);
   const [removeAvatarConfirm, setRemoveAvatarConfirm] = useState(false);
 
-  const approveAvatarFn = useServerFn(adminApproveAvatar);
   const rejectAvatarFn = useServerFn(adminRejectAvatar);
   const removeAvatarFn = useServerFn(adminRemoveProfilePicture);
   const disableSocialFn = useServerFn(adminDisableSocialFeaturing);
@@ -176,11 +174,6 @@ function UsersPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const avatarApproveMut = useMutation({
-    mutationFn: (userId: string) => approveAvatarFn({ data: { userId } }),
-    onSuccess: () => { toast.success("Avatar approved"); setAvatarTarget(null); invalidate(); },
-    onError: (e: Error) => toast.error(e.message),
-  });
   const avatarRejectMut = useMutation({
     mutationFn: (userId: string) => rejectAvatarFn({ data: { userId, reason: "admin_rejected" } }),
     onSuccess: () => { toast.success("Avatar rejected"); setAvatarTarget(null); invalidate(); },
@@ -669,7 +662,7 @@ function UsersPage() {
           <DialogHeader>
             <DialogTitle>Profile Image Moderation</DialogTitle>
             <DialogDescription>
-              @{avatarTarget?.username ?? "user"} — only approved avatars can be sent to Buffer.
+              @{avatarTarget?.username ?? "user"} — remove inappropriate profile pictures after the fact.
             </DialogDescription>
           </DialogHeader>
           {avatarTarget && (
@@ -698,10 +691,6 @@ function UsersPage() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Button size="sm" variant="secondary" disabled={avatarApproveMut.isPending}
-                  onClick={() => avatarApproveMut.mutate(avatarTarget.id)}>
-                  Approve Image
-                </Button>
                 <Button size="sm" variant="outline" disabled={avatarRejectMut.isPending}
                   onClick={() => avatarRejectMut.mutate(avatarTarget.id)}>
                   Reject Image

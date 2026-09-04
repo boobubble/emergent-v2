@@ -15,14 +15,16 @@ const STABLE =
 const MODERATED_AT = "2026-08-21T14:12:09.589Z";
 
 describe("resolvePublicAvatarUrl", () => {
-  it("allows approved https avatars", () => {
-    expect(resolvePublicAvatarUrl({ avatarUrl: UNIQUE, avatarModerationStatus: "approved" })).toBe(UNIQUE);
+  it("allows https avatars for live statuses", () => {
+    for (const status of ["approved", "pending", "needs_review", null]) {
+      expect(resolvePublicAvatarUrl({ avatarUrl: UNIQUE, avatarModerationStatus: status })).toBe(UNIQUE);
+    }
   });
 
-  it("rejects pending, review, rejected, and none", () => {
-    for (const status of ["pending", "needs_review", "rejected", "none", null]) {
-      expect(resolvePublicAvatarUrl({ avatarUrl: UNIQUE, avatarModerationStatus: status })).toBeUndefined();
-    }
+  it("rejects admin-rejected avatars and missing urls", () => {
+    expect(resolvePublicAvatarUrl({ avatarUrl: UNIQUE, avatarModerationStatus: "rejected" })).toBeUndefined();
+    expect(resolvePublicAvatarUrl({ avatarUrl: null, avatarModerationStatus: "approved" })).toBeUndefined();
+    expect(resolvePublicAvatarUrl({ avatarUrl: UNIQUE, avatarModerationStatus: "none" })).toBe(UNIQUE);
   });
 
   it("rejects data URLs even when marked approved", () => {
@@ -33,10 +35,6 @@ describe("resolvePublicAvatarUrl", () => {
         avatarModeratedAt: MODERATED_AT,
       }),
     ).toBeUndefined();
-  });
-
-  it("rejects missing urls", () => {
-    expect(resolvePublicAvatarUrl({ avatarUrl: null, avatarModerationStatus: "approved" })).toBeUndefined();
   });
 
   it("does not version unique avatar-{timestamp} object URLs", () => {
