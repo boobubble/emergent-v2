@@ -8987,6 +8987,7 @@ export type Database = {
         | "dj"
         | "rj"
         | "feed_moderator"
+        | "writer"
       ban_type: "ban" | "temp_ban" | "shadow_ban" | "ip_ban"
       community_member_role: "owner" | "moderator" | "member"
       community_member_status: "active" | "pending" | "banned" | "muted"
@@ -9231,6 +9232,7 @@ export const Constants = {
         "dj",
         "rj",
         "feed_moderator",
+        "writer",
       ],
       ban_type: ["ban", "temp_ban", "shadow_ban", "ip_ban"],
       community_member_role: ["owner", "moderator", "member"],

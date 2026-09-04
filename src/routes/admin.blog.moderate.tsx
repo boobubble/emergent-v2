@@ -11,6 +11,7 @@ export const Route = createFileRoute("/admin/blog/moderate")({
 function ModeratePage() {
   const [checking, setChecking] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [canManageContent, setCanManageContent] = useState(false);
   const [posts, setPosts] = useState<ModeratePost[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -29,13 +30,16 @@ function ModeratePage() {
       .from("user_roles")
       .select("role")
       .eq("user_id", userData.user.id)
-      .in("role", ["admin", "super_admin"]);
+      .in("role", ["admin", "super_admin", "writer"]);
 
-    const admin = (roleData?.length ?? 0) > 0;
+    const roles = (roleData ?? []).map((r) => r.role as string);
+    const admin = roles.includes("admin") || roles.includes("super_admin");
+    const editor = admin || roles.includes("writer");
     setIsAdmin(admin);
+    setCanManageContent(editor);
     setChecking(false);
 
-    if (admin) loadPendingPosts();
+    if (editor) loadPendingPosts();
   }
 
   async function loadPendingPosts() {
@@ -75,7 +79,7 @@ function ModeratePage() {
   }
 
   if (checking) return <p className="p-8 text-muted-foreground">Loading…</p>;
-  if (!isAdmin) {
+  if (!canManageContent) {
     return <p className="p-8 text-foreground">Access denied. Admin/moderator hi ye page dekh sakte hain.</p>;
   }
 
@@ -85,6 +89,7 @@ function ModeratePage() {
       loading={loading}
       onUpdateStatus={updateStatus}
       onDelete={deletePost}
+      canModerate={isAdmin}
     />
   );
 }

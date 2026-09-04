@@ -7,6 +7,7 @@ export type AppRole =
   | "room_moderator"
   | "dj"
   | "rj"
+  | "writer"
   | "vip"
   | "verified_creator"
   | "user";
@@ -82,6 +83,13 @@ export const ROLE_REGISTRY: RoleDef[] = [
     description: "Radio jockey: host shows, run the queue, and post broadcaster announcements.",
     color: "text-cyan-500",
     permissions: ["broadcaster.access","broadcaster.manage","content.create"],
+  },
+  {
+    id: "writer",
+    label: "Writer",
+    description: "Create and edit blog posts and static/custom pages. No user, moderation, or system admin access.",
+    color: "text-emerald-500",
+    permissions: ["content.create"],
   },
   {
     id: "vip",

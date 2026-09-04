@@ -238,7 +238,7 @@ function PageEditorGate() {
   if (!ready || isLoading) {
     return <div className="grid min-h-screen place-items-center bg-background text-sm text-muted-foreground">Checking access…</div>;
   }
-  if (isError || !data?.isAdmin) {
+  if (isError || !data?.canManageContent) {
     return (
       <div className="grid min-h-screen place-items-center bg-background px-4">
         <div className="max-w-sm text-center">

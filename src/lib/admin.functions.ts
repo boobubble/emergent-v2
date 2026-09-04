@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { summarizeRoles } from "@/lib/content-roles";
 import { withRateLimit } from "./rate-limit-middleware";
 
 async function getSupabaseAdmin() {
@@ -41,11 +42,7 @@ export const getMyRoles = createServerFn({ method: "GET" })
       .eq("user_id", context.userId);
     if (error) throw new Error(error.message);
     const roles = (data ?? []).map((r) => r.role as string);
-    return {
-      roles,
-      isAdmin: roles.includes("super_admin") || roles.includes("admin"),
-      isSuperAdmin: roles.includes("super_admin"),
-    };
+    return summarizeRoles(roles);
   });
 
 // Keys that hold secrets or staff-only configuration. Mirrors the
@@ -541,7 +538,7 @@ export const setUserRole = createServerFn({ method: "POST" })
   .inputValidator((input) =>
     z.object({
       user_id: z.string().uuid(),
-      role: z.enum(["super_admin", "admin", "moderator", "dj", "rj"]),
+      role: z.enum(["super_admin", "admin", "moderator", "dj", "rj", "writer"]),
       grant: z.boolean(),
     }).parse(input),
   )

@@ -22,7 +22,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Search, ShieldCheck, Shield, Hammer, Ban, Trash2, ShieldOff, UserCircle2, Pencil, Check, X, KeyRound, Copy, Coins, ImageIcon } from "lucide-react";
+import { Search, ShieldCheck, Shield, Hammer, Ban, Trash2, ShieldOff, UserCircle2, Pencil, Check, X, KeyRound, Copy, Coins, ImageIcon, FileText } from "lucide-react";
 import {
   getMyRoles, listUsersWithRoles, setUserRole,
   banUser, unbanUser, deleteUser, updateUserUsername, adminResetUserPassword, adminGrantCoins,
@@ -35,7 +35,7 @@ import {
 } from "@/lib/avatar-moderation.functions";
 export const Route = createFileRoute("/admin/users")({ component: UsersPage });
 
-type ManagedRole = "super_admin" | "admin" | "moderator" | "dj" | "rj";
+type ManagedRole = "super_admin" | "admin" | "moderator" | "dj" | "rj" | "writer";
 type FilterKey = "all" | "members" | "guests" | "banned" | "staff";
 
 const ROLE_META: Record<ManagedRole, { label: string; color: string; icon: typeof Shield }> = {
@@ -44,6 +44,7 @@ const ROLE_META: Record<ManagedRole, { label: string; color: string; icon: typeo
   moderator: { label: "Moderator", color: "text-amber-500", icon: Hammer },
   dj: { label: "DJ", color: "text-fuchsia-500", icon: Shield },
   rj: { label: "RJ", color: "text-cyan-500", icon: Shield },
+  writer: { label: "Writer", color: "text-emerald-500", icon: FileText },
 };
 
 
@@ -206,7 +207,7 @@ function UsersPage() {
 
   const users = usersQ.data ?? [];
   const totals = useMemo(() => {
-    const t: Record<ManagedRole, number> = { super_admin: 0, admin: 0, moderator: 0, dj: 0, rj: 0 };
+    const t: Record<ManagedRole, number> = { super_admin: 0, admin: 0, moderator: 0, dj: 0, rj: 0, writer: 0 };
     for (const u of users) for (const r of u.roles) if (r in t) (t as any)[r]++;
     return t;
   }, [users]);
@@ -284,6 +285,7 @@ function UsersPage() {
                   <th className="py-2 pr-3 font-medium">Mod</th>
                   <th className="py-2 pr-3 font-medium" title="Grants /broadcaster access (broadcaster.access + broadcaster.manage)">DJ</th>
                   <th className="py-2 pr-3 font-medium" title="Grants /broadcaster access (broadcaster.access + broadcaster.manage)">RJ</th>
+                  <th className="py-2 pr-3 font-medium" title="Create and edit blog posts and static pages">Writer</th>
                   <th className="py-2 pr-3 font-medium text-right">Actions</th>
                 </tr>
               </thead>
@@ -291,11 +293,11 @@ function UsersPage() {
                 {usersQ.isLoading &&
                   Array.from({ length: 6 }).map((_, i) => (
                     <tr key={i} className="border-b">
-                      <td colSpan={10} className="py-2"><Skeleton className="h-8 w-full" /></td>
+                      <td colSpan={11} className="py-2"><Skeleton className="h-8 w-full" /></td>
                     </tr>
                   ))}
                 {!usersQ.isLoading && users.length === 0 && (
-                  <tr><td colSpan={10} className="py-8 text-center text-sm text-muted-foreground">No users found.</td></tr>
+                  <tr><td colSpan={11} className="py-8 text-center text-sm text-muted-foreground">No users found.</td></tr>
                 )}
                 {users.map((u) => (
                   <tr key={u.id} className="group border-b align-top hover:bg-muted/30">

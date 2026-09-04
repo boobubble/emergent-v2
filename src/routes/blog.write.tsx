@@ -70,13 +70,13 @@ async function uploadBlogImage(file: File): Promise<string | null> {
   return supabase.storage.from("feed-media").getPublicUrl(path).data.publicUrl;
 }
 
-async function userIsAdmin(userId: string): Promise<boolean> {
+async function userCanManageContent(userId: string): Promise<boolean> {
   const supabase = await loadBrowserSupabase();
   const { data } = await supabase
     .from("user_roles")
     .select("role")
     .eq("user_id", userId)
-    .in("role", ["admin", "super_admin"]);
+    .in("role", ["admin", "super_admin", "writer"]);
   return (data?.length ?? 0) > 0;
 }
 
@@ -130,8 +130,8 @@ function WritePostPage() {
     let cancelled = false;
     void (async () => {
       try {
-        if (!(await userIsAdmin(user.id))) {
-          if (!cancelled) setLoadError("Only admins can edit existing posts.");
+        if (!(await userCanManageContent(user.id))) {
+          if (!cancelled) setLoadError("Only writers and admins can edit existing posts.");
           return;
         }
         const supabase = await loadBrowserSupabase();

@@ -1,10 +1,11 @@
-// Read the signed-in user's roles (super_admin / admin / moderator) for UI guards.
+// Read the signed-in user's roles for UI guards.
 // Reads directly from public.user_roles — RLS allows users to read their own row.
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-store";
 import { supabase } from "@/integrations/supabase/client";
+import { summarizeRoles } from "@/lib/content-roles";
 
-export type AppRole = "super_admin" | "admin" | "moderator" | "user";
+export type AppRole = "super_admin" | "admin" | "moderator" | "writer" | "user" | "dj" | "rj";
 
 export function useMyRoles() {
   const { user } = useAuth();
@@ -26,8 +27,7 @@ export function useMyRoles() {
     return () => { cancel = true; };
   }, [user?.id]);
 
-  const isSuperAdmin = roles.includes("super_admin");
-  const isAdmin = isSuperAdmin || roles.includes("admin");
-  const isModerator = isAdmin || roles.includes("moderator");
-  return { roles, isSuperAdmin, isAdmin, isModerator, loaded };
+  const flags = summarizeRoles(roles);
+  const isModerator = flags.isAdmin || roles.includes("moderator");
+  return { ...flags, roles, isModerator, loaded };
 }

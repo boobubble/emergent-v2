@@ -1,5 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
+import { useMyRoles } from "@/lib/use-my-role";
 import {
   LayoutDashboard, List, Globe2, Map, MapPin, Tags, KeyRound, LayoutTemplate,
   Wand2, Link2, SearchCheck, Download, ArrowRightLeft, FileText, PanelBottom,
@@ -24,9 +25,14 @@ export const PAGES_NAV = [
 
 export function PagesSubnav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { isAdmin, isWriter, loaded } = useMyRoles();
+  const writerOnly = loaded && isWriter && !isAdmin;
+  const items = writerOnly
+    ? PAGES_NAV.filter((item) => item.to === "/admin/pages/all")
+    : PAGES_NAV;
   return (
     <nav className="mb-4 flex flex-wrap gap-1.5 rounded-lg border border-border bg-muted/20 p-2">
-      {PAGES_NAV.map((item) => {
+      {items.map((item) => {
         const active = item.end
           ? pathname === item.to
           : pathname === item.to || pathname.startsWith(item.to + "/");

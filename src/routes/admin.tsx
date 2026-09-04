@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/lib/auth-store";
 import { getMyRoles } from "@/lib/admin.functions";
+import { isWriterAllowedAdminPath } from "@/lib/content-roles";
 import { getOwnerStatus } from "@/lib/owner-setup.functions";
 import { ADMIN_NAV, flattenAdminNav, type AdminGroup, type AdminLeaf } from "@/components/admin/AdminNav";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ export const Route = createFileRoute("/admin")({
 
 function AdminLayout() {
   const { user, ready } = useAuth();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   const fetchRoles = useServerFn(getMyRoles);
   const fetchOwnerStatus = useServerFn(getOwnerStatus);
   const { data: ownerStatus, isLoading: ownerLoading } = useQuery({
@@ -54,7 +56,9 @@ function AdminLayout() {
   if (!ready || isLoading) {
     return <div className="grid min-h-screen place-items-center bg-background text-sm text-muted-foreground">Checking access…</div>;
   }
-  if (isError || !data?.isAdmin) {
+  const isWriterOnly = !!data?.isWriter && !data?.isAdmin;
+  const writerAllowed = isWriterOnly && isWriterAllowedAdminPath(pathname);
+  if (isError || (!data?.isAdmin && !writerAllowed)) {
     return (
       <div className="grid min-h-screen place-items-center bg-background px-4">
         <div className="max-w-sm text-center">
@@ -67,22 +71,26 @@ function AdminLayout() {
     );
   }
 
-  return <AdminShell isSuper={data.isSuperAdmin} />;
+  if (isWriterOnly && (pathname === "/admin" || pathname === "/admin/pages")) {
+    return <Navigate to="/admin/pages/all" replace />;
+  }
+
+  return <AdminShell isSuper={data.isSuperAdmin} writerOnly={isWriterOnly} />;
 }
 
-function AdminShell({ isSuper }: { isSuper: boolean }) {
+function AdminShell({ isSuper, writerOnly = false }: { isSuper: boolean; writerOnly?: boolean }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="flex min-h-screen w-full bg-muted/40 dark:bg-[#0b0d12]">
       {/* Desktop sidebar */}
       <aside className="hidden md:flex md:w-[260px] md:flex-col md:border-r md:border-white/5 md:bg-[#10131a] md:text-slate-200">
-        <SidebarContent isSuper={isSuper} />
+        <SidebarContent isSuper={isSuper} writerOnly={writerOnly} />
       </aside>
 
       {/* Mobile sidebar */}
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="left" className="w-72 border-r border-white/5 bg-[#10131a] p-0 text-slate-200">
-          <SidebarContent isSuper={isSuper} onNavigate={() => setOpen(false)} />
+          <SidebarContent isSuper={isSuper} writerOnly={writerOnly} onNavigate={() => setOpen(false)} />
         </SheetContent>
       </Sheet>
 
@@ -102,24 +110,30 @@ function AdminShell({ isSuper }: { isSuper: boolean }) {
   );
 }
 
-function SidebarContent({ isSuper, onNavigate }: { isSuper: boolean; onNavigate?: () => void }) {
+function SidebarContent({ isSuper, writerOnly = false, onNavigate }: { isSuper: boolean; writerOnly?: boolean; onNavigate?: () => void }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const { mode, setMode, isAdvanced } = useAdminMode();
   const [query, setQuery] = useState("");
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
   const visibleGroups = useMemo<AdminGroup[]>(() => {
+    const writerAllow = new Set(["/admin/pages", "/admin/blog/moderate"]);
     return ADMIN_NAV
       .filter((g) => (g.superOnly ? isSuper : true) && (g.advanced ? isSuper && isAdvanced : true))
       .map((g) => {
-        if (!g.children) return g;
+        if (!g.children) {
+          if (writerOnly && (!g.to || !writerAllow.has(g.to))) return { ...g, children: [], to: undefined };
+          return g;
+        }
         const children = g.children.filter((c) =>
-          (c.superOnly ? isSuper : true) && (c.advanced ? isSuper && isAdvanced : true),
+          (c.superOnly ? isSuper : true)
+          && (c.advanced ? isSuper && isAdvanced : true)
+          && (writerOnly ? writerAllow.has(c.to) : true),
         );
         return { ...g, children };
       })
       .filter((g) => g.to || (g.children && g.children.length));
-  }, [isSuper, isAdvanced]);
+  }, [isSuper, isAdvanced, writerOnly]);
 
   // Auto-expand group containing the active route.
   useEffect(() => {
@@ -146,8 +160,8 @@ function SidebarContent({ isSuper, onNavigate }: { isSuper: boolean; onNavigate?
       <div className="flex h-14 items-center gap-2.5 border-b border-white/5 px-4">
         <div className="grid h-8 w-8 place-items-center rounded-md bg-primary/20 text-primary"><ShieldCheck className="h-4 w-4" /></div>
         <div className="min-w-0">
-          <div className="truncate text-sm font-semibold text-white">Admin Panel</div>
-          <div className="truncate text-[11px] text-slate-400">{isSuper ? "Super Admin" : "Admin"}</div>
+          <div className="truncate text-sm font-semibold text-white">{writerOnly ? "Writer" : "Admin Panel"}</div>
+          <div className="truncate text-[11px] text-slate-400">{writerOnly ? "Blog & pages" : isSuper ? "Super Admin" : "Admin"}</div>
         </div>
       </div>
 
