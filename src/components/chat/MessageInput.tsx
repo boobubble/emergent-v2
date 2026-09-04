@@ -554,7 +554,7 @@ export function MessageInput({
           </span>
         </div>
       ) : (
-      <div className={`chat-composer-glow group relative flex min-w-0 items-end gap-0.5 rounded-3xl border border-border bg-card/60 pb-0 pt-2 pr-1 shadow-sm backdrop-blur-md transition-all ${compact ? "pl-1 sm:gap-0.5 sm:pl-2 sm:pr-1" : "pl-2 sm:gap-1 sm:pl-4 sm:pr-2"}`}>
+      <div className={`chat-composer-glow group relative flex min-w-0 items-end gap-0.5 rounded-3xl border border-border bg-card/60 pb-0 pt-2 pr-1 shadow-sm backdrop-blur-md transition-[border-color,box-shadow] ${compact ? "pl-1 sm:gap-0.5 sm:pl-2 sm:pr-1" : "pl-2 sm:gap-1 sm:pl-4 sm:pr-2"}`}>
         <input ref={fileRef} type="file" onChange={onFile} className="hidden" accept="image/*,application/pdf,text/plain,.zip,.doc,.docx" />
         <button onClick={() => requireAuth(() => fileRef.current?.click())} className="mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-primary" title="Attach file" aria-label="Attach file">
           <Paperclip className="h-5 w-5" />

@@ -51,6 +51,7 @@ import {
   chatroomSidebarStyle,
   chatroomSidebarToggleVisible,
   chatroomShellLayoutAttr,
+  bindChatShellToVisualViewport,
   isClientLargeDesktopShell,
   isClientDesktopShell,
   readChatroomShellLayout,
@@ -254,6 +255,12 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
 
   const rootRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el) return;
+    return bindChatShellToVisualViewport(el);
+  }, []);
+
 
 
   useEffect(() => {
@@ -372,7 +379,7 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
         data-theme-variant={chatVariantFor(chatTheme)}
         data-chatroom-shell=""
         data-chatroom-layout={chatroomShellLayoutAttr(shellLayout)}
-        className="flex h-screen w-full overflow-hidden bg-background text-foreground"
+        className="flex h-dvh w-full overflow-hidden overscroll-none bg-background text-foreground"
       >
         <DjPlayerHost />
         {chatroomSidebarBackdropVisible(shellLayout, sidebarOpen) && (
@@ -402,7 +409,7 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
             />
           </SidebarPanelBoundary>
         </div>
-        <main className="relative flex h-full min-w-0 flex-1 flex-col">
+        <main className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col">
           {chatroomSidebarToggleVisible(shellLayout, sidebarOpen) && (
             <button
               data-chatroom-sidebar-toggle=""
@@ -486,7 +493,10 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
                   </div>
                 )}
 
-                <div className="chat-composer-footer shrink-0">
+                <div
+                  className="chat-composer-footer shrink-0"
+                  style={{ position: "relative", bottom: "auto" }}
+                >
                   <MessageInput />
                 </div>
               </>
