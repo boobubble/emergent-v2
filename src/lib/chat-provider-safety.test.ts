@@ -216,4 +216,97 @@ describe("profile popup and composer pickers close after their action", () => {
     expect(input).toContain("pickerToggleIsSuppressed()");
     expect(trio).toContain("onClose={() => setShowEmoji(false)}");
   });
+
+  it("emoji and sticker cells distinguish tap from scroll instead of selecting on pointerdown", () => {
+    const picker = readFileSync(resolve(testDir, "../components/chat/EmojiPicker.tsx"), "utf8");
+    const stickers = readFileSync(resolve(testDir, "../components/chat/AnimatedEmojiPicker.tsx"), "utf8");
+    expect(picker).toContain('from "./picker-pointer-tap"');
+    expect(stickers).toContain('from "./picker-pointer-tap"');
+    expect(picker).toContain("pickerItemPointerHandlers(() => pick(e))");
+    expect(stickers).toContain("pickerItemPointerHandlers(() => pick(s))");
+    expect(picker).not.toMatch(/onPointerDown=\{\(ev\) => \{[\s\S]*pick\(e\)/);
+    expect(stickers).not.toMatch(/onPointerDown=\{\(ev\) => \{[\s\S]*pick\(s\)/);
+  });
+});
+
+describe("picker pointer tap vs scroll", () => {
+  async function load() {
+    return import("../components/chat/picker-pointer-tap");
+  }
+
+  function fakePointer(
+    target: EventTarget,
+    overrides: Partial<{
+      clientX: number;
+      clientY: number;
+      pointerId: number;
+      pointerType: string;
+      button: number;
+    }> = {},
+  ) {
+    return {
+      currentTarget: target,
+      clientX: 0,
+      clientY: 0,
+      pointerId: 1,
+      pointerType: "touch",
+      button: 0,
+      preventDefault() {},
+      ...overrides,
+    } as unknown as import("react").PointerEvent;
+  }
+
+  it("treats a still pointerup as a tap and a moved pointerup as a scroll", async () => {
+    const {
+      rememberPickerPointerOrigin,
+      isPickerPointerTap,
+      PICKER_TAP_MOVE_THRESHOLD_PX,
+    } = await load();
+    const cell = {} as EventTarget;
+
+    rememberPickerPointerOrigin(fakePointer(cell, { clientX: 40, clientY: 80 }));
+    expect(isPickerPointerTap(fakePointer(cell, { clientX: 44, clientY: 82 }))).toBe(true);
+
+    rememberPickerPointerOrigin(fakePointer(cell, { clientX: 40, clientY: 80 }));
+    expect(
+      isPickerPointerTap(
+        fakePointer(cell, { clientX: 40, clientY: 80 + PICKER_TAP_MOVE_THRESHOLD_PX + 1 }),
+      ),
+    ).toBe(false);
+  });
+
+  it("does not select after pointercancel (browser scroll takeover)", async () => {
+    const { rememberPickerPointerOrigin, forgetPickerPointerOrigin, isPickerPointerTap } = await load();
+    const cell = {} as EventTarget;
+    rememberPickerPointerOrigin(fakePointer(cell, { clientX: 10, clientY: 10 }));
+    forgetPickerPointerOrigin(fakePointer(cell));
+    expect(isPickerPointerTap(fakePointer(cell, { clientX: 10, clientY: 10 }))).toBe(false);
+  });
+
+  it("pickerItemPointerHandlers preventDefault only on a committing tap", async () => {
+    const { pickerItemPointerHandlers, PICKER_TAP_MOVE_THRESHOLD_PX } = await load();
+    const cell = {} as EventTarget;
+    const taps: string[] = [];
+    const handlers = pickerItemPointerHandlers(() => taps.push("pick"));
+
+    handlers.onPointerDown(fakePointer(cell, { clientX: 0, clientY: 0 }));
+    const scrollUp = fakePointer(cell, { clientX: 0, clientY: PICKER_TAP_MOVE_THRESHOLD_PX + 5 });
+    let scrollPrevented = false;
+    scrollUp.preventDefault = () => {
+      scrollPrevented = true;
+    };
+    handlers.onPointerUp(scrollUp);
+    expect(taps).toEqual([]);
+    expect(scrollPrevented).toBe(false);
+
+    handlers.onPointerDown(fakePointer(cell, { clientX: 0, clientY: 0 }));
+    const tapUp = fakePointer(cell, { clientX: 2, clientY: 2 });
+    let tapPrevented = false;
+    tapUp.preventDefault = () => {
+      tapPrevented = true;
+    };
+    handlers.onPointerUp(tapUp);
+    expect(taps).toEqual(["pick"]);
+    expect(tapPrevented).toBe(true);
+  });
 });

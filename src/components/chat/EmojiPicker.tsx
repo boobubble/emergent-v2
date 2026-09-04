@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { Search } from "lucide-react";
 import { EMOJI_CATEGORIES, getRecentEmojis, pushRecentEmoji } from "@/lib/emoji-data";
+import { pickerItemPointerHandlers } from "./picker-pointer-tap";
 
 export function EmojiPicker({
   onPick,
@@ -80,14 +81,7 @@ export function EmojiPicker({
             <button
               type="button"
               key={`${e}-${i}`}
-              onPointerDown={(ev) => {
-                if (ev.pointerType === "mouse" && ev.button !== 0) return;
-                ev.preventDefault();
-                pick(e);
-              }}
-              onClick={(ev) => {
-                if (ev.detail === 0) pick(e);
-              }}
+              {...pickerItemPointerHandlers(() => pick(e))}
               className="grid h-6 w-6 place-items-center rounded-md text-base transition-transform hover:scale-110 hover:bg-white/5 active:scale-95"
               title={e}
             >
