@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { PartyPopper, ArrowRight, Sparkles, MessageCircle, Heart } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import {
   FUN_CATEGORIES,
   FUN_META,
@@ -10,6 +9,7 @@ import {
   type FunCategory,
   type FunZoneSummary,
 } from "@/lib/competition-memes";
+import { useCompetitionRealtimeEffect } from "@/lib/competition-realtime";
 import { useAppSettings } from "@/lib/app-settings";
 import { isNavigableSlug } from "@/lib/route-slug";
 
@@ -39,11 +39,10 @@ export function FunZone({
   const { modules } = useAppSettings();
   const [summary, setSummary] = useState<FunZoneSummary | null>(null);
 
-  useEffect(() => {
-    if (!modules.funZone) return;
+  useCompetitionRealtimeEffect(!!modules.funZone, (supabase) => {
     let alive = true;
     const load = () => loadFunZoneSummary(competitionId).then((s) => { if (alive) setSummary(s); });
-    load();
+    void load();
     const ch = supabase
       .channel(`fun-zone-${competitionId}`)
       .on(
@@ -52,7 +51,10 @@ export function FunZone({
         () => load(),
       )
       .subscribe();
-    return () => { alive = false; supabase.removeChannel(ch); };
+    return () => {
+      alive = false;
+      void supabase.removeChannel(ch);
+    };
   }, [competitionId, modules.funZone]);
 
   const enabledCats = useMemo(() => FUN_CATEGORIES.filter((c) => {

@@ -15,7 +15,8 @@ import {
   listRelatedCompetitions,
   voteForCompetitor,
 } from "@/lib/competitions.functions";
-import { supabase } from "@/integrations/supabase/client";
+import { getPublishedCompetitionBySlug } from "@/lib/competitions.public";
+import { loadBrowserSupabase } from "@/integrations/supabase/load-browser";
 import { useAuth } from "@/lib/auth-store";
 import { useMyRoles } from "@/lib/use-my-role";
 import { Countdown } from "@/components/competitions/Countdown";
@@ -60,8 +61,18 @@ import {
 export const Route = createFileRoute("/competitions/$slug")({
   loader: async ({ params }) => {
     if (!isNavigableSlug(params.slug)) throw notFound();
-    const { origin, siteName } = await loadSeoSiteContext();
-    const data = await getCompetitionBySlug({ data: { slug: params.slug } });
+    let origin = "";
+    let siteName = "Yaarzo";
+    try {
+      const ctx = await loadSeoSiteContext();
+      origin = ctx.origin;
+      siteName = ctx.siteName;
+    } catch {
+      origin = typeof window !== "undefined" ? window.location.origin : "";
+    }
+    const data = typeof window === "undefined"
+      ? await getPublishedCompetitionBySlug(params.slug)
+      : await getCompetitionBySlug({ data: { slug: params.slug } });
     if (!data?.competition) throw notFound();
     const canonical = (data.competition as any).slug as string | undefined;
     if (canonical && canonical !== params.slug) {
@@ -186,6 +197,8 @@ function CompetitionDetail() {
   useEffect(() => {
     if (!competitionId) return;
     let t: ReturnType<typeof setTimeout> | null = null;
+    let cleanup: (() => void) | undefined;
+    let cancelled = false;
     const bump = () => {
       if (t) return;
       t = setTimeout(() => {
@@ -193,14 +206,24 @@ function CompetitionDetail() {
         qc.invalidateQueries({ queryKey: ["competition-slug", slug] });
       }, 350);
     };
-    const ch = supabase
-      .channel(`competition:${competitionId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "competition_votes", filter: `competition_id=eq.${competitionId}` }, bump)
-      .on("postgres_changes", { event: "*", schema: "public", table: "competition_participants", filter: `competition_id=eq.${competitionId}` }, bump)
-      .on("postgres_changes", { event: "*", schema: "public", table: "competition_competitors", filter: `competition_id=eq.${competitionId}` }, bump)
-      .on("postgres_changes", { event: "*", schema: "public", table: "competition_competitor_votes", filter: `competition_id=eq.${competitionId}` }, bump)
-      .subscribe();
-    return () => { if (t) clearTimeout(t); supabase.removeChannel(ch); };
+    void loadBrowserSupabase().then((supabase) => {
+      if (cancelled) return;
+      const ch = supabase
+        .channel(`competition:${competitionId}`)
+        .on("postgres_changes", { event: "*", schema: "public", table: "competition_votes", filter: `competition_id=eq.${competitionId}` }, bump)
+        .on("postgres_changes", { event: "*", schema: "public", table: "competition_participants", filter: `competition_id=eq.${competitionId}` }, bump)
+        .on("postgres_changes", { event: "*", schema: "public", table: "competition_competitors", filter: `competition_id=eq.${competitionId}` }, bump)
+        .on("postgres_changes", { event: "*", schema: "public", table: "competition_competitor_votes", filter: `competition_id=eq.${competitionId}` }, bump)
+        .subscribe();
+      cleanup = () => {
+        if (t) clearTimeout(t);
+        void supabase.removeChannel(ch);
+      };
+    });
+    return () => {
+      cancelled = true;
+      cleanup?.();
+    };
   }, [competitionId, slug, qc]);
 
 
@@ -243,14 +266,16 @@ function CompetitionDetail() {
       // refetch, BattleActivityFeed line, and FloatingReactions burst.
       if (competitionId) {
         const target = competitors.find((cc) => cc.id === competitorId)?.name ?? null;
-        supabase
-          .channel(`comp-broadcast:${competitionId}`)
-          .send({
-            type: "broadcast",
-            event: "vote",
-            payload: { voter: (user as any)?.username ?? "Someone", target },
-          })
-          .catch(() => {});
+        void loadBrowserSupabase().then((supabase) => {
+          void supabase
+            .channel(`comp-broadcast:${competitionId}`)
+            .send({
+              type: "broadcast",
+              event: "vote",
+              payload: { voter: (user as any)?.username ?? "Someone", target },
+            })
+            .catch(() => {});
+        });
       }
       // Confetti burst
       const fire = (particleRatio: number, opts: confetti.Options) => {
@@ -286,17 +311,23 @@ function CompetitionDetail() {
   useEffect(() => {
     if (!appModules.competitionMemes || !appModules.nomineeMemeTagging) { setNomineeMemeCounts({}); return; }
     let alive = true;
+    let cleanup: (() => void) | undefined;
     async function load() {
       const { countMemesByNominee } = await import("@/lib/competition-memes");
       const counts = await countMemesByNominee(c.id);
       if (alive) setNomineeMemeCounts(counts);
     }
-    load();
-    const ch = supabase
-      .channel(`comp-meme-counts-${c.id}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "posts", filter: `competition_id=eq.${c.id}` }, () => load())
-      .subscribe();
-    return () => { alive = false; supabase.removeChannel(ch); };
+    void (async () => {
+      await load();
+      const supabase = await loadBrowserSupabase();
+      if (!alive) return;
+      const ch = supabase
+        .channel(`comp-meme-counts-${c.id}`)
+        .on("postgres_changes", { event: "*", schema: "public", table: "posts", filter: `competition_id=eq.${c.id}` }, () => load())
+        .subscribe();
+      cleanup = () => { void supabase.removeChannel(ch); };
+    })();
+    return () => { alive = false; cleanup?.(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [c.id, appModules.competitionMemes, appModules.nomineeMemeTagging]);
 
@@ -346,6 +377,7 @@ function CompetitionDetail() {
     if (!userId) { toast.error("Sign in to report"); return; }
     const reason = window.prompt("Why are you reporting this competition?");
     if (!reason) return;
+    const supabase = await loadBrowserSupabase();
     const { error } = await supabase.from("reports").insert({
       reporter_id: userId,
       target_type: "post" as any,

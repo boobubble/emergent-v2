@@ -2,9 +2,12 @@
  * Browser helpers for Competition Memes (Feed-owned; no duplicate storage).
  * All reads target `posts_safe` filtered by category='meme' + competition_id.
  */
-import { supabase } from "@/integrations/supabase/client";
-import { postsSafe } from "@/lib/posts-safe";
+import { loadBrowserSupabase } from "@/integrations/supabase/load-browser";
 import type { FeedPost } from "@/lib/feed-types";
+
+async function browserSupabase() {
+  return loadBrowserSupabase();
+}
 
 export interface ActiveCompetitionLite {
   id: string;
@@ -14,6 +17,7 @@ export interface ActiveCompetitionLite {
 }
 
 export async function searchActiveCompetitions(query: string, limit = 8): Promise<ActiveCompetitionLite[]> {
+  const supabase = await browserSupabase();
   let q = supabase
     .from("competitions")
     .select("id,name,slug,status")
@@ -30,6 +34,7 @@ export async function searchActiveCompetitions(query: string, limit = 8): Promis
 export interface NomineeLite { id: string; name: string; photo_url: string | null }
 
 export async function listCompetitionNominees(competitionId: string): Promise<NomineeLite[]> {
+  const supabase = await browserSupabase();
   const { data } = await supabase
     .from("competition_competitors")
     .select("id,name,photo_url,is_hidden,is_disqualified")
@@ -63,7 +68,8 @@ export async function listCompetitionMemes(opts: {
   category?: FunCategory;
 }): Promise<FeedPost[]> {
   const limit = opts.limit ?? 10;
-  let q = postsSafe()
+  const supabase = await browserSupabase();
+  let q = (supabase as any).from("posts_safe")
     .select("*")
     .eq("category", opts.category ?? "meme")
     .eq("competition_id", opts.competitionId);
@@ -79,6 +85,7 @@ export async function listCompetitionMemes(opts: {
 
 /** Counts memes per nominee for the given competition. */
 export async function countMemesByNominee(competitionId: string): Promise<Record<string, number>> {
+  const supabase = await browserSupabase();
   const { data } = await (supabase as any)
     .from("posts_safe")
     .select("nominee_id")
@@ -142,6 +149,7 @@ export async function loadFunZoneSummary(competitionId: string): Promise<FunZone
     poster:   { category: "poster",   count: 0, latestAt: null, thumb: null, caption: null, reactions: 0, comments: 0, recentCount: 0, badge: null },
     fan_edit: { category: "fan_edit", count: 0, latestAt: null, thumb: null, caption: null, reactions: 0, comments: 0, recentCount: 0, badge: null },
   };
+  const supabase = await browserSupabase();
   const { data } = await (supabase as any)
     .from("posts_safe")
     .select("id,slug,kind,author_id,category,created_at,media_urls,text,reaction_count,comment_count")
