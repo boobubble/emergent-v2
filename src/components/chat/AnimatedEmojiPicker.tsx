@@ -6,6 +6,7 @@ import { ShoppingBag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-store";
 import { SHOP_BY_ID, SHOP_BY_CATEGORY, stickerGifUrl, type StickerDef, type ShopItem } from "@/lib/shop-catalog";
+import { pickerItemPointerHandlers } from "./picker-pointer-tap";
 
 export type Sticker = StickerDef & { url?: string };
 
@@ -181,14 +182,7 @@ export function AnimatedEmojiPicker({
             <button
               type="button"
               key={s.name + s.cp}
-              onPointerDown={(ev) => {
-                if (ev.pointerType === "mouse" && ev.button !== 0) return;
-                ev.preventDefault();
-                pick(s);
-              }}
-              onClick={(ev) => {
-                if (ev.detail === 0) pick(s);
-              }}
+              {...pickerItemPointerHandlers(() => pick(s))}
               title={s.label}
               className={`grid ${cellSize} place-items-center rounded-lg transition-transform hover:scale-110 hover:bg-white/5 active:scale-95`}
             >
