@@ -31,6 +31,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { VoiceRecorder } from "./VoiceRecorder";
 import { TypingIndicator } from "./TypingIndicator";
 import { VOICE_NOTES_DEFAULTS, maxDurationForChannel, type VoiceNotesConfig } from "@/lib/voice-notes-config";
+import { formatMuteClock, readMutedUntil } from "@/lib/chat-mute-send";
 
 
 const COMMANDS = [
@@ -324,6 +325,7 @@ export function MessageInput({
 
   function submit() {
     if (!text.trim() && !attachment) return;
+    if (isChannelMuted) return;
     const trimmed = text.trim();
 
     // Ephemeral guest Lobby path — never creates auth/profile.
@@ -367,6 +369,7 @@ export function MessageInput({
     body: string,
     opts?: { attachment?: Attachment; replyToId?: string },
   ) {
+    if (isChannelMuted) return;
     // Media / stickers / gif / voice always require a real account.
     requireAuth(() => {
       send(body, {
@@ -429,10 +432,9 @@ export function MessageInput({
 
   const replyAuthor = replyForThis ? state.users[replyForThis.authorId] : null;
 
-  const muteUntil = state.moderation?.[channelId]?.me?.mutedUntil;
+  const muteUntil = readMutedUntil(state.moderation, channelId, ["me", user?.id]);
   const isChannelMuted = !!(muteUntil && muteUntil > Date.now());
-  const muteSecsLeft = isChannelMuted ? Math.ceil((muteUntil! - Date.now()) / 1000) : 0;
-  const muteLabel = muteSecsLeft >= 60 ? `${Math.ceil(muteSecsLeft / 60)}m` : `${muteSecsLeft}s`;
+  const muteLabel = isChannelMuted ? formatMuteClock(muteUntil! - Date.now()) : "0s";
   const mutedRoomName = state.rooms[channelId]?.name || channelId;
   const composerPlaceholder = placeholder
     ?? (guestChat.isGuestChatting && channelId === GUEST_LOBBY_CHANNEL_ID
