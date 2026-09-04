@@ -166,6 +166,7 @@ describe("no auth-guest regression", () => {
     expect(src).toMatch(/isBotCommandOrAction/);
     expect(src).toMatch(/requireAuth/);
     expect(src).toMatch(/openNicknameDialog/);
+    expect(src).toMatch(/appendGuestOptimistic/);
     expect(src).not.toMatch(/signInAnonymously/);
   });
 
@@ -253,7 +254,7 @@ describe("no auth-guest regression", () => {
 
   it("guest lobby history merges by id instead of replacing client state", () => {
     const src = readFileSync(resolve(srcRoot, "lib/use-guest-lobby-feed.ts"), "utf8");
-    expect(src).toMatch(/mergeGuestLobbyRows\(prev, data\)/);
+    expect(src).toMatch(/mergeGuestLobbyRows\(/);
     expect(src).not.toMatch(/if \(!cancelled\) setRows\(data\)/);
     expect(src).not.toMatch(/if \(!cancelled\) setRows\(\[\]\)/);
     expect(src).toMatch(/Keep whatever realtime/);
@@ -263,6 +264,7 @@ describe("no auth-guest regression", () => {
     expect(helpers).toMatch(/yaarzo:guest-lobby-row/);
     const input = readFileSync(resolve(srcRoot, "components/chat/MessageInput.tsx"), "utf8");
     expect(input).toMatch(/publishGuestLobbyRow\(row\)/);
+    expect(input).toMatch(/appendGuestOptimistic/);
     const list = readFileSync(resolve(srcRoot, "components/chat/MessageList.tsx"), "utf8");
     expect(list).toMatch(/resolveMessageAuthor/);
     expect(list).not.toMatch(/if \(!author\) return null/);
@@ -271,6 +273,26 @@ describe("no auth-guest regression", () => {
     const app = readFileSync(resolve(srcRoot, "components/chat/ChatApp.tsx"), "utf8");
     expect(app).toMatch(/channelId !== GUEST_LOBBY_CHANNEL_ID/);
     expect(app).toMatch(/useGuestLobbyFeed/);
+  });
+});
+
+describe("guest lobby optimistic UI", () => {
+  it("MessageInput appends locally before awaiting the server send", () => {
+    const src = readFileSync(resolve(srcRoot, "components/chat/MessageInput.tsx"), "utf8");
+    expect(src).toMatch(/appendGuestOptimistic/);
+    expect(src).toMatch(/confirmGuestOptimistic/);
+    expect(src).toMatch(/failGuestOptimistic/);
+    const appendAt = src.indexOf("appendGuestOptimistic");
+    const awaitAt = src.indexOf("await sendGuest");
+    expect(appendAt).toBeGreaterThan(-1);
+    expect(awaitAt).toBeGreaterThan(appendAt);
+  });
+
+  it("MessageList shows sending / retry for own pending messages", () => {
+    const src = readFileSync(resolve(srcRoot, "components/chat/MessageList.tsx"), "utf8");
+    expect(src).toMatch(/SendStatusBits/);
+    expect(src).toMatch(/Couldn't send/);
+    expect(src).toMatch(/retrySend/);
   });
 });
 
@@ -327,6 +349,22 @@ describe("guest lobby feed merge", () => {
     const live = guestRow({ id: "live-2", text: "ok" });
     const merged = mergeGuestLobbyRows([expired, live], [expired], now);
     expect(merged.map((r) => r.id)).toEqual(["live-2"]);
+  });
+
+  it("replaces a temp optimistic row when the confirmed server row arrives", () => {
+    const opt = guestRow({
+      id: "opt-abc",
+      text: "hello now",
+      sendStatus: "sending",
+    });
+    const real = guestRow({
+      id: "real-abc",
+      text: "hello now",
+      createdAt: "2026-09-03T04:21:00.000Z",
+    });
+    const merged = mergeGuestLobbyRows([opt], [real], now);
+    expect(merged.map((r) => r.id)).toEqual(["real-abc"]);
+    expect(merged[0].sendStatus).toBeUndefined();
   });
 
   it("publish event name is stable for MessageInput → MessageList", () => {

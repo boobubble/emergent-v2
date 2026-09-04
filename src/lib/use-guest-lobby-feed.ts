@@ -2,8 +2,10 @@
  * Merge ephemeral guest Lobby messages into the chat UI.
  * Also used by registered users so they see Guest-* messages in realtime.
  *
+ * Optimistic rows live in a module-level list so MessageInput can append
+ * immediately while MessageList (a sibling) renders them.
  * History fetch must MERGE by id. Replacing the array drops rows that arrived
- * via realtime / post-send while the snapshot was in flight.
+ * via realtime / post-send / optimistic insert while the snapshot was in flight.
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -19,6 +21,11 @@ import {
   rowToGuestLobbyUser,
   type GuestLobbyRow,
 } from "@/lib/guest-lobby-feed";
+import {
+  failGuestLobbyRow,
+  markGuestLobbyRowSending,
+  replaceGuestLobbyRow,
+} from "@/lib/chat-optimistic";
 import type { User } from "@/lib/chat-types";
 
 export type { GuestLobbyRow } from "@/lib/guest-lobby-feed";
@@ -29,11 +36,46 @@ export {
   publishGuestLobbyRow,
 } from "@/lib/guest-lobby-feed";
 
+let sharedRows: GuestLobbyRow[] = [];
+const listeners = new Set<(rows: GuestLobbyRow[]) => void>();
+
+function emitGuestRows(next: GuestLobbyRow[]) {
+  sharedRows = next;
+  for (const fn of listeners) fn(sharedRows);
+}
+
+export function appendGuestOptimistic(row: GuestLobbyRow) {
+  emitGuestRows(mergeGuestLobbyRows(sharedRows, [row]));
+}
+
+export function confirmGuestOptimistic(optId: string, real: GuestLobbyRow) {
+  emitGuestRows(mergeGuestLobbyRows(replaceGuestLobbyRow(sharedRows, optId, real), []));
+}
+
+export function failGuestOptimistic(optId: string, error: string) {
+  emitGuestRows(failGuestLobbyRow(sharedRows, optId, error));
+}
+
+export function markGuestOptimisticSending(optId: string) {
+  emitGuestRows(markGuestLobbyRowSending(sharedRows, optId));
+}
+
 export function useGuestLobbyFeed(enabled: boolean) {
   const listFn = useServerFn(listGuestLobbyMessages);
   const listFnRef = useRef(listFn);
   listFnRef.current = listFn;
-  const [rows, setRows] = useState<GuestLobbyRow[]>([]);
+  const [rows, setRows] = useState<GuestLobbyRow[]>(enabled ? sharedRows : []);
+
+  useEffect(() => {
+    if (!enabled) {
+      setRows([]);
+      return;
+    }
+    const fn = (next: GuestLobbyRow[]) => setRows(next);
+    listeners.add(fn);
+    setRows(sharedRows);
+    return () => { listeners.delete(fn); };
+  }, [enabled]);
 
   useEffect(() => {
     if (!enabled) return;
@@ -42,10 +84,10 @@ export function useGuestLobbyFeed(enabled: boolean) {
       try {
         const data = await listFnRef.current({ data: { limit: 80 } });
         if (!cancelled && Array.isArray(data)) {
-          setRows((prev) => mergeGuestLobbyRows(prev, data));
+          emitGuestRows(mergeGuestLobbyRows(sharedRows, data));
         }
       } catch {
-        // Keep whatever realtime / post-send already delivered.
+        // Keep whatever realtime / post-send / optimistic already delivered.
       }
     })();
     return () => {
@@ -58,7 +100,7 @@ export function useGuestLobbyFeed(enabled: boolean) {
     const onRow = (event: Event) => {
       const row = (event as CustomEvent<GuestLobbyRow>).detail;
       if (!row?.id) return;
-      setRows((prev) => mergeGuestLobbyRows(prev, [row]));
+      emitGuestRows(mergeGuestLobbyRows(sharedRows, [row]));
     };
     window.addEventListener(GUEST_LOBBY_ROW_EVENT, onRow);
     return () => window.removeEventListener(GUEST_LOBBY_ROW_EVENT, onRow);
@@ -77,7 +119,7 @@ export function useGuestLobbyFeed(enabled: boolean) {
           if (n.expires_at && new Date(String(n.expires_at)).getTime() <= Date.now()) return;
           const row = payloadToGuestLobbyRow(n);
           if (!row) return;
-          setRows((prev) => mergeGuestLobbyRows(prev, [row]));
+          emitGuestRows(mergeGuestLobbyRows(sharedRows, [row]));
         },
       )
       .subscribe();

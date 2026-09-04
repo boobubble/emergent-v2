@@ -4,6 +4,7 @@
  */
 
 import { GUEST_LOBBY_CHANNEL_ID } from "@/lib/guest-chat-config";
+import { isGuestOptimisticId } from "@/lib/chat-optimistic";
 import type { Message, User } from "@/lib/chat-types";
 
 export interface GuestLobbyRow {
@@ -14,6 +15,8 @@ export interface GuestLobbyRow {
   text: string;
   createdAt: string;
   expiresAt: string;
+  sendStatus?: "sending" | "failed";
+  sendError?: string;
 }
 
 /** MessageInput publishes the inserted row so the list does not wait on realtime. */
@@ -31,6 +34,20 @@ export function mergeGuestLobbyRows(
   for (const row of incoming) {
     if (new Date(row.expiresAt).getTime() > nowMs) byId.set(row.id, row);
   }
+  const confirmed = [...byId.values()].filter((r) => !isGuestOptimisticId(r.id));
+  for (const real of confirmed) {
+    for (const [id, row] of [...byId]) {
+      if (!isGuestOptimisticId(id)) continue;
+      if (row.visitorId === real.visitorId && row.text === real.text) byId.delete(id);
+    }
+    const cur = byId.get(real.id);
+    if (cur && (cur.sendStatus || cur.sendError)) {
+      const next = { ...cur };
+      delete next.sendStatus;
+      delete next.sendError;
+      byId.set(real.id, next);
+    }
+  }
   return [...byId.values()]
     .sort((a, b) => {
       const byTime = a.createdAt.localeCompare(b.createdAt);
@@ -47,6 +64,8 @@ export function rowToGuestLobbyMessage(row: GuestLobbyRow): Message {
     text: row.text,
     ts: new Date(row.createdAt).getTime(),
     kind: "text",
+    sendStatus: row.sendStatus,
+    sendError: row.sendError,
   };
 }
 

@@ -27,6 +27,71 @@ describe("chat provider safety", () => {
   });
 });
 
+describe("authenticated send is optimistic", () => {
+  const src = readFileSync(resolve(testDir, "chat-store.tsx"), "utf8");
+
+  it("adds the local message with sending status before the Supabase insert", () => {
+    expect(src).toMatch(/sendStatus:\s*"sending"/);
+    const sendingAt = src.indexOf('sendStatus: "sending"');
+    const insertAt = src.indexOf('.from("messages").insert', sendingAt);
+    expect(sendingAt).toBeGreaterThan(-1);
+    expect(insertAt).toBeGreaterThan(sendingAt);
+  });
+
+  it("confirms or fails after the insert, and exposes retrySend", () => {
+    expect(src).toMatch(/confirmMessages/);
+    expect(src).toMatch(/failMessages/);
+    expect(src).toMatch(/retrySend/);
+    expect(src).toMatch(/isDuplicateKeyError/);
+  });
+});
+
+describe("optimistic helpers", () => {
+  it("confirms sending messages and can apply server timestamps", async () => {
+    const { confirmMessages, failMessages, persistSendStatus } = await import("./chat-optimistic");
+    const sending = {
+      lobby: [{ id: "a", channelId: "lobby", authorId: "me", text: "hi", ts: 1, sendStatus: "sending" as const }],
+    };
+    const confirmed = confirmMessages(sending, ["a"], { a: 99 });
+    expect(confirmed.lobby[0].sendStatus).toBeUndefined();
+    expect(confirmed.lobby[0].ts).toBe(99);
+
+    const failed = failMessages(sending, ["a"], "network");
+    expect(failed.lobby[0].sendStatus).toBe("failed");
+    expect(failed.lobby[0].sendError).toBe("network");
+
+    const persisted = persistSendStatus(sending);
+    expect(persisted.lobby[0].sendStatus).toBe("failed");
+  });
+
+  it("reconciles guest optimistic rows by temp id or visitor+text", async () => {
+    const { mergeGuestLobbyRow, replaceGuestLobbyRow, failGuestLobbyRow } = await import("./chat-optimistic");
+    const opt = {
+      id: "opt-1",
+      channelId: "lobby",
+      visitorId: "visitor_abc",
+      displayName: "Guest-Ada",
+      text: "hello",
+      createdAt: "2026-01-01T00:00:00.000Z",
+      expiresAt: "2026-01-01T01:00:00.000Z",
+      sendStatus: "sending" as const,
+    };
+    const real = { ...opt, id: "real-1", sendStatus: undefined };
+    const viaRealtime = mergeGuestLobbyRow([opt], real);
+    expect(viaRealtime).toHaveLength(1);
+    expect(viaRealtime[0].id).toBe("real-1");
+    expect(viaRealtime[0].sendStatus).toBeUndefined();
+
+    const viaConfirm = replaceGuestLobbyRow([opt], "opt-1", real);
+    expect(viaConfirm).toHaveLength(1);
+    expect(viaConfirm[0].id).toBe("real-1");
+
+    const failed = failGuestLobbyRow([opt], "opt-1", "timeout");
+    expect(failed[0].sendStatus).toBe("failed");
+    expect(failed[0].sendError).toBe("timeout");
+  });
+});
+
 function sliceBetween(src: string, startToken: string, endToken: string): string {
   const start = src.indexOf(startToken);
   const end = src.indexOf(endToken, start + startToken.length);
@@ -152,4 +217,3 @@ describe("profile popup and composer pickers close after their action", () => {
     expect(trio).toContain("onClose={() => setShowEmoji(false)}");
   });
 });
-

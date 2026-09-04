@@ -11,6 +11,11 @@ import { sendGuestLobbyMessage } from "@/lib/guest-chat.functions";
 import { GUEST_LOBBY_CHANNEL_ID } from "@/lib/guest-chat-config";
 import { publishGuestLobbyRow } from "@/lib/guest-lobby-feed";
 import { isBotCommandOrAction } from "@/lib/guest-nickname";
+import {
+  appendGuestOptimistic,
+  confirmGuestOptimistic,
+  failGuestOptimistic,
+} from "@/lib/use-guest-lobby-feed";
 import { useTyping } from "@/lib/use-typing";
 import { EmojiPicker } from "./EmojiPicker";
 import { AnimatedEmojiPicker, stickerUrl } from "./AnimatedEmojiPicker";
@@ -265,6 +270,22 @@ export function MessageInput({
       requireAuth();
       return;
     }
+    const optId = `opt-${typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : String(Date.now())}`;
+    const nowIso = new Date().toISOString();
+    appendGuestOptimistic({
+      id: optId,
+      channelId: GUEST_LOBBY_CHANNEL_ID,
+      visitorId: guestChat.session.visitorId,
+      displayName: guestChat.session.displayName,
+      text: plain,
+      createdAt: nowIso,
+      expiresAt: new Date(Date.now() + 60 * 60_000).toISOString(),
+      sendStatus: "sending",
+    });
+    setText("");
+    setAttachment(null);
+    setAttachError("");
+    setReplyingTo(null);
     try {
       const row = await sendGuest({
         data: {
@@ -273,13 +294,21 @@ export function MessageInput({
           text: plain,
         },
       });
-      if (row?.id) publishGuestLobbyRow(row);
-      setText("");
-      setAttachment(null);
-      setAttachError("");
-      setReplyingTo(null);
+      if (row?.id) {
+        confirmGuestOptimistic(optId, {
+          id: row.id,
+          channelId: row.channelId,
+          visitorId: row.visitorId,
+          displayName: row.displayName,
+          text: row.text,
+          createdAt: row.createdAt,
+          expiresAt: row.expiresAt,
+        });
+        publishGuestLobbyRow(row);
+      }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Failed to send";
+      failGuestOptimistic(optId, msg);
       if (msg === "GUEST_BOT_BLOCKED" || /sign up|sign in|login/i.test(msg)) {
         requireAuth();
         return;

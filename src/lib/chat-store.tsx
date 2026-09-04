@@ -98,6 +98,13 @@ import {
 import { formatPresenceLineText } from "./presence-ui";
 import { removeCorruptedKey } from "./persisted-state-recovery";
 import { markDmConversationRead } from "./dm-read";
+import {
+  confirmMessages,
+  failMessages,
+  isDuplicateKeyError,
+  markMessagesSending,
+  persistSendStatus,
+} from "./chat-optimistic";
 
 export { dmChannelFor } from "./dm-utils";
 
@@ -520,6 +527,7 @@ interface Ctx {
   state: State;
   setActive: (channelId: string) => void;
   send: (text: string, opts?: { attachment?: Attachment; replyToId?: string; channelId?: string }) => void;
+  retrySend: (messageId: string) => void;
   startDM: (userId: string) => void;
   closeDM: (userId: string) => void;
   joinRoom: (roomId: string) => void;
@@ -798,8 +806,12 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
   useEffect(() => {
     if (!storageReady) return;
     const toPersist = authUserId ? sanitizeChatState(state, authUserId) : state;
+    const persistReady = {
+      ...toPersist,
+      messages: persistSendStatus(toPersist.messages || {}),
+    };
     try {
-      localStorage.setItem(storageKeyFor(username), JSON.stringify(toPersist));
+      localStorage.setItem(storageKeyFor(username), JSON.stringify(persistReady));
     } catch {
       /* ignore quota errors */
     }
@@ -1036,7 +1048,15 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
         const row = payload.new as Parameters<typeof rowToMessage>[0];
         // Public visitors only receive Lobby messages.
         if (!authUserId && row.channel_id !== "lobby") return;
-        if (seenRemoteMsgIds.current.has(row.id)) return;
+        if (seenRemoteMsgIds.current.has(row.id)) {
+          // Own optimistic row: confirm sending → sent using the server timestamp.
+          const serverTs = new Date(row.created_at).getTime();
+          setState((s) => {
+            const next = confirmMessages(s.messages, [row.id], { [row.id]: serverTs });
+            return next === s.messages ? s : { ...s, messages: next };
+          });
+          return;
+        }
         seenRemoteMsgIds.current.add(row.id);
         const msg = rowToMessage(row, authUserId);
         // Sync shared game state piggybacked on the message
@@ -1389,6 +1409,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
         text: trimmed, ts: Date.now(),
         kind: trimmed.startsWith("/me ") ? "me" : "text",
         attachment, replyToId,
+        ...(remote ? { sendStatus: "sending" as const } : {}),
       };
       if (remote) {
         seenRemoteMsgIds.current.add(msgId);
@@ -1489,6 +1510,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
           return {
             id, channelId, authorId: commandReplyAuthor(r.from, channelId),
             text: r.text, ts: Date.now(), kind: "game",
+            ...(remote ? { sendStatus: "sending" as const } : {}),
           };
         });
         next = {
@@ -1603,24 +1625,40 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
           attachment: out.attachment as unknown as never,
           reply_to_id: out.replyToId,
         }))
-      ).then(({ error }) => {
-        if (error) { console.error("send failed", error); rtLog("error", "send-failed", error.message); }
-        else {
-          // Fire-and-forget AI chatbot reply for chatroom messages
-          for (const out of safeRemotes) {
-            if (out.channelId.startsWith("dm:") || out.kind === "system") continue;
-            // AI chatbots only respond when explicitly @mentioned (validated server-side too).
-            if (/@\w/.test(out.text)) {
-              import("@/lib/ai-chatbots.functions").then(({ aiChatbotReply }) => {
-                aiChatbotReply({ data: { channel_id: out.channelId, text: out.text } }).catch(() => {});
-              }).catch(() => {});
-            }
-            // BooBubble ChatGPT lobby reply — trigger on any "boobubble" mention (case-insensitive)
-            if (out.kind === "text" && /boobubble/i.test(out.text)) {
-              import("@/lib/boobubble.functions").then(({ askBoobubbleInLobby }) => {
-                askBoobubbleInLobby({ data: { channel_id: out.channelId, text: out.text } }).catch(() => {});
-              }).catch(() => {});
-            }
+      ).select("id, created_at").then(({ data, error }) => {
+        const ids = safeRemotes.map((out) => out.id);
+        if (error) {
+          console.error("send failed", error);
+          rtLog("error", "send-failed", error.message);
+          if (isDuplicateKeyError(error.message)) {
+            setState((s) => ({ ...s, messages: confirmMessages(s.messages, ids) }));
+            return;
+          }
+          setState((s) => ({
+            ...s,
+            messages: failMessages(s.messages, ids, error.message || "Failed to send"),
+          }));
+          return;
+        }
+        const tsById: Record<string, number> = {};
+        for (const row of data ?? []) {
+          tsById[row.id] = new Date(row.created_at).getTime();
+        }
+        setState((s) => ({ ...s, messages: confirmMessages(s.messages, ids, tsById) }));
+        // Fire-and-forget AI chatbot reply for chatroom messages
+        for (const out of safeRemotes) {
+          if (out.channelId.startsWith("dm:") || out.kind === "system") continue;
+          // AI chatbots only respond when explicitly @mentioned (validated server-side too).
+          if (/@\w/.test(out.text)) {
+            import("@/lib/ai-chatbots.functions").then(({ aiChatbotReply }) => {
+              aiChatbotReply({ data: { channel_id: out.channelId, text: out.text } }).catch(() => {});
+            }).catch(() => {});
+          }
+          // BooBubble ChatGPT lobby reply — trigger on any "boobubble" mention (case-insensitive)
+          if (out.kind === "text" && /boobubble/i.test(out.text)) {
+            import("@/lib/boobubble.functions").then(({ askBoobubbleInLobby }) => {
+              askBoobubbleInLobby({ data: { channel_id: out.channelId, text: out.text } }).catch(() => {});
+            }).catch(() => {});
           }
         }
       });
@@ -1628,6 +1666,66 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     }
     setReplyingTo(null);
   }, [authUserId, isGuest]);
+
+  const retrySend = useCallback((messageId: string) => {
+    if (!authUserId) return;
+    type Outgoing = { id: string; channelId: string; text: string; kind: string; attachment: Attachment | null; replyToId: string | null };
+    let payload: Outgoing | null = null;
+    setState((s) => {
+      let found: Message | undefined;
+      let channelId = "";
+      for (const [ch, msgs] of Object.entries(s.messages)) {
+        const m = msgs.find((x) => x.id === messageId);
+        if (m) {
+          found = m;
+          channelId = ch;
+          break;
+        }
+      }
+      if (!found || found.sendStatus !== "failed") return s;
+      if (!isRemoteChannel(channelId, authUserId)) return s;
+      payload = {
+        id: found.id,
+        channelId,
+        text: found.text,
+        kind: found.kind ?? "text",
+        attachment: found.attachment ?? null,
+        replyToId: found.replyToId ?? null,
+      };
+      return { ...s, messages: markMessagesSending(s.messages, [messageId]) };
+    });
+    if (!payload) return;
+    const out = payload;
+    rtLog(out.channelId.startsWith("dm:") ? "dm" : "msg", "retry", `${out.channelId} · ${out.text.slice(0, 30)}`);
+    void supabase.from("messages").insert({
+      id: out.id,
+      channel_id: out.channelId,
+      author_id: authUserId,
+      text: out.text,
+      kind: out.kind,
+      attachment: out.attachment as unknown as never,
+      reply_to_id: out.replyToId,
+    }).select("id, created_at").then(({ data, error }) => {
+      if (error) {
+        console.error("retry send failed", error);
+        rtLog("error", "retry-failed", error.message);
+        if (isDuplicateKeyError(error.message)) {
+          setState((s) => ({ ...s, messages: confirmMessages(s.messages, [out.id]) }));
+          return;
+        }
+        setState((s) => ({
+          ...s,
+          messages: failMessages(s.messages, [out.id], error.message || "Failed to send"),
+        }));
+        return;
+      }
+      const tsById: Record<string, number> = {};
+      for (const row of data ?? []) {
+        tsById[row.id] = new Date(row.created_at).getTime();
+      }
+      setState((s) => ({ ...s, messages: confirmMessages(s.messages, [out.id], tsById) }));
+    });
+  }, [authUserId]);
 
   const startDM = useCallback((userId: string) => {
     if (isGuest || !authUserId) {
@@ -2008,7 +2106,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
   }, []);
 
   const value = useMemo<Ctx>(() => ({
-    state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe,
+    state, setActive, send, retrySend, startDM, closeDM, joinRoom, createRoom, updateMe,
     adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser,
     pushSystem, pushPresenceEvent, wipeChannel, deleteRoom, syncAdminChannels, registerCommunityRoom, leaveCommunityRoom,
 
@@ -2072,7 +2170,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     staffLocalMute,
     markDmRead,
     roomUnread,
-  }), [state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser, reset, replyingTo, findMessage, authUserId, dmReads, dmLatestTs, staffKick, staffLocalMute, pushSystem, pushPresenceEvent, wipeChannel, deleteRoom, syncAdminChannels, registerCommunityRoom, leaveCommunityRoom, markDmRead, roomUnread, watchRemoteChannel]);
+  }), [state, setActive, send, retrySend, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser, reset, replyingTo, findMessage, authUserId, dmReads, dmLatestTs, staffKick, staffLocalMute, pushSystem, pushPresenceEvent, wipeChannel, deleteRoom, syncAdminChannels, registerCommunityRoom, leaveCommunityRoom, markDmRead, roomUnread, watchRemoteChannel]);
 
 
   return <ChatCtx.Provider value={value}>{children}</ChatCtx.Provider>;
