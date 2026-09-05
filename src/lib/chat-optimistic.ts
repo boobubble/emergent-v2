@@ -99,7 +99,8 @@ export function markMessagesSending(
 /**
  * Persist sender-local status as-is.
  * A reload must not rewrite in-flight "sending" into "Couldn't send"; hydrate
- * reconciliation confirms rows that exist in public.messages and fails the rest.
+ * confirms rows found in public.messages and fails only ids the SELECT reports
+ * missing. A lookup error must not fail pending sends.
  */
 export function persistSendStatus(
   messages: Record<string, Message[]>,
@@ -151,6 +152,56 @@ export function isDuplicateKeyError(message: string | undefined): boolean {
   return /duplicate key|unique constraint|already exists/i.test(message);
 }
 
+/** Timeout / dropped HTTP — not RLS, mute, or validation errors. */
+export function isRetryableSendError(message: string | undefined): boolean {
+  if (!message) return false;
+  if (message === AUTH_SEND_TIMEOUT_ERROR) return true;
+  if (message === AUTH_SEND_NETWORK_ERROR) return true;
+  return /failed to fetch|networkerror|network request failed|load failed|internet connection|net::err/i.test(
+    message,
+  );
+}
+
+export type MessageLookupResult =
+  | { ok: true; rows: AuthenticatedInsertRow[] }
+  | { ok: false; error: string };
+
+export function rowsToTsById(rows: AuthenticatedInsertRow[] | null | undefined): Record<string, number> {
+  const tsById: Record<string, number> = {};
+  for (const row of rows ?? []) {
+    if (!row?.id || !row.created_at) continue;
+    const ts = new Date(row.created_at).getTime();
+    if (Number.isFinite(ts)) tsById[row.id] = ts;
+  }
+  return tsById;
+}
+
+export function missingLookupIds(
+  ids: readonly string[],
+  rows: AuthenticatedInsertRow[] | null | undefined,
+): string[] {
+  const found = new Set((rows ?? []).map((row) => row?.id).filter(Boolean) as string[]);
+  return ids.filter((id) => !found.has(id));
+}
+
+export type RecoverSendDeps = {
+  lookupRows: (ids: string[]) => Promise<MessageLookupResult>;
+  retryInsert: () => PromiseLike<AuthenticatedInsertResult>;
+};
+
+async function safeLookupRows(
+  lookupRows: RecoverSendDeps["lookupRows"],
+  ids: string[],
+): Promise<MessageLookupResult> {
+  try {
+    return await lookupRows(ids);
+  } catch (err) {
+    const error =
+      err instanceof Error && err.message ? err.message : AUTH_SEND_NETWORK_ERROR;
+    return { ok: false, error };
+  }
+}
+
 /** HTTP/insert settlement. Realtime is not required for success. */
 export function settleAuthenticatedInsert(
   error: { message?: string } | null | undefined,
@@ -162,13 +213,7 @@ export function settleAuthenticatedInsert(
     }
     return { action: "fail", error: error.message || AUTH_SEND_NETWORK_ERROR };
   }
-  const tsById: Record<string, number> = {};
-  for (const row of data ?? []) {
-    if (!row?.id || !row.created_at) continue;
-    const ts = new Date(row.created_at).getTime();
-    if (Number.isFinite(ts)) tsById[row.id] = ts;
-  }
-  return { action: "confirm", tsById };
+  return { action: "confirm", tsById: rowsToTsById(data) };
 }
 
 export async function settleAuthenticatedSendPromise(
@@ -181,6 +226,38 @@ export async function settleAuthenticatedSendPromise(
       options?.timeoutMs ?? AUTH_SEND_TIMEOUT_MS,
     );
     return settleAuthenticatedInsert(result?.error, result?.data);
+  } catch (err) {
+    const message =
+      err instanceof Error && err.message ? err.message : AUTH_SEND_NETWORK_ERROR;
+    return { action: "fail", error: message };
+  }
+}
+
+/**
+ * After a retryable INSERT failure, confirm from public.messages when the
+ * client UUID is already present. If the row is missing, retry the same UUID
+ * once. A failed SELECT must not be treated as "missing".
+ */
+export async function settleAuthenticatedSendWithRecover(
+  insertPromise: PromiseLike<AuthenticatedInsertResult>,
+  ids: readonly string[],
+  deps: RecoverSendDeps,
+  options?: { timeoutMs?: number },
+): Promise<SettleInsertOutcome> {
+  const first = await settleAuthenticatedSendPromise(insertPromise, options);
+  if (first.action === "confirm") return first;
+  if (!isRetryableSendError(first.error) || ids.length === 0) return first;
+
+  const lookup = await safeLookupRows(deps.lookupRows, [...ids]);
+  if (lookup.ok) {
+    const missing = missingLookupIds(ids, lookup.rows);
+    if (!missing.length) {
+      return { action: "confirm", tsById: rowsToTsById(lookup.rows) };
+    }
+  }
+
+  try {
+    return await settleAuthenticatedSendPromise(Promise.resolve(deps.retryInsert()), options);
   } catch (err) {
     const message =
       err instanceof Error && err.message ? err.message : AUTH_SEND_NETWORK_ERROR;
@@ -247,6 +324,16 @@ export function applyHydrateSendReconcile(
   });
   if (!stillPending.length) return next;
   return failMessages(next, stillPending, AUTH_SEND_INTERRUPTED_ERROR);
+}
+
+/** Reload lookup: confirm found rows; never treat a SELECT error as missing. */
+export function applyHydrateLookupResult(
+  messages: Record<string, Message[]>,
+  pendingIds: string[],
+  lookup: MessageLookupResult,
+): Record<string, Message[]> {
+  if (!lookup.ok) return messages;
+  return applyHydrateSendReconcile(messages, pendingIds, lookup.rows);
 }
 
 export function mergeGuestLobbyRow<T extends GuestLobbyOptimisticRow>(

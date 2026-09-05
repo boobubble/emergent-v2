@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, useCallback, type ReactNode } from "react";
+import { flushSync } from "react-dom";
 import type { User, Message, Room, GameState, Attachment, RoomGameConfig } from "./chat-types";
 import { canonicalGameType } from "./games-registry";
 
@@ -99,13 +100,16 @@ import { formatPresenceLineText } from "./presence-ui";
 import { removeCorruptedKey } from "./persisted-state-recovery";
 import { markDmConversationRead } from "./dm-read";
 import {
-  applyHydrateSendReconcile,
+  AUTH_SEND_NETWORK_ERROR,
+  applyHydrateLookupResult,
   collectPendingSendIds,
   confirmMessages,
   failMessages,
   markMessagesSending,
   persistSendStatus,
-  settleAuthenticatedSendPromise,
+  settleAuthenticatedSendWithRecover,
+  type AuthenticatedInsertRow,
+  type MessageLookupResult,
 } from "./chat-optimistic";
 
 export { dmChannelFor } from "./dm-utils";
@@ -142,6 +146,54 @@ function isRemoteChannel(channelId: string, meId: string | null): boolean {
   if (channelId === "lobby" || channelId === "games") return true;
   if (dbBackedRemoteChannels.has(channelId)) return true;
   return isRemoteDmChannel(channelId, meId);
+}
+
+type AuthenticatedOutgoing = {
+  id: string;
+  channelId: string;
+  text: string;
+  kind: string;
+  attachment: Attachment | null;
+  replyToId: string | null;
+};
+
+function toMessageInsertRow(out: AuthenticatedOutgoing, authorId: string) {
+  return {
+    id: out.id,
+    channel_id: out.channelId,
+    author_id: authorId,
+    text: out.text,
+    kind: out.kind,
+    attachment: out.attachment as unknown as never,
+    reply_to_id: out.replyToId,
+  };
+}
+
+async function lookupAuthenticatedMessageRows(ids: string[]): Promise<MessageLookupResult> {
+  try {
+    const { data, error } = await supabase
+      .from("messages")
+      .select("id, created_at")
+      .in("id", ids);
+    if (error) return { ok: false, error: error.message };
+    return { ok: true, rows: (data ?? []) as AuthenticatedInsertRow[] };
+  } catch (err) {
+    const message = err instanceof Error && err.message ? err.message : AUTH_SEND_NETWORK_ERROR;
+    return { ok: false, error: message };
+  }
+}
+
+function insertAuthenticatedMessages(rows: ReturnType<typeof toMessageInsertRow>[]) {
+  return supabase.from("messages").insert(rows).select("id, created_at");
+}
+
+function settleRemoteOutgoing(outs: AuthenticatedOutgoing[], authorId: string) {
+  const rows = outs.map((out) => toMessageInsertRow(out, authorId));
+  const ids = outs.map((out) => out.id);
+  return settleAuthenticatedSendWithRecover(insertAuthenticatedMessages(rows), ids, {
+    lookupRows: lookupAuthenticatedMessageRows,
+    retryInsert: () => insertAuthenticatedMessages(rows),
+  });
 }
 function rowToMessage(row: { id: string; channel_id: string; author_id: string; text: string; kind: string | null; attachment: unknown; reply_to_id: string | null; created_at: string }, meAuthUuid: string | null): Message {
   const authorId = meAuthUuid && row.author_id === meAuthUuid ? "me" : row.author_id;
@@ -763,38 +815,20 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     setState((s) => sanitizeChatState(s, authUserId));
   }, [storageReady, authUserId]);
 
-  // Reload: confirm optimistic rows that already exist in public.messages; fail the rest.
-  // Do not leave sendStatus stuck on "sending" when the INSERT cannot be verified.
+  // Reload: confirm optimistic rows that already exist in public.messages; fail
+  // only ids the SELECT positively reports missing. A lookup error must not fail.
   useEffect(() => {
     if (!storageReady || !authUserId || isGuest) return;
     const pendingIds = collectPendingSendIds(state.messages);
     if (!pendingIds.length) return;
     let cancelled = false;
     void (async () => {
-      try {
-        const { data, error } = await supabase
-          .from("messages")
-          .select("id, created_at")
-          .in("id", pendingIds);
-        if (cancelled) return;
-        if (error) {
-          setState((s) => {
-            const next = applyHydrateSendReconcile(s.messages, pendingIds, []);
-            return next === s.messages ? s : { ...s, messages: next };
-          });
-          return;
-        }
-        setState((s) => {
-          const next = applyHydrateSendReconcile(s.messages, pendingIds, data ?? []);
-          return next === s.messages ? s : { ...s, messages: next };
-        });
-      } catch {
-        if (cancelled) return;
-        setState((s) => {
-          const next = applyHydrateSendReconcile(s.messages, pendingIds, []);
-          return next === s.messages ? s : { ...s, messages: next };
-        });
-      }
+      const lookup = await lookupAuthenticatedMessageRows(pendingIds);
+      if (cancelled) return;
+      setState((s) => {
+        const next = applyHydrateLookupResult(s.messages, pendingIds, lookup);
+        return next === s.messages ? s : { ...s, messages: next };
+      });
     })();
     return () => {
       cancelled = true;
@@ -1348,9 +1382,12 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       // MessageInput / AuthGate must open sign-in instead.
       return;
     }
-    type Outgoing = { id: string; channelId: string; text: string; kind: string; attachment: Attachment | null; replyToId: string | null };
-    const outgoingRemotes: Outgoing[] = [];
+    type Outgoing = AuthenticatedOutgoing;
+    let outgoingRemotes: Outgoing[] = [];
+    flushSync(() => {
     setState(s => {
+      const outgoing: Outgoing[] = [];
+      try {
       const channelId = channelOverride || s.activeChannel;
       const isSlashMod = /^\/(mute|kick)\b/i.test(trimmed);
       const isCmd = trimmed.startsWith("!") || isSlashMod;
@@ -1455,7 +1492,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       };
       if (remote) {
         seenRemoteMsgIds.current.add(msgId);
-        outgoingRemotes.push({
+        outgoing.push({
           id: msgId, channelId, text: trimmed,
           kind: userMsg.kind ?? "text",
           attachment: attachment ?? null,
@@ -1543,7 +1580,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
             : undefined;
           if (remote) {
             seenRemoteMsgIds.current.add(id);
-            outgoingRemotes.push({
+            outgoing.push({
               id, channelId, text: r.text, kind: "game",
               attachment: (piggyback ?? null) as Attachment | null,
               replyToId: null,
@@ -1650,6 +1687,10 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
         }, 200);
       }
       return badged.state;
+      } finally {
+        outgoingRemotes = outgoing;
+      }
+    });
     });
     if (outgoingRemotes.length && authUserId) {
       const safeRemotes = outgoingRemotes.filter((out) => isRemoteChannel(out.channelId, authUserId));
@@ -1658,19 +1699,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       }
       if (safeRemotes.length) {
       const ids = safeRemotes.map((out) => out.id);
-      void settleAuthenticatedSendPromise(
-        supabase.from("messages").insert(
-          safeRemotes.map(out => ({
-            id: out.id,
-            channel_id: out.channelId,
-            author_id: authUserId,
-            text: out.text,
-            kind: out.kind,
-            attachment: out.attachment as unknown as never,
-            reply_to_id: out.replyToId,
-          }))
-        ).select("id, created_at"),
-      ).then((outcome) => {
+      void settleRemoteOutgoing(safeRemotes, authUserId).then((outcome) => {
         if (outcome.action === "fail") {
           console.error("send failed", outcome.error);
           rtLog("error", "send-failed", outcome.error);
@@ -1741,17 +1770,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     if (!payload) return;
     const out = payload;
     rtLog(out.channelId.startsWith("dm:") ? "dm" : "msg", "retry", `${out.channelId} · ${out.text.slice(0, 30)}`);
-    void settleAuthenticatedSendPromise(
-      supabase.from("messages").insert({
-        id: out.id,
-        channel_id: out.channelId,
-        author_id: authUserId,
-        text: out.text,
-        kind: out.kind,
-        attachment: out.attachment as unknown as never,
-        reply_to_id: out.replyToId,
-      }).select("id, created_at"),
-    ).then((outcome) => {
+    void settleRemoteOutgoing([out], authUserId).then((outcome) => {
       if (outcome.action === "fail") {
         console.error("retry send failed", outcome.error);
         rtLog("error", "retry-failed", outcome.error);

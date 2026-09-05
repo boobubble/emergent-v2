@@ -34,17 +34,17 @@ describe("authenticated send is optimistic", () => {
   it("adds the local message with sending status before the Supabase insert", () => {
     expect(src).toMatch(/sendStatus:\s*"sending"/);
     const sendingAt = src.indexOf('sendStatus: "sending"');
-    const insertAt = src.indexOf('.from("messages").insert', sendingAt);
+    const insertAt = src.indexOf("settleRemoteOutgoing", sendingAt);
     expect(sendingAt).toBeGreaterThan(-1);
     expect(insertAt).toBeGreaterThan(sendingAt);
   });
 
   it("confirms or fails after the insert, and exposes retrySend", () => {
-    expect(src).toMatch(/settleAuthenticatedSendPromise/);
+    expect(src).toMatch(/settleAuthenticatedSendWithRecover/);
     expect(src).toMatch(/confirmMessages/);
     expect(src).toMatch(/failMessages/);
     expect(src).toMatch(/retrySend/);
-    expect(src).toMatch(/applyHydrateSendReconcile/);
+    expect(src).toMatch(/applyHydrateLookupResult/);
   });
 });
 
