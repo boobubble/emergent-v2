@@ -9,6 +9,7 @@ import { listInventory, syncPublishedInventory } from "@/lib/content-automation/
 import { listRecentJobs, remainingPublishSlots } from "@/lib/content-automation/job-lock";
 import { executeSeoJobRetry } from "@/lib/content-automation/seo-job-retry";
 import { listKeywordTargets, parseKeywordCsv, updateKeywordTarget, upsertKeywordTargets } from "@/lib/content-automation/keyword-targets";
+import { previewResearchPaste, researchDashboard, saveResearchPaste } from "@/lib/content-automation/research-save";
 import { attachPexelsImage, listPexelsImages } from "@/lib/content-automation/pexels-images";
 import { listRefreshReports, migrateExistingBatch, refreshOneItem } from "@/lib/content-automation/seo-refresh";
 import { getVersion, listRecentVersions, listVersions, restoreVersion } from "@/lib/content-automation/versioning";
@@ -58,6 +59,7 @@ export const getSeoEngineOverview = createServerFn({ method: "GET" })
       count("seo_content_inventory", { migration_status: "pending" }),
     ]);
 
+    const research = await researchDashboard();
     return {
       settings,
       quota,
@@ -72,6 +74,11 @@ export const getSeoEngineOverview = createServerFn({ method: "GET" })
       cannibalOpen,
       inventoryTotal,
       migrationPending,
+      keywordClusters: research.keywordClusters,
+      totalKeywords: research.totalKeywords,
+      keywordsUsed: research.keywordsUsed,
+      keywordsUnused: research.keywordsUnused,
+      pendingContent: research.pendingContent,
     };
   });
 
@@ -210,6 +217,37 @@ export const runSeoMigrationBatch = createServerFn({ method: "POST" })
     await assertAdmin(context.userId);
     if (data.syncFirst !== false) await syncPublishedInventory((await getAutomationSettings()).refresh_interval_days);
     return migrateExistingBatch(data.limit ?? 5, data.dryRun ?? false);
+  });
+
+const researchPasteSchema = z.object({
+  clusterText: z.string().max(500_000).optional(),
+  ideasText: z.string().max(500_000).optional(),
+  extraText: z.string().max(200_000).optional(),
+});
+
+export const previewKeywordResearch = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
+  .inputValidator(researchPasteSchema)
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    return previewResearchPaste(data);
+  });
+
+export const saveKeywordResearch = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
+  .inputValidator(researchPasteSchema)
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const hasText = Boolean(data.clusterText?.trim() || data.ideasText?.trim() || data.extraText?.trim());
+    if (!hasText) throw new Error("Paste keyword research before saving.");
+    return saveResearchPaste(data);
+  });
+
+export const getKeywordResearchMeta = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth, withRateLimit("admin.read")])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    return researchDashboard();
   });
 
 export const syncSeoInventoryNow = createServerFn({ method: "POST" })

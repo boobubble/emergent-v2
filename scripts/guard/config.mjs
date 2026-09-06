@@ -153,6 +153,7 @@ export const MODULES = {
       "src/lib/content-automation/",
       "src/routes/admin.content-automation.tsx",
       "src/routes/api/run-static-publish.ts",
+      "supabase/migrations/20260906123000_seo_keyword_research_paste.sql",
     ],
     tests: [
       "src/lib/public-cms-route.test.ts",
@@ -179,6 +180,7 @@ export const MODULES = {
       "src/lib/content-image-seo.test.ts",
       "src/lib/pages-cms/pages-editor-new-page.test.tsx",
       "src/lib/content-automation/parse-keyword-research.test.ts",
+      "src/lib/content-automation/parse-research-paste.test.ts",
       "src/lib/content-automation/seo-engine.test.ts",
     ],
   },
@@ -219,6 +221,7 @@ export const MODULES = {
       "src/routes/api/run-static-publish.ts",
       "src/routes/api/admin/automation-settings.ts",
       "src/routes/api/admin/topic-ideas.ts",
+      "supabase/migrations/20260906123000_seo_keyword_research_paste.sql",
     ],
     tests: [
       "src/lib/blog.public.test.ts",
@@ -232,6 +235,7 @@ export const MODULES = {
       "src/lib/content-automation/parse-bulk-ideas.test.ts",
       "src/lib/content-automation/excel-ideas.test.ts",
       "src/lib/content-automation/parse-keyword-research.test.ts",
+      "src/lib/content-automation/parse-research-paste.test.ts",
       "src/lib/content-automation/seo-engine.test.ts",
       "src/lib/tiptap-html-source.test.ts",
       "src/lib/content-image-seo.test.ts",

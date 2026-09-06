@@ -2,7 +2,7 @@
 import { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ClipboardPaste, Download, FileSpreadsheet, Loader2, Play, Upload } from "lucide-react";
+import { ClipboardPaste, Loader2, Play, Upload } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { NumberField, ToggleRow } from "@/components/admin/SettingsSection";
 import { parseBulkContentIdeas } from "@/lib/content-automation/parse-bulk-ideas";
-import { appendBulkText, excelRowsToBulkText, pickExcelIdeasSheetName } from "@/lib/content-automation/excel-ideas";
+import { KeywordResearchInput } from "@/lib/content-automation/keyword-research-input";
 import { matchKeywordResearchTitle, type KeywordResearchCandidate, type KeywordSaveMode } from "@/lib/content-automation/parse-keyword-research";
 import { PasteKeywordResearchDialog } from "@/lib/content-automation/paste-keyword-research-dialog";
 import {
@@ -96,16 +96,13 @@ async function readJson(res: Response) {
 
 function ContentAutomationPage() {
   const qc = useQueryClient();
-  const [tab, setTab] = useState("settings");
+  const [tab, setTab] = useState("ideas");
   const [bulkText, setBulkText] = useState("");
   const [typeFilter, setTypeFilter] = useState<"all" | "blog" | "page">("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "published">("all");
   const [runResult, setRunResult] = useState<string | null>(null);
   const [parseErrors, setParseErrors] = useState<string[]>([]);
-  const [excelMessage, setExcelMessage] = useState<string | null>(null);
-  const [excelBusy, setExcelBusy] = useState(false);
   const [pasteOpen, setPasteOpen] = useState(false);
-  const excelInputRef = useRef<HTMLInputElement>(null);
   const bulkTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   const settingsQ = useQuery({
@@ -210,36 +207,6 @@ function ContentAutomationPage() {
         .filter((i) => statusFilter === "all" || i.status === statusFilter),
     [allIdeas, typeFilter, statusFilter],
   );
-
-  async function handleExcelFile(file: File) {
-    setExcelBusy(true);
-    setExcelMessage(null);
-    try {
-      const XLSX = await import("xlsx");
-      const buffer = await file.arrayBuffer();
-      const workbook = XLSX.read(buffer, { type: "array" });
-      const sheetName = pickExcelIdeasSheetName(workbook.SheetNames);
-      if (!sheetName) {
-        setExcelMessage("No valid Blog or Page rows found in this file — check the Kind column.");
-        return;
-      }
-      const sheet = workbook.Sheets[sheetName];
-      const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: "" });
-      const { text, imported } = excelRowsToBulkText(rows);
-      if (imported === 0) {
-        setExcelMessage("No valid Blog or Page rows found in this file — check the Kind column.");
-        return;
-      }
-      setBulkText((prev) => appendBulkText(prev, text));
-      toast.success(`Imported ${imported} idea${imported === 1 ? "" : "s"} into the textarea — review, then click Upload.`);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Could not read that Excel file";
-      setExcelMessage(message);
-    } finally {
-      setExcelBusy(false);
-      if (excelInputRef.current) excelInputRef.current.value = "";
-    }
-  }
 
   function handleBulkUpload() {
     const raw = bulkTextareaRef.current?.value ?? bulkText;
@@ -382,11 +349,16 @@ function ContentAutomationPage() {
         </TabsContent>
 
         <TabsContent value="ideas" className="mt-4 space-y-4">
+          <KeywordResearchInput />
+
           <Card>
             <CardContent className="space-y-3 p-5">
               <h3 className="text-sm font-semibold">Bulk Add Content Ideas</h3>
               <div className="space-y-2 text-xs text-muted-foreground">
-                <p>Add content ideas below. Separate each idea with a blank line.</p>
+                <p>
+                  Optional manual queue entry. Preferred workflow is Keyword Research Input above — no Excel template required.
+                  Separate each idea with a blank line.
+                </p>
                 <p>
                   For a blog post:<br />
                   <code>Blog: &lt;title&gt;</code><br />
@@ -401,32 +373,6 @@ function ContentAutomationPage() {
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <Button variant="outline" size="sm" asChild>
-                  <a href="/templates/yaarzo-content-ideas-import-template.xlsx" download>
-                    <Download className="mr-2 h-4 w-4" />
-                    Download template
-                  </a>
-                </Button>
-                <input
-                  ref={excelInputRef}
-                  type="file"
-                  accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) void handleExcelFile(file);
-                  }}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={excelBusy}
-                  onClick={() => excelInputRef.current?.click()}
-                >
-                  {excelBusy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileSpreadsheet className="mr-2 h-4 w-4" />}
-                  Import from Excel
-                </Button>
                 <Button
                   type="button"
                   variant="outline"
@@ -438,9 +384,6 @@ function ContentAutomationPage() {
                   Paste Keyword Research
                 </Button>
               </div>
-              {excelMessage && (
-                <p className="text-xs text-amber-700 dark:text-amber-300">{excelMessage}</p>
-              )}
               <Textarea
                 ref={bulkTextareaRef}
                 value={bulkText}
@@ -513,7 +456,7 @@ Type: girls`}
                 <p className="p-5 text-sm text-destructive">{(ideasQ.error as Error).message}</p>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full border-collapse text-sm">
+                  <table className="w-full min-w-[56rem] border-collapse text-sm">
                     <thead>
                       <tr className="border-b text-left">
                         <th className="px-4 py-3 font-medium">Type</th>
@@ -548,8 +491,7 @@ Type: girls`}
                       {filtered.length === 0 && (
                         <tr>
                           <td colSpan={5} className="px-4 py-6 text-center text-muted-foreground">
-                            No ideas match these filters. Upload some, or run{" "}
-                            <code>node migrate-json-to-db.cjs</code> once.
+                            No ideas match these filters. Paste keyword research above, or upload structured ideas.
                           </td>
                         </tr>
                       )}

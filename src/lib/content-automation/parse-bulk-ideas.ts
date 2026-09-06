@@ -52,7 +52,7 @@ export function pageSlugFromName(pageName: string, typeValue?: string | null): s
   return `${body}-chat-room`;
 }
 
-function inferSection(country: string | null, typeValue: string | null): string {
+export function inferSection(country: string | null, typeValue: string | null): string {
   if (typeValue) return "city_subcategory";
   if (!country) return "interest";
   const c = country.toLowerCase();

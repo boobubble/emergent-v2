@@ -49,6 +49,11 @@ export function SeoOverviewPanel() {
       <Stat label="Cannibalization warnings" value={d.cannibalOpen} />
       <Stat label="Inventory items" value={d.inventoryTotal} />
       <Stat label="Migration pending" value={d.migrationPending} />
+      <Stat label="Keyword clusters" value={d.keywordClusters ?? 0} />
+      <Stat label="Total keywords" value={d.totalKeywords ?? 0} />
+      <Stat label="Keywords used" value={d.keywordsUsed ?? 0} />
+      <Stat label="Keywords not yet used" value={d.keywordsUnused ?? 0} />
+      <Stat label="Pending content" value={d.pendingContent ?? 0} />
     </div>
   );
 }
@@ -78,7 +83,7 @@ export function SeoKeywordsPanel() {
         <CardContent className="space-y-3 p-5">
           <h3 className="text-sm font-semibold">Ubersuggest CSV import</h3>
           <p className="text-xs text-muted-foreground">
-            Paste a manually exported CSV. Required column: Keyword. Optional: Search Volume, SEO Difficulty, CPC, Competition, Intent.
+            Optional fallback. Prefer Keyword Research Input on the Content Ideas tab for RyRob, Neil Patel, and Ubersuggest pastes. Required column: Keyword. Optional: Search Volume, SEO Difficulty, CPC, Competition, Intent.
           </p>
           <Textarea value={csv} onChange={(e) => setCsv(e.target.value)} rows={8} className="font-mono text-xs" placeholder={"Keyword,Search Volume,SEO Difficulty,CPC,Intent\nindian chat room,5400,38,0.42,local"} />
           <Button onClick={() => upload.mutate()} disabled={upload.isPending || !csv.trim()}>
