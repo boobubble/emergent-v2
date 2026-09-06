@@ -693,14 +693,27 @@ export async function runStaticPublish(request: Request): Promise<Response> {
 
   const { data: ideaRows, error: ideasError } = await db()
     .from("static_page_ideas")
-    .select("slug, section, base_name, lookup_city, lookup_country_hint, keywords")
+    .select("slug, section, base_name, lookup_city, lookup_country_hint, keywords, generation_ready")
     .order("created_at", { ascending: true });
 
+  let masterList: StaticPageEntry[] = [];
   if (ideasError) {
-    return Response.json({ error: ideasError.message }, { status: 500 });
+    if (/generation_ready|schema cache|column/i.test(ideasError.message)) {
+      const fallback = await db()
+        .from("static_page_ideas")
+        .select("slug, section, base_name, lookup_city, lookup_country_hint, keywords")
+        .order("created_at", { ascending: true });
+      if (fallback.error) return Response.json({ error: fallback.error.message }, { status: 500 });
+      masterList = (fallback.data ?? []) as StaticPageEntry[];
+    } else {
+      return Response.json({ error: ideasError.message }, { status: 500 });
+    }
+  } else {
+    masterList = [...((ideaRows ?? []) as Array<StaticPageEntry & { generation_ready?: boolean | null }>)].sort(
+      (a, b) => Number(Boolean(b.generation_ready)) - Number(Boolean(a.generation_ready)),
+    );
   }
 
-  const masterList: StaticPageEntry[] = (ideaRows ?? []) as StaticPageEntry[];
   const results: StaticPublishResult[] = [];
 
   if (regenerateSlugs.length > 0) {

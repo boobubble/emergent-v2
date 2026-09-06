@@ -391,14 +391,50 @@ export async function runBlogPublish(): Promise<Response> {
 
   const { data: ideaRows, error: ideasError } = await db()
     .from("blog_topic_ideas")
-    .select("title, category_slug, meta_description, keywords")
+    .select("title, category_slug, meta_description, keywords, generation_ready")
     .order("created_at", { ascending: true });
 
   if (ideasError) {
+    // Backward-compatible if migration not applied yet
+    if (/generation_ready|schema cache|column/i.test(ideasError.message)) {
+      const fallback = await db()
+        .from("blog_topic_ideas")
+        .select("title, category_slug, meta_description, keywords")
+        .order("created_at", { ascending: true });
+      if (fallback.error) return Response.json({ error: fallback.error.message }, { status: 500 });
+      const allTopicsFallback: BlogTopic[] = (fallback.data ?? []).map((row: {
+        title: string;
+        category_slug: string;
+        meta_description: string | null;
+        keywords: string | null;
+      }) => ({
+        title: row.title,
+        category_slug: row.category_slug,
+        metaDescription: row.meta_description ?? "",
+        keywords: row.keywords?.trim() || null,
+      }));
+      const publishedTitlesFb = await getAlreadyPublishedTitles();
+      const pendingFb = allTopicsFallback.filter((t) => !publishedTitlesFb.has(t.title.trim()));
+      if (pendingFb.length === 0) {
+        return Response.json({ published: 0, results: [] as PublishResult[], message: "All topics have already been published." });
+      }
+      const toPublishFb = pendingFb.slice(0, postsPerRun);
+      const resultsFb: PublishResult[] = [];
+      for (let i = 0; i < toPublishFb.length; i++) {
+        resultsFb.push(await publishTopic(toPublishFb[i], quota.blogsUsed + i + 1, settings));
+      }
+      const publishedFb = resultsFb.filter((r) => r.success).length;
+      const refreshFb = settings.content_refresh_enabled ? await runDueRefresh("blog", 1) : { refreshed: 0 };
+      return Response.json({ published: publishedFb, results: resultsFb, quota, refresh: refreshFb });
+    }
     return Response.json({ error: ideasError.message }, { status: 500 });
   }
 
-  const allTopics: BlogTopic[] = (ideaRows ?? []).map((row: {
+  const ranked = [...(ideaRows ?? [])].sort((a: { generation_ready?: boolean | null }, b: { generation_ready?: boolean | null }) =>
+    Number(Boolean(b.generation_ready)) - Number(Boolean(a.generation_ready)),
+  );
+
+  const allTopics: BlogTopic[] = ranked.map((row: {
     title: string;
     category_slug: string;
     meta_description: string | null;

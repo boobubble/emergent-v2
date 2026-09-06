@@ -236,19 +236,23 @@ describe("prepareKeywordResearchTags", () => {
 });
 
 describe("content-automation keyword-research wiring", () => {
-  it("reuses the shared parser dialog across queue, published admin, and both editors", () => {
-    const files = [
-      "src/routes/admin.content-automation.tsx",
+  it("keeps Paste Keyword Research dialog on published/editor surfaces; pending queue uses per-row modal", () => {
+    const publishedSurfaces = [
       "src/components/blog/BlogModerateView.tsx",
       "src/routes/admin.pages.all.tsx",
       "src/components/blog/BlogEditorView.tsx",
       "src/routes/pages-editor.$id.tsx",
     ];
-    for (const rel of files) {
+    for (const rel of publishedSurfaces) {
       const src = readFileSync(resolve(process.cwd(), rel), "utf8");
       expect(src, rel).toContain("Paste Keyword Research");
       expect(src, rel).toContain("PasteKeywordResearchDialog");
     }
+    const admin = readFileSync(resolve(process.cwd(), "src/routes/admin.content-automation.tsx"), "utf8");
+    expect(admin).toContain("PendingKeywordResearchDialog");
+    expect(admin).toContain("Keyword Research");
+    expect(admin).toContain("Send to Content Generation");
+    expect(admin).not.toContain("PasteKeywordResearchDialog");
     const parser = readFileSync(resolve(process.cwd(), "src/lib/content-automation/parse-keyword-research.ts"), "utf8");
     expect(parser).toContain("export function parseKeywordResearch");
     expect(parser).toContain("export function matchKeywordResearchTitle");

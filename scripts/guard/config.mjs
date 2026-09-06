@@ -154,6 +154,7 @@ export const MODULES = {
       "src/routes/admin.content-automation.tsx",
       "src/routes/api/run-static-publish.ts",
       "supabase/migrations/20260906123000_seo_keyword_research_paste.sql",
+      "supabase/migrations/20260906140000_idea_generation_ready.sql",
     ],
     tests: [
       "src/lib/public-cms-route.test.ts",
@@ -222,6 +223,7 @@ export const MODULES = {
       "src/routes/api/admin/automation-settings.ts",
       "src/routes/api/admin/topic-ideas.ts",
       "supabase/migrations/20260906123000_seo_keyword_research_paste.sql",
+      "supabase/migrations/20260906140000_idea_generation_ready.sql",
     ],
     tests: [
       "src/lib/blog.public.test.ts",

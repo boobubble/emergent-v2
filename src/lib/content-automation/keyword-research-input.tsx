@@ -1,39 +1,44 @@
-import { useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { formatResearchSource } from "@/lib/content-automation/parse-research-paste";
 import {
-  getKeywordResearchMeta,
-  previewKeywordResearch,
-  saveKeywordResearch,
+  previewIdeaKeywordResearch,
+  saveIdeaKeywordResearch,
 } from "@/lib/content-automation/seo-engine.functions";
 
+export type PendingIdeaForResearch = {
+  id: number;
+  type: "blog" | "page";
+  identifier: string;
+  baseName: string | null;
+  keywords: string | null;
+};
+
 type OpportunityRow = {
-  contentType: "blog" | "page";
-  proposedTitle: string;
-  primaryKeyword: string;
-  secondaryKeywords: string[];
-  longTailKeywords: string[];
-  cluster: string | null;
-  searchIntent: string;
-  sources: string[];
-  searchVolume: number | null;
   action: string;
+  primaryKeyword: string;
   cannibalizationStatus: string;
   existingUrl: string | null;
   existingTitle: string | null;
-  priority: number;
-  relatedUrls: string[];
+  searchIntent: string;
+  sources: string[];
 };
 
 type PreviewResult = {
-  source: string;
   sources: string[];
   clustersFound: number;
   keywordsFound: number;
@@ -41,345 +46,221 @@ type PreviewResult = {
   primary: string[];
   secondary: string[];
   longTail: string[];
+  keywordsText: string;
   opportunities: OpportunityRow[];
-  newOpportunities: number;
-  mergedOpportunities: number;
   cannibalizationRisks: number;
   errors: string[];
+  idea: { mainKeyword: string; title: string };
 };
 
 function actionLabel(action: string): string {
-  if (action === "new_content") return "NEW CONTENT";
+  if (action === "new_content") return "ATTACH TO THIS ITEM";
   if (action === "merge_existing") return "MERGE INTO EXISTING";
   if (action === "use_as_secondary") return "USE AS SECONDARY";
   if (action === "skip_cannibalization") return "SKIP - CANNIBALIZATION RISK";
   return action;
 }
 
-function Stat({ label, value }: { label: string; value: number | string }) {
-  return (
-    <div className="rounded-lg border bg-muted/30 p-3">
-      <div className="text-xl font-semibold tabular-nums">{value}</div>
-      <div className="mt-0.5 text-xs text-muted-foreground">{label}</div>
-    </div>
-  );
-}
+type Props = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  idea: PendingIdeaForResearch | null;
+};
 
-export function KeywordResearchInput() {
+export function PendingKeywordResearchDialog({ open, onOpenChange, idea }: Props) {
   const qc = useQueryClient();
-  const previewFn = useServerFn(previewKeywordResearch);
-  const saveFn = useServerFn(saveKeywordResearch);
-  const metaFn = useServerFn(getKeywordResearchMeta);
+  const previewFn = useServerFn(previewIdeaKeywordResearch);
+  const saveFn = useServerFn(saveIdeaKeywordResearch);
   const [clusterText, setClusterText] = useState("");
   const [ideasText, setIdeasText] = useState("");
   const [extraText, setExtraText] = useState("");
   const [preview, setPreview] = useState<PreviewResult | null>(null);
-  const [sourceFilter, setSourceFilter] = useState("all");
-  const [clusterFilter, setClusterFilter] = useState("all");
-  const [typeFilter, setTypeFilter] = useState("all");
-  const [intentFilter, setIntentFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [priorityFilter, setPriorityFilter] = useState("all");
 
-  const metaQ = useQuery({
-    queryKey: ["keyword-research-meta"],
-    queryFn: () => metaFn({}),
-  });
+  useEffect(() => {
+    if (!open) return;
+    setClusterText("");
+    setIdeasText("");
+    setExtraText("");
+    setPreview(null);
+  }, [open, idea?.id, idea?.type]);
 
-  const payload = { clusterText, ideasText, extraText };
+  const mainKeyword =
+    (idea?.keywords || "").split(",")[0]?.trim()
+    || idea?.baseName
+    || idea?.identifier
+    || "";
+
   const previewMut = useMutation({
-    mutationFn: () => previewFn({ data: payload }),
-    onSuccess: (res) => {
-      setPreview(res as PreviewResult);
-      if ((res as PreviewResult).keywordsFound === 0) {
-        toast.error("No usable keywords found in the pasted text.");
-      }
+    mutationFn: async () => {
+      if (!idea) throw new Error("No pending item selected");
+      return previewFn({
+        data: {
+          ideaType: idea.type,
+          ideaId: idea.id,
+          clusterText,
+          ideasText,
+          extraText,
+        },
+      }) as Promise<PreviewResult>;
+    },
+    onSuccess: (data) => {
+      setPreview(data);
+      toast.success(`Parsed ${data.keywordsFound} keywords for this item`);
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
   const saveMut = useMutation({
-    mutationFn: () => saveFn({ data: payload }),
-    onSuccess: (res) => {
-      const saved = res as PreviewResult & { keywordUpsert?: { created: number; merged: number }; queued?: { blogUpserted: number; pageUpserted: number } };
+    mutationFn: async () => {
+      if (!idea) throw new Error("No pending item selected");
+      return saveFn({
+        data: {
+          ideaType: idea.type,
+          ideaId: idea.id,
+          clusterText,
+          ideasText,
+          extraText,
+        },
+      });
+    },
+    onSuccess: (data: { keywordsFound?: number; keywordUpsert?: { upserted: number } }) => {
       toast.success(
-        `Saved ${saved.keywordUpsert?.created ?? 0} new keywords, merged ${saved.keywordUpsert?.merged ?? 0}. Pending queue updated — nothing published.`,
+        `Research saved on this pending item (${data.keywordsFound ?? 0} keywords). Not published — use Send to Content Generation when ready.`,
       );
-      setPreview(null);
-      setClusterText("");
-      setIdeasText("");
-      setExtraText("");
-      qc.invalidateQueries({ queryKey: ["keyword-research-meta"] });
       qc.invalidateQueries({ queryKey: ["content-automation-ideas"] });
-      qc.invalidateQueries({ queryKey: ["seo-engine-overview"] });
-      qc.invalidateQueries({ queryKey: ["seo-engine-keywords"] });
+      onOpenChange(false);
     },
     onError: (e: Error) => toast.error(e.message),
   });
-
-  const opportunities = preview?.opportunities ?? [];
-  const filtered = useMemo(() => {
-    return opportunities.filter((row) => {
-      if (sourceFilter !== "all" && !row.sources.includes(sourceFilter)) return false;
-      if (clusterFilter !== "all" && (row.cluster || "") !== clusterFilter) return false;
-      if (typeFilter !== "all" && row.contentType !== typeFilter) return false;
-      if (intentFilter !== "all" && row.searchIntent !== intentFilter) return false;
-      if (statusFilter !== "all" && row.action !== statusFilter) return false;
-      if (priorityFilter === "high" && row.priority < 60) return false;
-      if (priorityFilter === "medium" && (row.priority < 35 || row.priority >= 60)) return false;
-      if (priorityFilter === "low" && row.priority >= 35) return false;
-      return true;
-    });
-  }, [opportunities, sourceFilter, clusterFilter, typeFilter, intentFilter, statusFilter, priorityFilter]);
-
-  const clusterNames = [...new Set(opportunities.map((o) => o.cluster).filter(Boolean))] as string[];
-  const meta = metaQ.data;
 
   return (
-    <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
-        <Stat label="Keyword Clusters" value={meta?.keywordClusters ?? 0} />
-        <Stat label="Total Keywords" value={meta?.totalKeywords ?? 0} />
-        <Stat label="New Opportunities" value={preview?.newOpportunities ?? 0} />
-        <Stat label="Pending Content" value={meta?.pendingContent ?? 0} />
-        <Stat label="Cannibalization Risks" value={preview?.cannibalizationRisks ?? 0} />
-        <Stat label="Keywords Used" value={meta?.keywordsUsed ?? 0} />
-        <Stat label="Keywords Not Yet Used" value={meta?.keywordsUnused ?? 0} />
-      </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="flex max-h-[90vh] max-w-3xl flex-col gap-0 overflow-hidden p-0">
+        <DialogHeader className="shrink-0 border-b px-6 py-4 text-left">
+          <DialogTitle>Keyword Research</DialogTitle>
+          <DialogDescription>
+            Paste RyRob Keyword Cluster and Neil Patel / Ubersuggest keywords for this pending item.
+            Saving research never publishes — send to Content Generation separately.
+          </DialogDescription>
+        </DialogHeader>
 
-      <Card>
-        <CardContent className="space-y-4 p-5">
-          <div>
-            <h3 className="text-sm font-semibold">Keyword Research Input</h3>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Paste RyRob clusters, Neil Patel / Ubersuggest keyword ideas, or extra keywords. Parsing is tolerant of tables, tabs, CSV, headings, and messy spacing. Review the preview, then save into the existing SEO Content Engine. Nothing is published from this screen.
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-4">
+          {idea && (
+            <div className="rounded-lg border bg-muted/30 px-3 py-2 text-sm">
+              <div className="font-medium">
+                {idea.type === "blog" ? "Blog" : "Page"}: {idea.baseName || idea.identifier}
+              </div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                Main keyword: <span className="font-medium text-foreground">{mainKeyword || "—"}</span>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">RyRob Keyword Cluster</label>
+            <p className="text-xs text-muted-foreground">
+              Paste the cluster block (Cluster heading + keyword lines). Main keyword is already the parent for this item.
             </p>
-          </div>
-
-          <div className="grid gap-4 xl:grid-cols-2">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Keyword Cluster</label>
-              <p className="text-xs text-muted-foreground">
-                Raw paste from <a className="underline" href="https://www.ryrob.com/keyword-cluster/" target="_blank" rel="noreferrer">RyRob Keyword Cluster</a>.
-              </p>
-              <Textarea
-                value={clusterText}
-                onChange={(e) => setClusterText(e.target.value)}
-                rows={10}
-                className="min-h-40 font-mono text-xs"
-                placeholder={"Cluster: Indian Chat Room (Informational)\n- indian chat room\n- india chat room\n- free indian chat room to make friends"}
-              />
-              <Button type="button" variant="secondary" disabled={previewMut.isPending || !clusterText.trim()} onClick={() => previewMut.mutate()}>
-                {previewMut.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Parse Keyword Cluster
-              </Button>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Keyword Ideas</label>
-              <p className="text-xs text-muted-foreground">
-                Raw paste from <a className="underline" href="https://app.neilpatel.com/en/keyword-ideas" target="_blank" rel="noreferrer">Neil Patel Keyword Ideas</a> or Ubersuggest tables.
-              </p>
-              <Textarea
-                value={ideasText}
-                onChange={(e) => setIdeasText(e.target.value)}
-                rows={10}
-                className="min-h-40 font-mono text-xs"
-                placeholder={"Keyword\tVolume\tSEO Difficulty\tCPC\tPaid Difficulty\nindian chat room\t2900\t35\t0.42\t18"}
-              />
-              <Button type="button" variant="secondary" disabled={previewMut.isPending || !ideasText.trim()} onClick={() => previewMut.mutate()}>
-                {previewMut.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Parse Keyword Ideas
-              </Button>
-            </div>
+            <Textarea
+              value={clusterText}
+              onChange={(e) => setClusterText(e.target.value)}
+              rows={8}
+              className="font-mono text-xs"
+              placeholder={`Cluster: ${mainKeyword || "your main keyword"}\n- related keyword\n- long tail keyword`}
+            />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Additional Keywords</label>
+            <label className="text-sm font-medium">Neil Patel / Ubersuggest Keyword Ideas</label>
             <p className="text-xs text-muted-foreground">
-              Extra Ubersuggest or manual keywords. Comma-separated, newline-separated, or one keyword per line.
+              Paste the Keyword Ideas table (tabs or spaces). Volume, SD, PD, and intent are parsed when present.
             </p>
+            <Textarea
+              value={ideasText}
+              onChange={(e) => setIdeasText(e.target.value)}
+              rows={8}
+              className="font-mono text-xs"
+              placeholder={"Keyword Ideas\nkeyword\tVolume\tSD\t...\nindian chat room\t2400\t34"}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Extra keywords (optional)</label>
             <Textarea
               value={extraText}
               onChange={(e) => setExtraText(e.target.value)}
-              rows={5}
+              rows={3}
               className="font-mono text-xs"
-              placeholder={"indian chat rooms\nfree indian chat room\nchat with indian people"}
+              placeholder="comma or newline separated extras"
             />
-            <Button type="button" variant="secondary" disabled={previewMut.isPending || !extraText.trim()} onClick={() => previewMut.mutate()}>
-              {previewMut.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Add Keywords
+          </div>
+
+          {preview && (
+            <div className="space-y-3 rounded-lg border p-3">
+              <div className="flex flex-wrap gap-2 text-xs">
+                <Badge variant="secondary">{preview.keywordsFound} keywords</Badge>
+                <Badge variant="secondary">{preview.clustersFound} clusters</Badge>
+                <Badge variant="secondary">{preview.duplicatesRemoved} dupes removed</Badge>
+                {preview.cannibalizationRisks > 0 && (
+                  <Badge variant="destructive">{preview.cannibalizationRisks} cannibalization risks</Badge>
+                )}
+                {preview.sources.map((s) => (
+                  <Badge key={s} variant="outline">{formatResearchSource(s)}</Badge>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Will attach to this pending item only (replace keywords). Does not create new pending ideas or publish.
+              </p>
+              {preview.keywordsText && (
+                <p className="line-clamp-3 text-xs" title={preview.keywordsText}>
+                  <span className="font-medium">Keywords preview:</span> {preview.keywordsText}
+                </p>
+              )}
+              {preview.opportunities.slice(0, 6).map((opp) => (
+                <div key={`${opp.primaryKeyword}-${opp.action}`} className="border-t pt-2 text-xs">
+                  <div className="font-medium">{opp.primaryKeyword}</div>
+                  <div className="text-muted-foreground">
+                    {actionLabel(opp.action)}
+                    {opp.existingUrl ? ` · ${opp.existingTitle || opp.existingUrl}` : ""}
+                  </div>
+                </div>
+              ))}
+              {preview.errors.length > 0 && (
+                <ul className="list-disc pl-4 text-xs text-amber-700 dark:text-amber-300">
+                  {preview.errors.slice(0, 5).map((err) => (
+                    <li key={err}>{err}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </div>
+
+        <DialogFooter className="shrink-0 gap-2 border-t px-6 py-4 sm:justify-between">
+          <Button
+            type="button"
+            variant="outline"
+            disabled={previewMut.isPending || !idea}
+            onClick={() => previewMut.mutate()}
+          >
+            {previewMut.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Preview
+          </Button>
+          <div className="flex gap-2">
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              disabled={saveMut.isPending || !idea}
+              onClick={() => saveMut.mutate()}
+            >
+              {saveMut.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Save Research
             </Button>
           </div>
-        </CardContent>
-      </Card>
-
-      {preview && (
-        <Card>
-          <CardContent className="space-y-4 p-5">
-            <div>
-              <h3 className="text-sm font-semibold">Keyword Research Preview</h3>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Source: {preview.sources.map(formatResearchSource).join(", ") || "—"} · Clusters found: {preview.clustersFound} · Keywords found: {preview.keywordsFound} · Duplicates removed: {preview.duplicatesRemoved}
-              </p>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-              <Stat label="Clusters" value={preview.clustersFound} />
-              <Stat label="Keywords" value={preview.keywordsFound} />
-              <Stat label="New" value={preview.newOpportunities} />
-              <Stat label="Merged" value={preview.mergedOpportunities} />
-              <Stat label="Cannibalization risks" value={preview.cannibalizationRisks} />
-            </div>
-            <div className="grid gap-4 md:grid-cols-3 text-sm">
-              <div>
-                <div className="mb-1 font-medium">Primary Keywords</div>
-                <ul className="list-disc space-y-0.5 pl-5 text-xs text-muted-foreground">
-                  {preview.primary.slice(0, 8).map((k) => <li key={k}>{k}</li>)}
-                  {preview.primary.length === 0 && <li>None detected</li>}
-                </ul>
-              </div>
-              <div>
-                <div className="mb-1 font-medium">Secondary Keywords</div>
-                <ul className="list-disc space-y-0.5 pl-5 text-xs text-muted-foreground">
-                  {preview.secondary.slice(0, 8).map((k) => <li key={k}>{k}</li>)}
-                  {preview.secondary.length === 0 && <li>None detected</li>}
-                </ul>
-              </div>
-              <div>
-                <div className="mb-1 font-medium">Long-tail Keywords</div>
-                <ul className="list-disc space-y-0.5 pl-5 text-xs text-muted-foreground">
-                  {preview.longTail.slice(0, 8).map((k) => <li key={k}>{k}</li>)}
-                  {preview.longTail.length === 0 && <li>None detected</li>}
-                </ul>
-              </div>
-            </div>
-            {preview.errors.length > 0 && (
-              <p className="text-xs text-amber-700 dark:text-amber-300">{preview.errors.join(" · ")}</p>
-            )}
-            <div className="flex flex-wrap gap-2">
-              <Button type="button" onClick={() => saveMut.mutate()} disabled={saveMut.isPending || preview.keywordsFound === 0}>
-                {saveMut.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Save & Add to SEO Engine
-              </Button>
-              <Button type="button" variant="outline" onClick={() => setPreview(null)}>Cancel</Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {preview && (
-        <Card>
-          <CardContent className="space-y-3 p-5">
-            <h3 className="text-sm font-semibold">Review Opportunities</h3>
-            <div className="flex flex-wrap items-center gap-2 text-sm">
-              {[
-                ["Source", sourceFilter, setSourceFilter, ["all", ...preview.sources]],
-                ["Cluster", clusterFilter, setClusterFilter, ["all", ...clusterNames]],
-                ["Content Type", typeFilter, setTypeFilter, ["all", "page", "blog"]],
-                ["Intent", intentFilter, setIntentFilter, ["all", ...new Set(opportunities.map((o) => o.searchIntent))]],
-                ["Status", statusFilter, setStatusFilter, ["all", "new_content", "merge_existing", "use_as_secondary", "skip_cannibalization"]],
-                ["Priority", priorityFilter, setPriorityFilter, ["all", "high", "medium", "low"]],
-              ].map(([label, value, setter, options]) => (
-                <label key={String(label)} className="flex items-center gap-1 text-xs">
-                  <span className="text-muted-foreground">{String(label)}</span>
-                  <select
-                    className="rounded-md border bg-background px-2 py-1"
-                    value={String(value)}
-                    onChange={(e) => (setter as (v: string) => void)(e.target.value)}
-                  >
-                    {(options as string[]).map((opt) => (
-                      <option key={opt} value={opt}>{opt}</option>
-                    ))}
-                  </select>
-                </label>
-              ))}
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[72rem] border-collapse text-sm">
-                <thead>
-                  <tr className="border-b text-left text-xs text-muted-foreground">
-                    <th className="px-3 py-2">Content Type</th>
-                    <th className="px-3 py-2">Proposed Title</th>
-                    <th className="px-3 py-2">Primary Keyword</th>
-                    <th className="px-3 py-2">Cluster</th>
-                    <th className="px-3 py-2">Intent</th>
-                    <th className="px-3 py-2">Priority</th>
-                    <th className="px-3 py-2">Cannibalization</th>
-                    <th className="px-3 py-2">Source</th>
-                    <th className="px-3 py-2">Volume</th>
-                    <th className="px-3 py-2">Related pages</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((row) => (
-                    <tr key={`${row.primaryKeyword}-${row.proposedTitle}`} className="border-b align-top last:border-0">
-                      <td className="px-3 py-2">{row.contentType === "blog" ? "Blog" : "SEO page"}</td>
-                      <td className="px-3 py-2">{row.proposedTitle}</td>
-                      <td className="px-3 py-2">{row.primaryKeyword}</td>
-                      <td className="px-3 py-2 text-muted-foreground">{row.cluster || "—"}</td>
-                      <td className="px-3 py-2">{row.searchIntent}</td>
-                      <td className="px-3 py-2 tabular-nums">{row.priority}</td>
-                      <td className="px-3 py-2">
-                        <Badge variant={row.action === "skip_cannibalization" ? "destructive" : "secondary"}>
-                          {actionLabel(row.action)}
-                        </Badge>
-                        <div className="mt-1 max-w-xs text-xs text-muted-foreground">{row.cannibalizationStatus}</div>
-                      </td>
-                      <td className="px-3 py-2 text-xs">{row.sources.map(formatResearchSource).join(", ")}</td>
-                      <td className="px-3 py-2">{row.searchVolume ?? "—"}</td>
-                      <td className="px-3 py-2 text-xs text-muted-foreground">
-                        {row.relatedUrls.slice(0, 3).join(" ") || "—"}
-                      </td>
-                    </tr>
-                  ))}
-                  {filtered.length === 0 && (
-                    <tr>
-                      <td colSpan={10} className="px-3 py-6 text-center text-muted-foreground">No opportunities match these filters.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {(meta?.batches?.length ?? 0) > 0 && (
-        <Card>
-          <CardContent className="p-0">
-            <div className="px-5 pt-5">
-              <h3 className="text-sm font-semibold">Import batch history</h3>
-              <p className="mt-1 text-xs text-muted-foreground">Re-pasting the same research updates existing keywords instead of creating duplicates.</p>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[48rem] text-sm">
-                <thead>
-                  <tr className="border-b text-left text-xs text-muted-foreground">
-                    <th className="px-5 py-2">Date</th>
-                    <th className="px-3 py-2">Source</th>
-                    <th className="px-3 py-2">Keywords</th>
-                    <th className="px-3 py-2">Clusters</th>
-                    <th className="px-3 py-2">Duplicates</th>
-                    <th className="px-3 py-2">New</th>
-                    <th className="px-3 py-2">Merged</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(meta?.batches ?? []).map((batch: Record<string, unknown>) => (
-                    <tr key={String(batch.id)} className="border-b last:border-0">
-                      <td className="px-5 py-2 text-xs">{String(batch.created_at || "").slice(0, 10)}</td>
-                      <td className="px-3 py-2">{(batch.sources as string[] | undefined)?.map(formatResearchSource).join(", ") || formatResearchSource(String(batch.source || ""))}</td>
-                      <td className="px-3 py-2">{String(batch.keywords_found ?? 0)}</td>
-                      <td className="px-3 py-2">{String(batch.clusters_found ?? 0)}</td>
-                      <td className="px-3 py-2">{String(batch.duplicates_removed ?? 0)}</td>
-                      <td className="px-3 py-2">{String(batch.new_count ?? 0)}</td>
-                      <td className="px-3 py-2">{String(batch.merged_count ?? 0)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

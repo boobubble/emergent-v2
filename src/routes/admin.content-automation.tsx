@@ -1,8 +1,9 @@
 ﻿import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { ClipboardPaste, Loader2, Play, Upload } from "lucide-react";
+import { Loader2, Play, Upload } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,9 +12,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { NumberField, ToggleRow } from "@/components/admin/SettingsSection";
 import { parseBulkContentIdeas } from "@/lib/content-automation/parse-bulk-ideas";
-import { KeywordResearchInput } from "@/lib/content-automation/keyword-research-input";
-import { matchKeywordResearchTitle, type KeywordResearchCandidate, type KeywordSaveMode } from "@/lib/content-automation/parse-keyword-research";
-import { PasteKeywordResearchDialog } from "@/lib/content-automation/paste-keyword-research-dialog";
+import {
+  PendingKeywordResearchDialog,
+  type PendingIdeaForResearch,
+} from "@/lib/content-automation/keyword-research-input";
+import { sendIdeaToContentGeneration } from "@/lib/content-automation/seo-engine.functions";
 import {
   SeoCannibalizationPanel,
   SeoImagesPanel,
@@ -65,17 +68,8 @@ type NormalizedIdea = {
   status: "pending" | "published";
   keywords: string | null;
   baseName: string | null;
+  generationReady?: boolean;
 };
-
-function ideaToCandidate(idea: NormalizedIdea): KeywordResearchCandidate {
-  return {
-    type: idea.type,
-    id: idea.id,
-    title: idea.type === "blog" ? idea.identifier : (idea.baseName ?? idea.identifier),
-    slug: idea.type === "page" ? idea.identifier : null,
-    keywords: idea.keywords,
-  };
-}
 
 function adminHeaders(): HeadersInit {
   const secret = import.meta.env.VITE_ADMIN_API_SECRET as string | undefined;
@@ -96,13 +90,14 @@ async function readJson(res: Response) {
 
 function ContentAutomationPage() {
   const qc = useQueryClient();
+  const sendToGenerationFn = useServerFn(sendIdeaToContentGeneration);
   const [tab, setTab] = useState("ideas");
   const [bulkText, setBulkText] = useState("");
   const [typeFilter, setTypeFilter] = useState<"all" | "blog" | "page">("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "published">("all");
   const [runResult, setRunResult] = useState<string | null>(null);
   const [parseErrors, setParseErrors] = useState<string[]>([]);
-  const [pasteOpen, setPasteOpen] = useState(false);
+  const [researchIdea, setResearchIdea] = useState<PendingIdeaForResearch | null>(null);
   const bulkTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   const settingsQ = useQuery({
@@ -179,21 +174,12 @@ function ContentAutomationPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const saveKeywords = useMutation({
-    mutationFn: async (payload: {
-      type: "blog" | "page";
-      id: number;
-      keywords: string;
-      mode: KeywordSaveMode;
-    }) => {
-      const res = await fetch("/api/admin/topic-ideas", {
-        method: "PATCH",
-        headers: adminHeaders(),
-        body: JSON.stringify(payload),
-      });
-      const json = await readJson(res);
-      if (!res.ok) throw new Error(json.error || res.statusText);
-      return json;
+  const sendToGeneration = useMutation({
+    mutationFn: async (idea: NormalizedIdea) =>
+      sendToGenerationFn({ data: { ideaType: idea.type, ideaId: idea.id } }),
+    onSuccess: (result: { message?: string }) => {
+      toast.success(result.message || "Queued for content generation (not published).");
+      qc.invalidateQueries({ queryKey: ["content-automation-ideas"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -349,40 +335,27 @@ function ContentAutomationPage() {
         </TabsContent>
 
         <TabsContent value="ideas" className="mt-4 space-y-4">
-          <KeywordResearchInput />
-
           <Card>
             <CardContent className="space-y-3 p-5">
               <h3 className="text-sm font-semibold">Bulk Add Content Ideas</h3>
               <div className="space-y-2 text-xs text-muted-foreground">
                 <p>
-                  Optional manual queue entry. Preferred workflow is Keyword Research Input above — no Excel template required.
+                  Create ideas with a main keyword — they enter the Pending List below.
+                  From each pending row, open Keyword Research, then explicitly Send to Content Generation.
                   Separate each idea with a blank line.
                 </p>
                 <p>
                   For a blog post:<br />
                   <code>Blog: &lt;title&gt;</code><br />
                   <code>About: &lt;short description&gt;</code><br />
-                  <code>Keywords: &lt;comma-separated keywords, optional&gt;</code>
+                  <code>Keywords: &lt;main keyword, optional extras&gt;</code>
                 </p>
                 <p>
                   For a chat-room page:<br />
                   <code>Page: &lt;city or topic name&gt;</code><br />
                   <code>Country: &lt;e.g. Pakistan, India — helps categorize automatically&gt;</code><br />
-                  <code>Keywords: &lt;comma-separated keywords, optional&gt;</code>
+                  <code>Keywords: &lt;main keyword, optional extras&gt;</code>
                 </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={ideasQ.isLoading}
-                  onClick={() => setPasteOpen(true)}
-                >
-                  <ClipboardPaste className="mr-2 h-4 w-4" />
-                  Paste Keyword Research
-                </Button>
               </div>
               <Textarea
                 ref={bulkTextareaRef}
@@ -456,7 +429,7 @@ Type: girls`}
                 <p className="p-5 text-sm text-destructive">{(ideasQ.error as Error).message}</p>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-[56rem] border-collapse text-sm">
+                  <table className="w-full min-w-[64rem] border-collapse text-sm">
                     <thead>
                       <tr className="border-b text-left">
                         <th className="px-4 py-3 font-medium">Type</th>
@@ -464,6 +437,7 @@ Type: girls`}
                         <th className="px-4 py-3 font-medium">Category / Section</th>
                         <th className="w-48 max-w-[12rem] px-4 py-3 font-medium">Keywords</th>
                         <th className="px-4 py-3 font-medium">Status</th>
+                        <th className="px-4 py-3 font-medium">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -482,16 +456,59 @@ Type: girls`}
                             )}
                           </td>
                           <td className="px-4 py-2">
-                            <Badge variant={idea.status === "published" ? "default" : "secondary"}>
-                              {idea.status === "published" ? "Published" : "Pending"}
-                            </Badge>
+                            <div className="flex flex-col gap-1">
+                              <Badge variant={idea.status === "published" ? "default" : "secondary"}>
+                                {idea.status === "published" ? "Published" : "Pending"}
+                              </Badge>
+                              {idea.status === "pending" && idea.generationReady ? (
+                                <Badge variant="outline" className="w-fit text-[10px]">
+                                  Ready for generation
+                                </Badge>
+                              ) : null}
+                            </div>
+                          </td>
+                          <td className="px-4 py-2">
+                            {idea.status === "pending" ? (
+                              <div className="flex flex-col gap-1 sm:flex-row">
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() =>
+                                    setResearchIdea({
+                                      id: idea.id,
+                                      type: idea.type,
+                                      identifier: idea.identifier,
+                                      baseName: idea.baseName,
+                                      keywords: idea.keywords,
+                                    })
+                                  }
+                                >
+                                  Keyword Research
+                                </Button>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant={idea.generationReady ? "secondary" : "default"}
+                                  disabled={sendToGeneration.isPending}
+                                  onClick={() => sendToGeneration.mutate(idea)}
+                                >
+                                  {sendToGeneration.isPending ? (
+                                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                                  ) : null}
+                                  {idea.generationReady ? "Ready" : "Send to Content Generation"}
+                                </Button>
+                              </div>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            )}
                           </td>
                         </tr>
                       ))}
                       {filtered.length === 0 && (
                         <tr>
-                          <td colSpan={5} className="px-4 py-6 text-center text-muted-foreground">
-                            No ideas match these filters. Paste keyword research above, or upload structured ideas.
+                          <td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">
+                            No ideas match these filters. Upload content ideas with a main keyword to start.
                           </td>
                         </tr>
                       )}
@@ -526,27 +543,12 @@ Type: girls`}
         </TabsContent>
       </Tabs>
 
-      <PasteKeywordResearchDialog
-        open={pasteOpen}
-        onOpenChange={setPasteOpen}
-        variant="queue"
-        requireMatch
-        candidates={allIdeas.map(ideaToCandidate)}
-        matchFn={matchKeywordResearchTitle}
-        applyBusy={saveKeywords.isPending}
-        candidatesLoading={ideasQ.isLoading}
-        onApply={async ({ match, keywordsText, saveMode }) => {
-          if (!match) throw new Error("No matching pending item found");
-          const id = Number(match.id);
-          if (!Number.isInteger(id) || id < 1) throw new Error("No matching pending item found");
-          await saveKeywords.mutateAsync({
-            type: match.type,
-            id,
-            keywords: keywordsText,
-            mode: saveMode,
-          });
-          qc.invalidateQueries({ queryKey: ["content-automation-ideas"] });
+      <PendingKeywordResearchDialog
+        open={Boolean(researchIdea)}
+        onOpenChange={(open) => {
+          if (!open) setResearchIdea(null);
         }}
+        idea={researchIdea}
       />
     </div>
   );

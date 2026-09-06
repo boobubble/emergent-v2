@@ -12,6 +12,7 @@ export type NormalizedIdea = {
   status: IdeaStatus;
   keywords: string | null;
   baseName: string | null;
+  generationReady: boolean;
 };
 
 type BlogIdeaRow = {
@@ -19,6 +20,7 @@ type BlogIdeaRow = {
   title: string;
   category_slug: string;
   keywords: string | null;
+  generation_ready?: boolean | null;
 };
 
 type PageIdeaRow = {
@@ -27,6 +29,7 @@ type PageIdeaRow = {
   section: string;
   base_name: string;
   keywords: string | null;
+  generation_ready?: boolean | null;
 };
 
 function emptyToNull(value?: string | null): string | null {
@@ -39,10 +42,26 @@ function asStatus(published: boolean): IdeaStatus {
 }
 
 async function fetchBlogIdeas(statusFilter?: IdeaStatus): Promise<NormalizedIdea[]> {
-  const [{ data: ideas, error: ideasError }, { data: posts, error: postsError }] = await Promise.all([
-    db().from("blog_topic_ideas").select("id, title, category_slug, keywords").order("created_at", { ascending: true }),
-    db().from("blog_posts").select("title"),
-  ]);
+  let ideas: BlogIdeaRow[] | null = null;
+  let ideasError: { message: string } | null = null;
+  {
+    const res = await db()
+      .from("blog_topic_ideas")
+      .select("id, title, category_slug, keywords, generation_ready")
+      .order("created_at", { ascending: true });
+    if (res.error && /generation_ready|schema cache|column/i.test(res.error.message)) {
+      const fallback = await db()
+        .from("blog_topic_ideas")
+        .select("id, title, category_slug, keywords")
+        .order("created_at", { ascending: true });
+      ideas = (fallback.data ?? []) as BlogIdeaRow[];
+      ideasError = fallback.error;
+    } else {
+      ideas = (res.data ?? []) as BlogIdeaRow[];
+      ideasError = res.error;
+    }
+  }
+  const { data: posts, error: postsError } = await db().from("blog_posts").select("title");
   if (ideasError) throw new Error(ideasError.message);
   if (postsError) throw new Error(postsError.message);
 
@@ -50,7 +69,7 @@ async function fetchBlogIdeas(statusFilter?: IdeaStatus): Promise<NormalizedIdea
     (posts ?? []).map((p: { title: string }) => (p.title ?? "").trim()),
   );
 
-  const rows: NormalizedIdea[] = ((ideas ?? []) as BlogIdeaRow[]).map((row) => ({
+  const rows: NormalizedIdea[] = (ideas ?? []).map((row) => ({
     id: row.id,
     type: "blog",
     identifier: row.title,
@@ -58,23 +77,42 @@ async function fetchBlogIdeas(statusFilter?: IdeaStatus): Promise<NormalizedIdea
     status: asStatus(publishedTitles.has(row.title.trim())),
     keywords: emptyToNull(row.keywords),
     baseName: null,
+    generationReady: Boolean(row.generation_ready),
   }));
+
+  rows.sort((a, b) => Number(b.generationReady) - Number(a.generationReady));
 
   if (!statusFilter) return rows;
   return rows.filter((r) => r.status === statusFilter);
 }
 
 async function fetchPageIdeas(statusFilter?: IdeaStatus): Promise<NormalizedIdea[]> {
-  const [{ data: ideas, error: ideasError }, { data: pages, error: pagesError }] = await Promise.all([
-    db().from("static_page_ideas").select("id, slug, section, base_name, keywords").order("created_at", { ascending: true }),
-    db().from("custom_pages").select("slug"),
-  ]);
+  let ideas: PageIdeaRow[] | null = null;
+  let ideasError: { message: string } | null = null;
+  {
+    const res = await db()
+      .from("static_page_ideas")
+      .select("id, slug, section, base_name, keywords, generation_ready")
+      .order("created_at", { ascending: true });
+    if (res.error && /generation_ready|schema cache|column/i.test(res.error.message)) {
+      const fallback = await db()
+        .from("static_page_ideas")
+        .select("id, slug, section, base_name, keywords")
+        .order("created_at", { ascending: true });
+      ideas = (fallback.data ?? []) as PageIdeaRow[];
+      ideasError = fallback.error;
+    } else {
+      ideas = (res.data ?? []) as PageIdeaRow[];
+      ideasError = res.error;
+    }
+  }
+  const { data: pages, error: pagesError } = await db().from("custom_pages").select("slug");
   if (ideasError) throw new Error(ideasError.message);
   if (pagesError) throw new Error(pagesError.message);
 
   const publishedSlugs = new Set((pages ?? []).map((p: { slug: string }) => p.slug));
 
-  const rows: NormalizedIdea[] = ((ideas ?? []) as PageIdeaRow[]).map((row) => ({
+  const rows: NormalizedIdea[] = (ideas ?? []).map((row) => ({
     id: row.id,
     type: "page",
     identifier: row.slug,
@@ -82,7 +120,10 @@ async function fetchPageIdeas(statusFilter?: IdeaStatus): Promise<NormalizedIdea
     status: asStatus(publishedSlugs.has(row.slug)),
     keywords: emptyToNull(row.keywords),
     baseName: row.base_name ?? null,
+    generationReady: Boolean(row.generation_ready),
   }));
+
+  rows.sort((a, b) => Number(b.generationReady) - Number(a.generationReady));
 
   if (!statusFilter) return rows;
   return rows.filter((r) => r.status === statusFilter);
@@ -234,4 +275,32 @@ export async function updateIdeaKeywords(opts: {
     previousKeywords: emptyToNull(typed.keywords),
     mode,
   };
+}
+
+export async function getTopicIdeaById(
+  type: IdeaType,
+  id: number,
+): Promise<NormalizedIdea | null> {
+  const ideas = await listTopicIdeas({ type });
+  return ideas.find((idea) => idea.id === id) ?? null;
+}
+
+/** Marks idea ready for the existing publish pipeline. Does not publish. */
+export async function markIdeaGenerationReady(type: IdeaType, id: number): Promise<NormalizedIdea> {
+  const table = type === "blog" ? "blog_topic_ideas" : "static_page_ideas";
+  const { error } = await db()
+    .from(table)
+    .update({ generation_ready: true })
+    .eq("id", id);
+  if (error) {
+    if (/generation_ready|schema cache|column/i.test(error.message)) {
+      throw new Error(
+        "Database is missing generation_ready. Apply migration 20260906140000_idea_generation_ready.sql.",
+      );
+    }
+    throw new Error(error.message);
+  }
+  const idea = await getTopicIdeaById(type, id);
+  if (!idea) throw new IdeaNotFoundError(String(id));
+  return idea;
 }

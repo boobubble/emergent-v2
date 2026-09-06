@@ -210,16 +210,19 @@ describe("idempotent and malformed input", () => {
 });
 
 describe("admin workflow wiring", () => {
-  it("adds Keyword Research Input and no longer requires the Excel template", () => {
+  it("wires Keyword Research into each Pending List row (no standalone research section)", () => {
     const admin = readFileSync(resolve(process.cwd(), "src/routes/admin.content-automation.tsx"), "utf8");
-    expect(admin).toContain("KeywordResearchInput");
+    expect(admin).toContain("PendingKeywordResearchDialog");
+    expect(admin).toContain("Keyword Research");
+    expect(admin).toContain("Send to Content Generation");
     expect(admin).not.toContain("yaarzo-content-ideas-import-template.xlsx");
     expect(admin).not.toContain("Import from Excel");
-    expect(admin).toContain("Paste Keyword Research");
+    expect(admin).not.toContain("<KeywordResearchInput");
     const ui = readFileSync(resolve(process.cwd(), "src/lib/content-automation/keyword-research-input.tsx"), "utf8");
-    expect(ui).toContain("Keyword Research Input");
-    expect(ui).toContain("Save & Add to SEO Engine");
-    expect(ui).toContain("Parse Keyword Cluster");
-    expect(ui).toContain("Parse Keyword Ideas");
+    expect(ui).toContain("PendingKeywordResearchDialog");
+    expect(ui).toContain("Save Research");
+    expect(ui).toContain("RyRob Keyword Cluster");
+    expect(ui).toContain("Neil Patel / Ubersuggest");
+    expect(ui).toContain("never publishes");
   });
 });

@@ -9,7 +9,14 @@ import { listInventory, syncPublishedInventory } from "@/lib/content-automation/
 import { listRecentJobs, remainingPublishSlots } from "@/lib/content-automation/job-lock";
 import { executeSeoJobRetry } from "@/lib/content-automation/seo-job-retry";
 import { listKeywordTargets, parseKeywordCsv, updateKeywordTarget, upsertKeywordTargets } from "@/lib/content-automation/keyword-targets";
-import { previewResearchPaste, researchDashboard, saveResearchPaste } from "@/lib/content-automation/research-save";
+import {
+  previewIdeaResearch,
+  previewResearchPaste,
+  researchDashboard,
+  saveIdeaResearch,
+  saveResearchPaste,
+  sendIdeaToGeneration,
+} from "@/lib/content-automation/research-save";
 import { attachPexelsImage, listPexelsImages } from "@/lib/content-automation/pexels-images";
 import { listRefreshReports, migrateExistingBatch, refreshOneItem } from "@/lib/content-automation/seo-refresh";
 import { getVersion, listRecentVersions, listVersions, restoreVersion } from "@/lib/content-automation/versioning";
@@ -225,6 +232,11 @@ const researchPasteSchema = z.object({
   extraText: z.string().max(200_000).optional(),
 });
 
+const ideaResearchSchema = researchPasteSchema.extend({
+  ideaType: z.enum(["blog", "page"]),
+  ideaId: z.number().int().positive(),
+});
+
 export const previewKeywordResearch = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator(researchPasteSchema)
@@ -241,6 +253,35 @@ export const saveKeywordResearch = createServerFn({ method: "POST" })
     const hasText = Boolean(data.clusterText?.trim() || data.ideasText?.trim() || data.extraText?.trim());
     if (!hasText) throw new Error("Paste keyword research before saving.");
     return saveResearchPaste(data);
+  });
+
+export const previewIdeaKeywordResearch = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
+  .inputValidator(ideaResearchSchema)
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    return previewIdeaResearch(data);
+  });
+
+export const saveIdeaKeywordResearch = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
+  .inputValidator(ideaResearchSchema)
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const hasText = Boolean(data.clusterText?.trim() || data.ideasText?.trim() || data.extraText?.trim());
+    if (!hasText) throw new Error("Paste keyword research before saving.");
+    return saveIdeaResearch(data);
+  });
+
+export const sendIdeaToContentGeneration = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
+  .inputValidator(z.object({
+    ideaType: z.enum(["blog", "page"]),
+    ideaId: z.number().int().positive(),
+  }))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    return sendIdeaToGeneration(data);
   });
 
 export const getKeywordResearchMeta = createServerFn({ method: "GET" })
