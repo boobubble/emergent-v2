@@ -1,8 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+﻿import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Download, FileSpreadsheet, Loader2, Play, Upload } from "lucide-react";
+import { ClipboardPaste, Download, FileSpreadsheet, Loader2, Play, Upload } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,18 @@ import { Badge } from "@/components/ui/badge";
 import { NumberField, ToggleRow } from "@/components/admin/SettingsSection";
 import { parseBulkContentIdeas } from "@/lib/content-automation/parse-bulk-ideas";
 import { appendBulkText, excelRowsToBulkText, pickExcelIdeasSheetName } from "@/lib/content-automation/excel-ideas";
+import { matchKeywordResearchTitle, type KeywordResearchCandidate, type KeywordSaveMode } from "@/lib/content-automation/parse-keyword-research";
+import { PasteKeywordResearchDialog } from "@/lib/content-automation/paste-keyword-research-dialog";
+import {
+  SeoCannibalizationPanel,
+  SeoImagesPanel,
+  SeoInventoryPanel,
+  SeoJobsPanel,
+  SeoKeywordsPanel,
+  SeoOverviewPanel,
+  SeoRefreshPanel,
+  SeoVersionsPanel,
+} from "@/lib/content-automation/seo-engine-admin-panels";
 
 export const Route = createFileRoute("/admin/content-automation")({
   component: ContentAutomationPage,
@@ -21,17 +33,49 @@ type AutomationSettings = {
   id: number;
   blog_posts_per_day: number;
   static_pages_per_day: number;
+  daily_total_limit: number;
   automation_enabled: boolean;
+  auto_seo_optimization: boolean;
+  auto_internal_linking: boolean;
+  two_way_linking: boolean;
+  cannibalization_check: boolean;
+  broken_link_check: boolean;
+  new_page_discovery: boolean;
+  content_refresh_enabled: boolean;
+  refresh_interval_days: number;
+  only_update_when_meaningful: boolean;
+  minimum_content_change_percent: number;
+  keep_previous_versions: boolean;
+  max_versions: number;
+  pexels_images_enabled: boolean;
+  images_per_content: number;
+  prefer_landscape_images: boolean;
+  image_optimization: boolean;
+  image_duplicate_prevention: boolean;
+  dry_run_optimization: boolean;
+  migration_paused: boolean;
   updated_at: string | null;
 };
 
 type NormalizedIdea = {
+  id: number;
   type: "blog" | "page";
   identifier: string;
   grouping: string;
   status: "pending" | "published";
   keywords: string | null;
+  baseName: string | null;
 };
+
+function ideaToCandidate(idea: NormalizedIdea): KeywordResearchCandidate {
+  return {
+    type: idea.type,
+    id: idea.id,
+    title: idea.type === "blog" ? idea.identifier : (idea.baseName ?? idea.identifier),
+    slug: idea.type === "page" ? idea.identifier : null,
+    keywords: idea.keywords,
+  };
+}
 
 function adminHeaders(): HeadersInit {
   const secret = import.meta.env.VITE_ADMIN_API_SECRET as string | undefined;
@@ -60,6 +104,7 @@ function ContentAutomationPage() {
   const [parseErrors, setParseErrors] = useState<string[]>([]);
   const [excelMessage, setExcelMessage] = useState<string | null>(null);
   const [excelBusy, setExcelBusy] = useState(false);
+  const [pasteOpen, setPasteOpen] = useState(false);
   const excelInputRef = useRef<HTMLInputElement>(null);
   const bulkTextareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -137,6 +182,25 @@ function ContentAutomationPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const saveKeywords = useMutation({
+    mutationFn: async (payload: {
+      type: "blog" | "page";
+      id: number;
+      keywords: string;
+      mode: KeywordSaveMode;
+    }) => {
+      const res = await fetch("/api/admin/topic-ideas", {
+        method: "PATCH",
+        headers: adminHeaders(),
+        body: JSON.stringify(payload),
+      });
+      const json = await readJson(res);
+      if (!res.ok) throw new Error(json.error || res.statusText);
+      return json;
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const settings = settingsQ.data;
   const allIdeas = ideasQ.data ?? [];
   const filtered = useMemo(
@@ -205,7 +269,7 @@ function ContentAutomationPage() {
     <div className="space-y-5">
       <AdminPageHeader
         title="Content Automation"
-        description="Daily blog and static-page publishing from queued ideas. Cron runs at 06:00 (blog) and 07:00 (pages) UTC."
+        description="Unified SEO content engine: daily publish quotas, keyword targets, Pexels images, and 15-day intelligent refresh. Cron still runs at 06:00 (blog) and 07:00 (pages) UTC."
       />
 
       {missingSecret && (
@@ -215,10 +279,22 @@ function ContentAutomationPage() {
       )}
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList>
+        <TabsList className="flex h-auto flex-wrap">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
           <TabsTrigger value="ideas">Content Ideas</TabsTrigger>
+          <TabsTrigger value="keywords">Keywords</TabsTrigger>
+          <TabsTrigger value="existing">Existing</TabsTrigger>
+          <TabsTrigger value="refresh">Refresh</TabsTrigger>
+          <TabsTrigger value="images">Images</TabsTrigger>
+          <TabsTrigger value="versions">Versions</TabsTrigger>
+          <TabsTrigger value="jobs">Jobs</TabsTrigger>
+          <TabsTrigger value="cannibalization">Cannibalization</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="overview" className="mt-4">
+          <SeoOverviewPanel />
+        </TabsContent>
 
         <TabsContent value="settings" className="mt-4 space-y-4">
           <Card>
@@ -234,24 +310,51 @@ function ContentAutomationPage() {
                     onChange={(v) => patchSettings.mutate({ automation_enabled: v })}
                     disabled={patchSettings.isPending}
                   />
-                  <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="grid gap-4 sm:grid-cols-3">
                     <NumberField
                       label="Blog posts per day"
                       value={settings.blog_posts_per_day}
                       min={0}
                       max={20}
                       onChange={(v) => patchSettings.mutate({ blog_posts_per_day: v })}
-                      hint="How many pending blog ideas to publish each cron/manual run."
+                      hint="Default 2. Cron and Run Now share this quota."
                     />
                     <NumberField
-                      label="Static pages per day"
+                      label="SEO pages per day"
                       value={settings.static_pages_per_day}
                       min={0}
                       max={50}
                       onChange={(v) => patchSettings.mutate({ static_pages_per_day: v })}
-                      hint="How many pending page ideas to publish each cron/manual run."
+                      hint="Default 3. Cron and Run Now share this quota."
+                    />
+                    <NumberField
+                      label="Daily total limit"
+                      value={settings.daily_total_limit ?? 5}
+                      min={0}
+                      max={20}
+                      onChange={(v) => patchSettings.mutate({ daily_total_limit: v })}
+                      hint="Hard cap across blogs + pages. Default 5."
                     />
                   </div>
+                  <ToggleRow label="Auto SEO optimization" desc="When on, injects keyword/intent context, enforces the thin-content floor, and allows intelligent refresh rewrites. New-publish quality and link gates always run." value={settings.auto_seo_optimization} onChange={(v) => patchSettings.mutate({ auto_seo_optimization: v })} disabled={patchSettings.isPending} />
+                  <ToggleRow label="Auto internal linking" desc="Keep planned, inventory-validated internal links." value={settings.auto_internal_linking} onChange={(v) => patchSettings.mutate({ auto_internal_linking: v })} disabled={patchSettings.isPending} />
+                  <ToggleRow label="Two-way linking" desc="Add a contextual back-link on a related live item when it is genuinely useful. The update is sanitized before it is written." value={settings.two_way_linking} onChange={(v) => patchSettings.mutate({ two_way_linking: v })} disabled={patchSettings.isPending} />
+                  <ToggleRow label="Cannibalization check" desc="Skip new publish when an existing item already targets the same primary keyword." value={settings.cannibalization_check} onChange={(v) => patchSettings.mutate({ cannibalization_check: v })} disabled={patchSettings.isPending} />
+                  <ToggleRow label="Broken link check" desc="On refresh and two-way links, rewrite invented/unpublished Yaarzo URLs and abort the write if blocking link issues remain. Invented URLs are always rewritten." value={settings.broken_link_check} onChange={(v) => patchSettings.mutate({ broken_link_check: v })} disabled={patchSettings.isPending} />
+                  <ToggleRow label="New page discovery" desc="Include existing published Yaarzo inventory URLs in generation context so the model can differentiate. Does not enqueue extra pages beyond the daily quota." value={settings.new_page_discovery} onChange={(v) => patchSettings.mutate({ new_page_discovery: v })} disabled={patchSettings.isPending} />
+                  <ToggleRow label="Content refresh" desc="15-day intelligent refresh after each cron run. Good images are kept." value={settings.content_refresh_enabled} onChange={(v) => patchSettings.mutate({ content_refresh_enabled: v })} disabled={patchSettings.isPending} />
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <NumberField label="Refresh interval (days)" value={settings.refresh_interval_days ?? 15} min={1} max={365} onChange={(v) => patchSettings.mutate({ refresh_interval_days: v })} />
+                    <NumberField label="Minimum meaningful change %" value={settings.minimum_content_change_percent ?? 10} min={0} max={100} onChange={(v) => patchSettings.mutate({ minimum_content_change_percent: v })} hint="Threshold for evaluating a refresh, not a rewrite quota." />
+                  </div>
+                  <ToggleRow label="Only update when meaningful" value={settings.only_update_when_meaningful} onChange={(v) => patchSettings.mutate({ only_update_when_meaningful: v })} disabled={patchSettings.isPending} />
+                  <ToggleRow label="Dry-run optimization" desc="Audit and propose refresh/migration changes without writing published content." value={settings.dry_run_optimization} onChange={(v) => patchSettings.mutate({ dry_run_optimization: v })} disabled={patchSettings.isPending} />
+                  <ToggleRow label="Keep previous versions" desc="Snapshot live HTML before refresh, two-way link, and regenerate writes. Restore still works on versions that already exist." value={settings.keep_previous_versions} onChange={(v) => patchSettings.mutate({ keep_previous_versions: v })} disabled={patchSettings.isPending} />
+                  <NumberField label="Maximum versions" value={settings.max_versions ?? 10} min={1} max={50} onChange={(v) => patchSettings.mutate({ max_versions: v })} />
+                  <ToggleRow label="Pexels images" desc="One server-side Pexels image per new item. Uses PEXELS_API_KEY only on the server." value={settings.pexels_images_enabled} onChange={(v) => patchSettings.mutate({ pexels_images_enabled: v })} disabled={patchSettings.isPending} />
+                  <ToggleRow label="Image markup optimization" desc="Add width, height, lazy-loading, and async decoding on the selected Pexels image. Does not re-encode or download files." value={settings.image_optimization} onChange={(v) => patchSettings.mutate({ image_optimization: v })} disabled={patchSettings.isPending} />
+                  <ToggleRow label="Prevent duplicate Pexels photos" value={settings.image_duplicate_prevention} onChange={(v) => patchSettings.mutate({ image_duplicate_prevention: v })} disabled={patchSettings.isPending} />
+                  <ToggleRow label="Pause existing-content migration" value={settings.migration_paused} onChange={(v) => patchSettings.mutate({ migration_paused: v })} disabled={patchSettings.isPending} />
                   <div className="flex flex-wrap gap-2">
                     <Button
                       onClick={() => runPublish.mutate("blog")}
@@ -323,6 +426,16 @@ function ContentAutomationPage() {
                 >
                   {excelBusy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileSpreadsheet className="mr-2 h-4 w-4" />}
                   Import from Excel
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={ideasQ.isLoading}
+                  onClick={() => setPasteOpen(true)}
+                >
+                  <ClipboardPaste className="mr-2 h-4 w-4" />
+                  Paste Keyword Research
                 </Button>
               </div>
               {excelMessage && (
@@ -447,7 +560,52 @@ Type: girls`}
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="keywords" className="mt-4">
+          <SeoKeywordsPanel />
+        </TabsContent>
+        <TabsContent value="existing" className="mt-4">
+          <SeoInventoryPanel />
+        </TabsContent>
+        <TabsContent value="refresh" className="mt-4">
+          <SeoRefreshPanel />
+        </TabsContent>
+        <TabsContent value="images" className="mt-4">
+          <SeoImagesPanel />
+        </TabsContent>
+        <TabsContent value="versions" className="mt-4">
+          <SeoVersionsPanel />
+        </TabsContent>
+        <TabsContent value="jobs" className="mt-4">
+          <SeoJobsPanel />
+        </TabsContent>
+        <TabsContent value="cannibalization" className="mt-4">
+          <SeoCannibalizationPanel />
+        </TabsContent>
       </Tabs>
+
+      <PasteKeywordResearchDialog
+        open={pasteOpen}
+        onOpenChange={setPasteOpen}
+        variant="queue"
+        requireMatch
+        candidates={allIdeas.map(ideaToCandidate)}
+        matchFn={matchKeywordResearchTitle}
+        applyBusy={saveKeywords.isPending}
+        candidatesLoading={ideasQ.isLoading}
+        onApply={async ({ match, keywordsText, saveMode }) => {
+          if (!match) throw new Error("No matching pending item found");
+          const id = Number(match.id);
+          if (!Number.isInteger(id) || id < 1) throw new Error("No matching pending item found");
+          await saveKeywords.mutateAsync({
+            type: match.type,
+            id,
+            keywords: keywordsText,
+            mode: saveMode,
+          });
+          qc.invalidateQueries({ queryKey: ["content-automation-ideas"] });
+        }}
+      />
     </div>
   );
 }

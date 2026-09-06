@@ -178,6 +178,8 @@ export const MODULES = {
       "src/lib/cms-footer.test.ts",
       "src/lib/content-image-seo.test.ts",
       "src/lib/pages-cms/pages-editor-new-page.test.tsx",
+      "src/lib/content-automation/parse-keyword-research.test.ts",
+      "src/lib/content-automation/seo-engine.test.ts",
     ],
   },
   blog: {
@@ -229,6 +231,8 @@ export const MODULES = {
       "src/lib/admin-blog-nav.test.ts",
       "src/lib/content-automation/parse-bulk-ideas.test.ts",
       "src/lib/content-automation/excel-ideas.test.ts",
+      "src/lib/content-automation/parse-keyword-research.test.ts",
+      "src/lib/content-automation/seo-engine.test.ts",
       "src/lib/tiptap-html-source.test.ts",
       "src/lib/content-image-seo.test.ts",
       "src/lib/public-routes.test.ts",

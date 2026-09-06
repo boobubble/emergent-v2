@@ -60,6 +60,8 @@ describe("/pages-editor/new empty page", () => {
     expect(route).toContain('createFileRoute("/pages-editor/$id")');
     expect(route).toContain('const isNew = id === "new"');
     expect(route).toContain("useAuth");
+    expect(route).toContain("Paste Keyword Research");
+    expect(route).toContain("PasteKeywordResearchDialog");
     expect(route).toContain("PageEditorGate");
     expect(route).toContain("Admin access required");
     expect(route).toContain("Checking access");

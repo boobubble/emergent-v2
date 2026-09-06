@@ -12,8 +12,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Pencil, Plus, Trash2 } from "lucide-react";
-import { listPages, deletePage } from "@/lib/pages.functions";
+import { ClipboardPaste, Pencil, Plus, Trash2 } from "lucide-react";
+import { listPages, deletePage, listPageKeywordTargets, updatePageTags } from "@/lib/pages.functions";
+import { matchPublishedContentTitle, type KeywordResearchCandidate } from "@/lib/content-automation/parse-keyword-research";
+import { PasteKeywordResearchDialog } from "@/lib/content-automation/paste-keyword-research-dialog";
 import { ImageStatusBadge } from "@/components/content-images/ImageStatusBadge";
 import type { ImageStatusSummary } from "@/lib/content-image-seo";
 import {
@@ -101,6 +103,8 @@ function AllPagesPage() {
   const canDelete = rolesLoaded && isAdmin;
   const listFn = useServerFn(listPages);
   const deleteFn = useServerFn(deletePage);
+  const listKeywordTargetsFn = useServerFn(listPageKeywordTargets);
+  const updatePageTagsFn = useServerFn(updatePageTags);
   const listCountriesFn = useServerFn(listPageCountries);
   const listStatesFn = useServerFn(listPageStates);
   const listCitiesFn = useServerFn(listPageCities);
@@ -131,6 +135,7 @@ function AllPagesPage() {
   const [saveViewOpen, setSaveViewOpen] = useState(false);
   const [viewName, setViewName] = useState("");
   const [citySearch, setCitySearch] = useState("");
+  const [pasteOpen, setPasteOpen] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(searchInput.trim()), 300);
@@ -155,6 +160,20 @@ function AllPagesPage() {
     queryKey: ["admin", "pages", "all", queryParams],
     queryFn: async () => listFn({ data: queryParams }) as Promise<PaginatedResult<PageRow>>,
     staleTime: 15_000,
+  });
+
+  const keywordTargetsQ = useQuery({
+    queryKey: ["admin", "pages", "keyword-targets"],
+    queryFn: () => listKeywordTargetsFn(),
+    enabled: pasteOpen,
+    staleTime: 30_000,
+  });
+
+  const savePageTagsMut = useMutation({
+    mutationFn: (payload: { id: string; tags: string[] }) => updatePageTagsFn({ data: payload }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "pages"] });
+    },
   });
 
   const countriesQ = useQuery({
@@ -295,6 +314,10 @@ function AllPagesPage() {
               <Button size="sm"><Plus className="mr-1 h-4 w-4" />New page</Button>
             </Link>
             <Button size="sm" variant="outline" onClick={resetFilters}>Reset filters</Button>
+            <Button size="sm" variant="outline" onClick={() => setPasteOpen(true)}>
+              <ClipboardPaste className="mr-1 h-4 w-4" />
+              Paste Keyword Research
+            </Button>
             {canDelete && (
             <Button size="sm" variant="outline" onClick={() => setSaveViewOpen(true)}>Save view</Button>
             )}
@@ -707,6 +730,29 @@ function AllPagesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <PasteKeywordResearchDialog
+        open={pasteOpen}
+        onOpenChange={setPasteOpen}
+        variant="tags"
+        requireMatch
+        maxTags={20}
+        candidates={(keywordTargetsQ.data ?? []).map((row): KeywordResearchCandidate => ({
+          type: "page",
+          id: row.id,
+          title: row.h1 || row.title,
+          slug: row.slug,
+          aliases: [row.title, row.h1, row.meta_title].filter((v): v is string => Boolean(v && v.trim())),
+          keywords: (row.tags ?? []).join(", ") || null,
+        }))}
+        matchFn={matchPublishedContentTitle}
+        applyBusy={savePageTagsMut.isPending}
+        candidatesLoading={keywordTargetsQ.isLoading}
+        onApply={async ({ match, tags }) => {
+          if (!match) throw new Error("No matching published item found");
+          await savePageTagsMut.mutateAsync({ id: String(match.id), tags });
+        }}
+      />
     </div>
   );
 }

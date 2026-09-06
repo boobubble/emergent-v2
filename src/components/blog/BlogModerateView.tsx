@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Check, Eye, Image as ImageIcon, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Check, ClipboardPaste, Eye, Image as ImageIcon, Pencil, Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +21,9 @@ import { excerptFromHtml, formatBlogTimestamp } from "@/components/blog/blog-for
 import { ImageStatusBadge } from "@/components/content-images/ImageStatusBadge";
 import { summarizeContentImages, type ImageStatusKind } from "@/lib/content-image-seo";
 import { publicBlogTags } from "@/lib/blog.public";
-import { parseKeywordPhrases } from "@/lib/blog-taxonomy";
+import { MAX_BLOG_KEYWORDS, MAX_BLOG_TAGS, parseKeywordPhrases } from "@/lib/blog-taxonomy";
+import { matchPublishedContentTitle, type KeywordResearchCandidate } from "@/lib/content-automation/parse-keyword-research";
+import { PasteKeywordResearchDialog } from "@/lib/content-automation/paste-keyword-research-dialog";
 import { canStartBlogDelete, nextPageAfterDelete } from "@/lib/blog-delete";
 import { cn } from "@/lib/utils";
 
@@ -72,12 +74,14 @@ export function BlogModerateView({
   loading,
   onUpdateStatus,
   onDelete,
+  onSaveTaxonomy,
   canModerate = true,
 }: {
   posts: ModeratePost[];
   loading: boolean;
   onUpdateStatus: (id: string, status: "published" | "rejected") => void;
   onDelete: (id: string) => Promise<{ ok: boolean; error?: string }>;
+  onSaveTaxonomy?: (id: string, payload: { tags: string[]; keywords: string }) => Promise<void>;
   /** Admins can approve/reject/delete. Writers browse and edit only. */
   canModerate?: boolean;
 }) {
@@ -93,6 +97,8 @@ export function BlogModerateView({
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [pasteOpen, setPasteOpen] = useState(false);
+  const [pasteBusy, setPasteBusy] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(searchInput.trim()), 300);
@@ -227,6 +233,12 @@ export function BlogModerateView({
             <Button size="sm" variant="outline" onClick={resetFilters}>
               Reset Filters
             </Button>
+            {onSaveTaxonomy && (
+              <Button size="sm" variant="outline" onClick={() => setPasteOpen(true)} disabled={loading}>
+                <ClipboardPaste className="mr-1 h-4 w-4" />
+                Paste Keyword Research
+              </Button>
+            )}
           </div>
 
           <div className="flex flex-wrap gap-1.5">
@@ -457,6 +469,36 @@ export function BlogModerateView({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {onSaveTaxonomy && (
+        <PasteKeywordResearchDialog
+          open={pasteOpen}
+          onOpenChange={setPasteOpen}
+          variant="tags"
+          requireMatch
+          maxTags={MAX_BLOG_TAGS}
+          maxPhrases={MAX_BLOG_KEYWORDS}
+          candidates={posts.map((post): KeywordResearchCandidate => ({
+            type: "blog",
+            id: post.id,
+            title: post.title,
+            slug: post.slug,
+            keywords: publicBlogTags(post.tags).join(", ") || null,
+          }))}
+          matchFn={matchPublishedContentTitle}
+          applyBusy={pasteBusy}
+          candidatesLoading={loading}
+          onApply={async ({ match, tags, keywordsText }) => {
+            if (!match) throw new Error("No matching published item found");
+            setPasteBusy(true);
+            try {
+              await onSaveTaxonomy(String(match.id), { tags, keywords: keywordsText });
+            } finally {
+              setPasteBusy(false);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

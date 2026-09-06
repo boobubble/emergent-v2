@@ -33,6 +33,28 @@ import {
   type PlannedInternalLink,
 } from "@/lib/content-automation/publish-quality";
 import { coherentGeneratedTitles } from "@/lib/pages-cms/coherent-titles";
+import { claimDailyPublishSlot, finishJob, remainingPublishSlots } from "@/lib/content-automation/job-lock";
+import {
+  appendVisibleFaqs,
+  applyPexelsIfEnabled,
+  blockIfExactCannibalization,
+  buildGenerationContext,
+  collectFaqs,
+  formatGenerationContextBlock,
+  maybeTwoWayLink,
+  recordPublishedBundle,
+  safeFaqJsonLd,
+  thinContentError,
+} from "@/lib/content-automation/seo-engine";
+import { runDueRefresh } from "@/lib/content-automation/seo-refresh";
+import { snapshotContent } from "@/lib/content-automation/versioning";
+import {
+  shouldDiscoverRelatedPages,
+  shouldEnforceThinContent,
+  shouldInjectSeoContext,
+  shouldSnapshotVersions,
+} from "@/lib/content-automation/seo-settings";
+import type { SeoJobRow } from "@/lib/content-automation/job-lock";
 
 export type StaticPageEntry = {
   slug: string;
@@ -209,6 +231,7 @@ async function generatePageContent(
   entry: StaticPageEntry,
   peerPages: GeoPage[] = [],
   publishedSlugs: Set<string> = new Set(),
+  settings?: Awaited<ReturnType<typeof getAutomationSettings>>,
 ) {
   const contextLine = entry.section === "country_language"
     ? `This page is for people from a specific country who want to chat in a specific language: "${entry.base_name}".`
@@ -246,10 +269,19 @@ async function generatePageContent(
     .map((item, i) => `${i + 1}. <a href="${item.href}"> — short 2-4 word natural anchor about "${item.label}". Never dump a full SEO title.`)
     .join("\n");
 
+  const seoContext = await buildGenerationContext({
+    kind: "page",
+    title: `${entry.base_name} chat room`,
+    keywords: entry.keywords,
+    primaryKeyword: `${entry.base_name} chat room`,
+    slug: entry.slug,
+    discoverRelated: settings ? shouldDiscoverRelatedPages(settings) : true,
+  });
+
   const anthropic = getAnthropic();
   const message = await anthropic.messages.create({
     model: "claude-sonnet-5",
-    max_tokens: 2000,
+    max_tokens: 3200,
     system: YAARZO_MASTER_SYSTEM_PROMPT,
     messages: [{
       role: "user",
@@ -257,8 +289,10 @@ async function generatePageContent(
 
 ${contextLine}
 
+${settings && !shouldInjectSeoContext(settings) ? "" : formatGenerationContextBlock(seoContext)}
+
 Requirements:
-- 500-750 words total
+- Aim for 700–900 useful words. Do not pad with filler to hit the range.
 - Do NOT include an <h1> tag (rendered separately)
 - Do NOT include a "join now" or "start chatting" call-to-action button or link — that is added separately as /chatroom
 - HARD: Never output "/chatrooms" — the chat hub is "/chatroom". Never output "/p/{slug}" — use "/{slug}" or https://yaarzo.com/{slug}
@@ -286,7 +320,11 @@ FAQ1_A: <2-3 sentence answer>
 FAQ2_Q: <another real question>
 FAQ2_A: <2-3 sentence answer>
 FAQ3_Q: <another real question>
-FAQ3_A: <2-3 sentence answer>`,
+FAQ3_A: <2-3 sentence answer>
+FAQ4_Q: <optional fourth question or leave blank>
+FAQ4_A: <optional fourth answer>
+FAQ5_Q: <optional fifth question or leave blank>
+FAQ5_A: <optional fifth answer>`,
     }],
   });
 
@@ -308,8 +346,11 @@ FAQ3_A: <2-3 sentence answer>`,
       { question: get("FAQ1_Q"), answer: get("FAQ1_A") },
       { question: get("FAQ2_Q"), answer: get("FAQ2_A") },
       { question: get("FAQ3_Q"), answer: get("FAQ3_A") },
+      { question: get("FAQ4_Q"), answer: get("FAQ4_A") },
+      { question: get("FAQ5_Q"), answer: get("FAQ5_A") },
     ].filter((f) => f.question && f.answer),
     linksUsed: planned.map((p) => p.href),
+    seoContext,
   };
 }
 
@@ -346,7 +387,7 @@ async function buildRowPayload(
   return {
     title,
     h1,
-    content: generated.contentHtml,
+    content: appendVisibleFaqs(generated.contentHtml, generated.faq),
     excerpt: metaDescription,
     category: entry.section,
     primary_keyword: primaryKeyword,
@@ -361,12 +402,12 @@ async function buildRowPayload(
     faq_content: generated.faq,
     internal_links_json: generated.linksUsed,
     internal_link_count: generated.linksUsed.length,
-    schema_jsonld: {
-      "@context": "https://schema.org",
-      "@type": "WebPage",
-      name: meta_title,
+    schema_jsonld: safeFaqJsonLd({
+      title: meta_title,
       description: metaDescription,
-    },
+      url: `https://yaarzo.com/${entry.slug}`,
+      faqs: generated.faq,
+    }),
     city_id: cityId,
     country_id: countryId,
     content_status: "complete",
@@ -418,8 +459,27 @@ function applyStaticQualityGate(
 type PagePublishOutcome = { success: boolean; error?: string };
 
 async function regeneratePage(entry: StaticPageEntry): Promise<PagePublishOutcome> {
+  const settings = await getAutomationSettings();
   try {
     console.log(`\n🔄 Regenerating: ${entry.slug}...`);
+    const existingRow = await db().from("custom_pages").select("*").eq("slug", entry.slug).maybeSingle();
+    if (existingRow.data && shouldSnapshotVersions(settings)) {
+      await snapshotContent({
+        content_type: "page",
+        source_id: String(existingRow.data.id),
+        title: existingRow.data.title,
+        slug: existingRow.data.slug,
+        canonical_url: existingRow.data.canonical_url,
+        content: existingRow.data.content,
+        seo_info: {
+          h1: existingRow.data.h1,
+          meta_title: existingRow.data.meta_title,
+          meta_description: existingRow.data.meta_description,
+        },
+        change_reason: "regenerate",
+        change_summary: "Admin/API regenerate — URL preserved",
+      }, settings.max_versions);
+    }
     const { cityId, countryId: cityCountryId } = await findCityId(entry.lookup_city, entry.lookup_country_hint);
     const directCountryId = entry.section === "country" ? await findCountryId(entry.base_name) : cityCountryId;
     const geoPool = await loadPublishedGeoPages();
@@ -429,11 +489,19 @@ async function regeneratePage(entry: StaticPageEntry): Promise<PagePublishOutcom
     const publishedSlugs = publishedSlugSet(geoPool);
     let generated: Awaited<ReturnType<typeof generatePageContent>>;
     try {
-      generated = await generatePageContent(entry, peerPages, publishedSlugs);
+      generated = await generatePageContent(entry, peerPages, publishedSlugs, settings);
     } catch (err) {
       const error = failureMessage(err);
       console.error(`❌ Content generation failed for "${entry.slug}":`, error);
       return { success: false, error };
+    }
+    const cannibal = await blockIfExactCannibalization(settings, generated.seoContext, {
+      type: "page",
+      url: `https://yaarzo.com/${entry.slug}`,
+      id: existing?.id,
+    });
+    if (cannibal) {
+      return { success: false, error: cannibal };
     }
     const ungated = await buildRowPayload(entry, generated, cityId, directCountryId);
     const gated = applyStaticQualityGate(entry, ungated, publishedSlugs, peerPages);
@@ -441,7 +509,31 @@ async function regeneratePage(entry: StaticPageEntry): Promise<PagePublishOutcom
       console.error(`❌ ${gated.error} — skipping "${entry.slug}"`);
       return { success: false, error: gated.error };
     }
-    const payload = gated.payload;
+    const thin = shouldEnforceThinContent(settings) ? thinContentError("page", gated.payload.content) : null;
+    if (thin) return { success: false, error: thin };
+    const image = await applyPexelsIfEnabled({
+      settings,
+      html: gated.payload.content,
+      topic: `${entry.base_name} chat room`,
+      primaryKeyword: gated.payload.primary_keyword,
+      kind: "page",
+      sourceId: existing?.id,
+      geo: entry.base_name,
+    });
+    const payload = {
+      ...gated.payload,
+      content: image.html,
+      slug: entry.slug,
+      canonical_url: `https://yaarzo.com/${entry.slug}`,
+      schema_jsonld: safeFaqJsonLd({
+        title: gated.payload.meta_title,
+        description: gated.payload.meta_description,
+        url: `https://yaarzo.com/${entry.slug}`,
+        faqs: collectFaqs(image.html, gated.payload.faq_content),
+        image: image.ogImage,
+      }),
+    };
+    if (image.ogImage) payload.og_image = image.ogImage;
 
     const { error } = await db().from("custom_pages").update(payload).eq("slug", entry.slug);
     if (error) {
@@ -461,7 +553,18 @@ async function regeneratePage(entry: StaticPageEntry): Promise<PagePublishOutcom
   }
 }
 
-async function publishNewPage(entry: StaticPageEntry): Promise<PagePublishOutcome> {
+async function publishNewPage(
+  entry: StaticPageEntry,
+  slot: number,
+  settings: Awaited<ReturnType<typeof getAutomationSettings>>,
+  existingJobId?: string,
+): Promise<PagePublishOutcome> {
+  let jobId = existingJobId;
+  if (!jobId) {
+    const claimed = await claimDailyPublishSlot({ kind: "page", slot, title: entry.base_name, slug: entry.slug });
+    if (!claimed.ok) return { success: false, error: `Job ${claimed.reason}` };
+    jobId = claimed.job.id;
+  }
   try {
     console.log(`\n📝 Generating: ${entry.slug}...`);
     const { cityId, countryId: cityCountryId } = await findCityId(entry.lookup_city, entry.lookup_country_hint);
@@ -472,19 +575,55 @@ async function publishNewPage(entry: StaticPageEntry): Promise<PagePublishOutcom
     const publishedSlugs = publishedSlugSet(geoPool);
     let generated: Awaited<ReturnType<typeof generatePageContent>>;
     try {
-      generated = await generatePageContent(entry, peerPages, publishedSlugs);
+      generated = await generatePageContent(entry, peerPages, publishedSlugs, settings);
     } catch (err) {
       const error = failureMessage(err);
       console.error(`❌ Content generation failed for "${entry.slug}":`, error);
+      await finishJob(jobId, "failed", { error, slug: entry.slug, title: entry.base_name });
       return { success: false, error };
+    }
+    const cannibal = await blockIfExactCannibalization(settings, generated.seoContext, {
+      type: "page",
+      url: `https://yaarzo.com/${entry.slug}`,
+    });
+    if (cannibal) {
+      await finishJob(jobId, "skipped", { error: cannibal, slug: entry.slug });
+      return { success: false, error: cannibal };
     }
     const ungated = await buildRowPayload(entry, generated, cityId, directCountryId);
     const gated = applyStaticQualityGate(entry, ungated, publishedSlugs, peerPages);
     if (gated.error) {
       console.error(`❌ ${gated.error} — skipping "${entry.slug}"`);
+      await finishJob(jobId, "failed", { error: gated.error, slug: entry.slug });
       return { success: false, error: gated.error };
     }
-    const payload = gated.payload;
+    const thin = shouldEnforceThinContent(settings) ? thinContentError("page", gated.payload.content) : null;
+    if (thin) {
+      await finishJob(jobId, "failed", { error: thin, slug: entry.slug });
+      return { success: false, error: thin };
+    }
+    const image = await applyPexelsIfEnabled({
+      settings,
+      html: gated.payload.content,
+      topic: `${entry.base_name} chat room`,
+      primaryKeyword: gated.payload.primary_keyword,
+      kind: "page",
+      geo: entry.base_name,
+    });
+    const payload = {
+      ...gated.payload,
+      content: image.html,
+      slug: entry.slug,
+      canonical_url: `https://yaarzo.com/${entry.slug}`,
+      schema_jsonld: safeFaqJsonLd({
+        title: gated.payload.meta_title,
+        description: gated.payload.meta_description,
+        url: `https://yaarzo.com/${entry.slug}`,
+        faqs: collectFaqs(image.html, gated.payload.faq_content),
+        image: image.ogImage,
+      }),
+    };
+    if (image.ogImage) payload.og_image = image.ogImage;
 
     const { data: inserted, error } = await db()
       .from("custom_pages")
@@ -493,16 +632,44 @@ async function publishNewPage(entry: StaticPageEntry): Promise<PagePublishOutcom
       .single();
     if (error) {
       console.error(`❌ Failed to insert "${entry.slug}":`, error.message);
+      await finishJob(jobId, "failed", { error: error.message, slug: entry.slug });
       return { success: false, error: error.message };
     }
     if (inserted?.id) {
       await persistPeerGraph({ ...source, id: inserted.id }, geoPool);
+      await recordPublishedBundle({
+        kind: "page",
+        sourceId: String(inserted.id),
+        slug: entry.slug,
+        title: payload.title,
+        h1: payload.h1,
+        html: image.html,
+        primaryKeyword: payload.primary_keyword,
+        secondary: payload.secondary_keywords,
+        intent: generated.seoContext.searchIntent,
+        imageStatus: image.imageStatus,
+        refreshDays: settings.refresh_interval_days,
+      });
+      await maybeTwoWayLink({
+        settings,
+        kind: "page",
+        newSlug: entry.slug,
+        newTitle: payload.title,
+        related: peerPages.slice(0, 1).map((p) => ({ slug: p.slug, title: p.title, id: p.id })),
+      });
     }
+    await finishJob(jobId, "completed", {
+      sourceId: inserted?.id ? String(inserted.id) : undefined,
+      slug: entry.slug,
+      title: entry.base_name,
+      result: { imageStatus: image.imageStatus, photoId: image.photoId },
+    });
     console.log(`✅ Published: yaarzo.com/${entry.slug}`);
     return { success: true };
   } catch (err) {
     const error = failureMessage(err);
     console.error(`❌ "${entry.slug}":`, error);
+    await finishJob(jobId, "failed", { error, slug: entry.slug });
     return { success: false, error };
   }
 }
@@ -519,7 +686,8 @@ export async function runStaticPublish(request: Request): Promise<Response> {
   const settings = await getAutomationSettings();
   if (!settings.automation_enabled) return pausedResponse();
 
-  const pagesPerRun = Math.max(0, Number(settings.static_pages_per_day) || 0);
+  const quota = await remainingPublishSlots(settings);
+  const pagesPerRun = quota.pages;
   const url = new URL(request.url);
   const regenerateSlugs = parseRegenerateSlugs(url);
 
@@ -556,11 +724,46 @@ export async function runStaticPublish(request: Request): Promise<Response> {
   const pending = masterList.filter((e) => !existingSlugs.has(e.slug));
   const toPublish = pending.slice(0, pagesPerRun);
 
-  for (const entry of toPublish) {
-    const outcome = await publishNewPage(entry);
+  for (let i = 0; i < toPublish.length; i++) {
+    const entry = toPublish[i];
+    const outcome = await publishNewPage(entry, quota.pagesUsed + i + 1, settings);
     results.push({ slug: entry.slug, success: outcome.success, error: outcome.error });
   }
 
   const published = results.filter((r) => r.success && !r.regenerated).length;
-  return Response.json({ published, results });
+  const refresh = settings.content_refresh_enabled ? await runDueRefresh("page", 1) : { refreshed: 0 };
+  return Response.json({ published, results, quota, refresh });
+}
+
+export async function retryPagePublishFromJob(
+  job: SeoJobRow,
+  settings: Awaited<ReturnType<typeof getAutomationSettings>>,
+): Promise<PagePublishOutcome> {
+  if (job.source_id) {
+    const { data } = await db().from("custom_pages").select("id").eq("id", job.source_id).maybeSingle();
+    if (data) {
+      await finishJob(job.id, "completed", { result: { skipped: "already_published" }, sourceId: job.source_id });
+      return { success: true };
+    }
+  }
+  const slug = job.slug;
+  if (!slug) {
+    await finishJob(job.id, "failed", { error: "Retry missing slug" });
+    return { success: false, error: "Retry missing slug" };
+  }
+  const existing = await getExistingSlugs();
+  if (existing.has(slug)) {
+    await finishJob(job.id, "completed", { result: { skipped: "already_published" }, slug });
+    return { success: true };
+  }
+  const { data: idea } = await db()
+    .from("static_page_ideas")
+    .select("slug, section, base_name, lookup_city, lookup_country_hint, keywords")
+    .eq("slug", slug)
+    .maybeSingle();
+  if (!idea) {
+    await finishJob(job.id, "failed", { error: "Idea not found for retry", slug });
+    return { success: false, error: "Idea not found for retry" };
+  }
+  return publishNewPage(idea as StaticPageEntry, job.slot ?? 1, settings, job.id);
 }

@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
-  ArrowLeft, Save, ExternalLink, Eye, Settings2, Tag, Star,
+  ArrowLeft, Save, ExternalLink, Eye, Settings2, Tag, Star, ClipboardPaste,
   Calendar, FileText, Cloud, CloudOff, ShieldCheck, Info,
   X, Plus, Link2, History, MapPin, KeyRound, Braces, RefreshCw, PanelBottom,
 } from "lucide-react";
@@ -68,6 +68,7 @@ import {
 import { useAuth } from "@/lib/auth-store";
 import { getMyRoles } from "@/lib/admin.functions";
 import { pageEditorCtaDefaults } from "@/lib/page-cta";
+import { PasteKeywordResearchDialog } from "@/lib/content-automation/paste-keyword-research-dialog";
 
 export const Route = createFileRoute("/pages-editor/$id")({
   component: PageEditorGate,
@@ -279,6 +280,7 @@ function PageEditor() {
   const syncLinkCountFn = useServerFn(syncPageInternalLinkCount);
 
   const [row, setRow] = useState<PageRow>(emptyPage());
+  const [pasteOpen, setPasteOpen] = useState(false);
   const rowCountryId = row.country_id;
   const rowStateId = row.state_id;
 
@@ -1386,6 +1388,16 @@ function PageEditor() {
             </SidebarCard>
 
             <SidebarCard icon={<Tag className="h-4 w-4" />} title="Tags">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mb-2 h-7 w-full text-[11px]"
+                onClick={() => setPasteOpen(true)}
+              >
+                <ClipboardPaste className="mr-1 h-3.5 w-3.5" />
+                Paste Keyword Research
+              </Button>
               <TagsInput
                 value={row.tags ?? []}
                 onChange={(tags) => update("tags", tags)}
@@ -1483,6 +1495,16 @@ function PageEditor() {
           </TabsContent>
         </Tabs>
       </div>
+      <PasteKeywordResearchDialog
+        open={pasteOpen}
+        onOpenChange={setPasteOpen}
+        variant="tags"
+        requireMatch={false}
+        existingTags={row.tags}
+        maxTags={20}
+        applyLabel="Apply tags"
+        onApply={({ tags }) => update("tags", tags)}
+      />
     </div>
   );
 }

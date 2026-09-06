@@ -1,25 +1,31 @@
 import { db } from "@/lib/content-automation/db";
+import { mergeKeywords, type KeywordSaveMode } from "@/lib/content-automation/parse-keyword-research";
 
 export type IdeaStatus = "pending" | "published";
 export type IdeaType = "blog" | "page";
 
 export type NormalizedIdea = {
+  id: number;
   type: IdeaType;
   identifier: string;
   grouping: string;
   status: IdeaStatus;
   keywords: string | null;
+  baseName: string | null;
 };
 
 type BlogIdeaRow = {
+  id: number;
   title: string;
   category_slug: string;
   keywords: string | null;
 };
 
 type PageIdeaRow = {
+  id: number;
   slug: string;
   section: string;
+  base_name: string;
   keywords: string | null;
 };
 
@@ -34,7 +40,7 @@ function asStatus(published: boolean): IdeaStatus {
 
 async function fetchBlogIdeas(statusFilter?: IdeaStatus): Promise<NormalizedIdea[]> {
   const [{ data: ideas, error: ideasError }, { data: posts, error: postsError }] = await Promise.all([
-    db().from("blog_topic_ideas").select("title, category_slug, keywords").order("created_at", { ascending: true }),
+    db().from("blog_topic_ideas").select("id, title, category_slug, keywords").order("created_at", { ascending: true }),
     db().from("blog_posts").select("title"),
   ]);
   if (ideasError) throw new Error(ideasError.message);
@@ -45,11 +51,13 @@ async function fetchBlogIdeas(statusFilter?: IdeaStatus): Promise<NormalizedIdea
   );
 
   const rows: NormalizedIdea[] = ((ideas ?? []) as BlogIdeaRow[]).map((row) => ({
+    id: row.id,
     type: "blog",
     identifier: row.title,
     grouping: row.category_slug,
     status: asStatus(publishedTitles.has(row.title.trim())),
     keywords: emptyToNull(row.keywords),
+    baseName: null,
   }));
 
   if (!statusFilter) return rows;
@@ -58,7 +66,7 @@ async function fetchBlogIdeas(statusFilter?: IdeaStatus): Promise<NormalizedIdea
 
 async function fetchPageIdeas(statusFilter?: IdeaStatus): Promise<NormalizedIdea[]> {
   const [{ data: ideas, error: ideasError }, { data: pages, error: pagesError }] = await Promise.all([
-    db().from("static_page_ideas").select("slug, section, keywords").order("created_at", { ascending: true }),
+    db().from("static_page_ideas").select("id, slug, section, base_name, keywords").order("created_at", { ascending: true }),
     db().from("custom_pages").select("slug"),
   ]);
   if (ideasError) throw new Error(ideasError.message);
@@ -67,11 +75,13 @@ async function fetchPageIdeas(statusFilter?: IdeaStatus): Promise<NormalizedIdea
   const publishedSlugs = new Set((pages ?? []).map((p: { slug: string }) => p.slug));
 
   const rows: NormalizedIdea[] = ((ideas ?? []) as PageIdeaRow[]).map((row) => ({
+    id: row.id,
     type: "page",
     identifier: row.slug,
     grouping: row.section,
     status: asStatus(publishedSlugs.has(row.slug)),
     keywords: emptyToNull(row.keywords),
+    baseName: row.base_name ?? null,
   }));
 
   if (!statusFilter) return rows;
@@ -170,4 +180,58 @@ export async function upsertTopicIdeas(items: TopicIdeaInput[]) {
   }
 
   return { blogUpserted, pageUpserted, skipped };
+}
+
+export class IdeaNotFoundError extends Error {
+  constructor(titleOrId: string) {
+    super(`No matching pending item found for '${titleOrId}'`);
+    this.name = "IdeaNotFoundError";
+  }
+}
+
+export async function updateIdeaKeywords(opts: {
+  type: IdeaType;
+  id: number;
+  keywords: string;
+  mode?: KeywordSaveMode;
+}) {
+  const mode: KeywordSaveMode = opts.mode === "append" ? "append" : "replace";
+  const table = opts.type === "blog" ? "blog_topic_ideas" : "static_page_ideas";
+  const selectCols =
+    opts.type === "blog" ? "id, title, keywords" : "id, slug, base_name, keywords";
+
+  const { data: row, error: fetchError } = await db()
+    .from(table)
+    .select(selectCols)
+    .eq("id", opts.id)
+    .maybeSingle();
+  if (fetchError) throw new Error(fetchError.message);
+  if (!row) throw new IdeaNotFoundError(String(opts.id));
+
+  const typed = row as {
+    id: number;
+    title?: string;
+    slug?: string;
+    base_name?: string;
+    keywords: string | null;
+  };
+  const next = mergeKeywords(typed.keywords, opts.keywords, mode);
+  const { data, error } = await db()
+    .from(table)
+    .update({ keywords: emptyToNull(next) })
+    .eq("id", opts.id)
+    .select(selectCols)
+    .single();
+  if (error) throw new Error(error.message);
+
+  const saved = data as typeof typed;
+  return {
+    type: opts.type,
+    id: saved.id,
+    identifier: opts.type === "blog" ? String(saved.title ?? "") : String(saved.slug ?? ""),
+    baseName: opts.type === "page" ? saved.base_name ?? null : null,
+    keywords: emptyToNull(saved.keywords) ?? next,
+    previousKeywords: emptyToNull(typed.keywords),
+    mode,
+  };
 }

@@ -22,6 +22,23 @@ import {
   ensurePlannedLinks,
   type PlannedInternalLink,
 } from "@/lib/content-automation/publish-quality";
+import { claimDailyPublishSlot, finishJob, remainingPublishSlots } from "@/lib/content-automation/job-lock";
+import {
+  applyPexelsIfEnabled,
+  blockIfExactCannibalization,
+  buildGenerationContext,
+  formatGenerationContextBlock,
+  maybeTwoWayLink,
+  recordPublishedBundle,
+  thinContentError,
+} from "@/lib/content-automation/seo-engine";
+import { runDueRefresh } from "@/lib/content-automation/seo-refresh";
+import {
+  shouldEnforceThinContent,
+  shouldInjectSeoContext,
+  shouldDiscoverRelatedPages,
+} from "@/lib/content-automation/seo-settings";
+import type { SeoJobRow } from "@/lib/content-automation/job-lock";
 
 export type BlogTopic = {
   title: string;
@@ -91,30 +108,30 @@ function labelFromHref(href: string): string {
   return slug.replace(/-chat-room$/i, "").replace(/-/g, " ") || "related page";
 }
 
-async function generateContent(title: string, planned: PlannedInternalLink[]) {
+async function generateContent(title: string, planned: PlannedInternalLink[], seoContext = "") {
   const linkLines = planned
     .map((item, i) => `${i + 1}. <a href="${item.href}"> — short 2-5 word natural anchor about "${item.label}". Never dump a full page title.`)
     .join("\n");
   const anthropic = getAnthropic();
   const message = await anthropic.messages.create({
     model: "claude-sonnet-5",
-    max_tokens: 2500,
+    max_tokens: 4500,
     system: YAARZO_MASTER_SYSTEM_PROMPT,
     messages: [{
       role: "user",
       content: `Write an SEO-optimized blog post for Yaarzo, a free online chatroom and social community platform, on the topic: "${title}".
 
 Target audience: global, English-speaking.
-
+${seoContext ? `\n${seoContext}\n` : ""}
 Structure rules:
 - Do NOT include an <h1>
 - Use 3-5 <h2> section headings targeting natural long-tail search phrases
 - Use <h3> sub-headings where it helps scannability
-- 800-1000 words total
+- Aim for 1,200–1,500 useful words. Do not pad with filler to hit the range.
 - Write for humans first: specific, concrete advice, no generic filler
 - Vary sentence rhythm — mix short and long sentences like a real writer would
 - Output clean HTML only (h2, h3, p, ul/li, strong, a, and the one HTML comment described below) — no <html>/<body>/<h1> tags
-- Right after the intro paragraph, insert exactly this on its own line: <!-- IMAGE: a real 5-10 word description of an image that would fit here --> (a human will manually add the real image later — do not embed an actual <img> tag)
+- Right after the intro paragraph, insert exactly this on its own line: <!-- IMAGE: a real 5-10 word description of an image that would fit here --> (do not embed an actual <img> tag; a server-side image step may replace this comment)
 
 Include 2-3 internal links from this allowed list only, naturally placed in different sections (not next to each other). Every link must be relevant. Varied anchors — never repeat the same link text.
 ${linkLines}
@@ -161,17 +178,45 @@ async function getRelatedBlogPosts(categoryId: string, excludeSlug: string, coun
   if (!categoryId) return [];
   const { data } = await db()
     .from("blog_posts")
-    .select("title, slug")
+    .select("id, title, slug")
     .eq("status", "published")
     .eq("category_id", categoryId)
     .neq("slug", excludeSlug)
     .limit(count);
-  return (data ?? []) as Array<{ title: string; slug: string }>;
+  return (data ?? []) as Array<{ id: string; title: string; slug: string }>;
 }
 
-async function publishTopic(topic: BlogTopic): Promise<PublishResult> {
+async function publishTopic(
+  topic: BlogTopic,
+  slot: number,
+  settings: Awaited<ReturnType<typeof getAutomationSettings>>,
+  existingJobId?: string,
+): Promise<PublishResult> {
+  let jobId = existingJobId;
+  if (!jobId) {
+    const claimed = await claimDailyPublishSlot({ kind: "blog", slot, title: topic.title });
+    if (!claimed.ok) {
+      return { title: topic.title, success: false, error: `Job ${claimed.reason}` };
+    }
+    jobId = claimed.job.id;
+  }
   try {
     console.log(`\n📝 Generating: ${topic.title}...`);
+
+    const ctx = await buildGenerationContext({
+      kind: "blog",
+      title: topic.title,
+      keywords: topic.keywords,
+      discoverRelated: shouldDiscoverRelatedPages(settings),
+    });
+    const blocked = await blockIfExactCannibalization(settings, ctx, {
+      type: "blog",
+      url: `pending:${topic.title}`,
+    });
+    if (blocked) {
+      await finishJob(jobId, "skipped", { error: blocked, title: topic.title });
+      return { title: topic.title, success: false, error: blocked };
+    }
 
     const publishedSlugs = await loadPublishedPageSlugs();
     let slug: string;
@@ -184,12 +229,14 @@ async function publishTopic(topic: BlogTopic): Promise<PublishResult> {
     } catch (err) {
       const error = failureMessage(err);
       console.error(`❌ Content generation failed for "${topic.title}":`, error);
+      await finishJob(jobId, "failed", { error, title: topic.title });
       return { title: topic.title, success: false, error };
     }
 
     if (!categoryId) {
       const error = `Category "${topic.category_slug}" not found in categories table`;
       console.error(`❌ ${error} — skipping "${topic.title}"`);
+      await finishJob(jobId, "failed", { error, title: topic.title });
       return { title: topic.title, success: false, error };
     }
 
@@ -217,10 +264,15 @@ async function publishTopic(topic: BlogTopic): Promise<PublishResult> {
 
     let generated: Awaited<ReturnType<typeof generateContent>>;
     try {
-      generated = await generateContent(topic.title, linkPlan);
+      generated = await generateContent(
+        topic.title,
+        linkPlan,
+        shouldInjectSeoContext(settings) ? formatGenerationContextBlock(ctx) : "",
+      );
     } catch (err) {
       const error = failureMessage(err);
       console.error(`❌ Content generation failed for "${topic.title}":`, error);
+      await finishJob(jobId, "failed", { error, title: topic.title });
       return { title: topic.title, success: false, error };
     }
 
@@ -239,46 +291,83 @@ async function publishTopic(topic: BlogTopic): Promise<PublishResult> {
     if (prepared.blocked) {
       const error = `Quality gate: ${prepared.blockReason}`;
       console.error(`❌ ${error} — skipping "${topic.title}"`);
+      await finishJob(jobId, "failed", { error, title: topic.title, slug });
       return { title: topic.title, success: false, error };
     }
 
+    const thin = shouldEnforceThinContent(settings) ? thinContentError("blog", prepared.content) : null;
+    if (thin) {
+      console.error(`❌ ${thin} — skipping "${topic.title}"`);
+      await finishJob(jobId, "failed", { error: thin, title: topic.title, slug });
+      return { title: topic.title, success: false, error: thin };
+    }
+
+    const image = await applyPexelsIfEnabled({
+      settings,
+      html: prepared.content,
+      topic: topic.title,
+      primaryKeyword: ctx.primaryKeyword,
+      kind: "blog",
+    });
+
+    const now = new Date().toISOString();
     const { data: inserted, error: insertError } = await db()
       .from("blog_posts")
       .insert({
         title: topic.title,
         slug,
         meta_description: topic.metaDescription,
-        content: prepared.content,
+        content: image.html,
         keywords: topic.keywords?.trim() || generated.keywords,
         tags: prepared.tags,
         reading_time_minutes: generated.readingTime,
         category_id: categoryId,
         author_id: null,
-        last_refreshed_at: new Date().toISOString(),
+        published_at: now,
+        last_refreshed_at: now,
+        status: "published",
       })
       .select()
       .single();
 
     if (insertError) {
       console.error(`❌ Insert failed for "${topic.title}":`, insertError.message);
+      await finishJob(jobId, "failed", { error: insertError.message, title: topic.title, slug });
       return { title: topic.title, success: false, error: insertError.message };
     }
 
-    const { error: updateError } = await db()
-      .from("blog_posts")
-      .update({ status: "published" })
-      .eq("id", inserted.id);
+    await recordPublishedBundle({
+      kind: "blog",
+      sourceId: String(inserted.id),
+      slug,
+      title: topic.title,
+      html: image.html,
+      primaryKeyword: ctx.primaryKeyword,
+      keywords: topic.keywords?.trim() || generated.keywords,
+      intent: ctx.searchIntent,
+      imageStatus: image.imageStatus,
+      refreshDays: settings.refresh_interval_days,
+    });
+    await maybeTwoWayLink({
+      settings,
+      kind: "blog",
+      newSlug: slug,
+      newTitle: topic.title,
+      related: relatedPosts.map((p) => ({ slug: p.slug, title: p.title, id: p.id })),
+    });
 
-    if (updateError) {
-      console.error(`❌ Publish step failed for "${topic.title}":`, updateError.message);
-      return { title: topic.title, success: false, error: updateError.message };
-    }
-
+    await finishJob(jobId, "completed", {
+      sourceId: String(inserted.id),
+      slug,
+      title: topic.title,
+      result: { imageStatus: image.imageStatus, photoId: image.photoId },
+    });
     console.log(`✅ Published: yaarzo.com/blog/${slug}`);
     return { title: topic.title, success: true };
   } catch (err) {
     const error = failureMessage(err);
     console.error(`❌ "${topic.title}":`, error);
+    await finishJob(jobId, "failed", { error, title: topic.title });
     return { title: topic.title, success: false, error };
   }
 }
@@ -287,9 +376,17 @@ export async function runBlogPublish(): Promise<Response> {
   const settings = await getAutomationSettings();
   if (!settings.automation_enabled) return pausedResponse();
 
-  const postsPerRun = Math.max(0, Number(settings.blog_posts_per_day) || 0);
+  const quota = await remainingPublishSlots(settings);
+  const postsPerRun = quota.blogs;
   if (postsPerRun === 0) {
-    return Response.json({ published: 0, results: [] as PublishResult[] });
+    const refresh = settings.content_refresh_enabled ? await runDueRefresh("blog", 1) : { refreshed: 0 };
+    return Response.json({
+      published: 0,
+      results: [] as PublishResult[],
+      quota,
+      refresh,
+      message: "Daily blog quota already used or paused at 0.",
+    });
   }
 
   const { data: ideaRows, error: ideasError } = await db()
@@ -323,10 +420,48 @@ export async function runBlogPublish(): Promise<Response> {
   const toPublish = pendingTopics.slice(0, postsPerRun);
   const results: PublishResult[] = [];
 
-  for (const topic of toPublish) {
-    results.push(await publishTopic(topic));
+  for (let i = 0; i < toPublish.length; i++) {
+    results.push(await publishTopic(toPublish[i], quota.blogsUsed + i + 1, settings));
   }
 
   const published = results.filter((r) => r.success).length;
-  return Response.json({ published, results });
+  const refresh = settings.content_refresh_enabled ? await runDueRefresh("blog", 1) : { refreshed: 0 };
+  return Response.json({ published, results, quota, refresh });
+}
+
+export async function retryBlogPublishFromJob(
+  job: SeoJobRow,
+  settings: Awaited<ReturnType<typeof getAutomationSettings>>,
+): Promise<PublishResult> {
+  if (job.source_id) {
+    const { data } = await db().from("blog_posts").select("id").eq("id", job.source_id).maybeSingle();
+    if (data) {
+      await finishJob(job.id, "completed", { result: { skipped: "already_published" }, sourceId: job.source_id });
+      return { title: job.title || "", success: true };
+    }
+  }
+  if (!job.title) {
+    await finishJob(job.id, "failed", { error: "Retry missing title" });
+    return { title: "", success: false, error: "Retry missing title" };
+  }
+  const publishedTitles = await getAlreadyPublishedTitles();
+  if (publishedTitles.has(job.title.trim())) {
+    await finishJob(job.id, "completed", { result: { skipped: "already_published" }, title: job.title });
+    return { title: job.title, success: true };
+  }
+  const { data: idea } = await db()
+    .from("blog_topic_ideas")
+    .select("title, category_slug, meta_description, keywords")
+    .eq("title", job.title)
+    .maybeSingle();
+  if (!idea) {
+    await finishJob(job.id, "failed", { error: "Idea not found for retry", title: job.title });
+    return { title: job.title, success: false, error: "Idea not found for retry" };
+  }
+  return publishTopic({
+    title: idea.title,
+    category_slug: idea.category_slug,
+    metaDescription: idea.meta_description ?? "",
+    keywords: idea.keywords?.trim() || null,
+  }, job.slot ?? 1, settings, job.id);
 }

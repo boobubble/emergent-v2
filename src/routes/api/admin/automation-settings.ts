@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { requireAdminApiAuth } from "@/lib/content-automation/auth";
 import { db, getAutomationSettings, type AutomationSettings } from "@/lib/content-automation/db";
+import { AUTOMATION_SETTINGS_PATCH_KEYS, asBool, asInt, normalizeAutomationSettings } from "@/lib/content-automation/seo-settings";
 
 async function handleGet({ request }: { request: Request }) {
   const denied = requireAdminApiAuth(request);
@@ -21,25 +22,27 @@ async function handlePatch({ request }: { request: Request }) {
     const body = (await request.json().catch(() => ({}))) as Partial<AutomationSettings>;
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
 
-    if (typeof body.blog_posts_per_day === "number" && Number.isFinite(body.blog_posts_per_day)) {
-      patch.blog_posts_per_day = Math.max(0, Math.floor(body.blog_posts_per_day));
-    }
-    if (typeof body.static_pages_per_day === "number" && Number.isFinite(body.static_pages_per_day)) {
-      patch.static_pages_per_day = Math.max(0, Math.floor(body.static_pages_per_day));
-    }
-    if (typeof body.automation_enabled === "boolean") {
-      patch.automation_enabled = body.automation_enabled;
+    for (const key of AUTOMATION_SETTINGS_PATCH_KEYS) {
+      if (!(key in body)) continue;
+      const value = body[key];
+      if (typeof value === "boolean") {
+        patch[key] = asBool(value, false);
+      } else if (typeof value === "number" && Number.isFinite(value)) {
+        patch[key] = asInt(value, 0);
+      } else if (typeof value === "string" && key === "refresh_type") {
+        patch[key] = value.slice(0, 40);
+      }
     }
 
     const { data, error } = await db()
       .from("automation_settings")
       .update(patch)
       .eq("id", 1)
-      .select("id, blog_posts_per_day, static_pages_per_day, automation_enabled, updated_at")
+      .select("*")
       .single();
 
     if (error) return Response.json({ error: error.message }, { status: 500 });
-    return Response.json(data);
+    return Response.json(normalizeAutomationSettings(data));
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return Response.json({ error: message }, { status: 500 });

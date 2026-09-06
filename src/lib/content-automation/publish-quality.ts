@@ -292,6 +292,91 @@ export type PreparePublishOptions = CmsQualityInput & {
   linkCount?: { min: number; max: number };
 };
 
+/** Codes that must block a live refresh / two-way mutation (not new-publish link-count). */
+export const LIVE_MUTATION_BLOCKING_CODES = [
+  "broken_internal_link",
+  "chatrooms_alias",
+  "hashtag_dump",
+  "placeholder",
+  "research_notes",
+] as const;
+
+export type LiveMutationPrepareResult =
+  | { ok: true; html: string; blockReason?: undefined }
+  | { ok: false; html: string; blockReason: string };
+
+/**
+ * Sanitize HTML for a live update: keep valid Yaarzo + external links, rewrite
+ * invented/unpublished Yaarzo URLs, then abort if blocking issues remain.
+ * Does not enforce new-publish min/max link counts.
+ */
+export function prepareLiveMutationHtml(input: {
+  html: string;
+  slug: string;
+  title?: string | null;
+  publishedSlugs: Iterable<string>;
+  tags?: string[] | null;
+  enforceBrokenLinks?: boolean;
+}): LiveMutationPrepareResult {
+  const raw = input.html ?? "";
+  if (!raw.trim()) {
+    return { ok: false, html: raw, blockReason: "empty_html" };
+  }
+  const published = publishedSet(input.publishedSlugs);
+  const fallback = pickPublishedInternalHref([], published);
+  const content = rewritePipelineHtml(raw, published, fallback);
+  const quality = evaluatePageQuality({
+    slug: input.slug,
+    title: input.title,
+    content,
+    tags: sanitizePipelineTags(input.tags),
+    publishedSlugs: published,
+  });
+  const blocking = quality.warnings.filter((w) => {
+    if (!(LIVE_MUTATION_BLOCKING_CODES as readonly string[]).includes(w.code)) return false;
+    if (
+      input.enforceBrokenLinks === false
+      && (w.code === "broken_internal_link" || w.code === "chatrooms_alias")
+    ) {
+      return false;
+    }
+    return true;
+  });
+  if (blocking.length) {
+    return {
+      ok: false,
+      html: content,
+      blockReason: blocking.map((w) => `${w.code}: ${w.message}`).join("; "),
+    };
+  }
+  return { ok: true, html: content };
+}
+
+export function applySanitizedLiveUpdate(
+  liveHtml: string,
+  nextHtml: string,
+  opts: {
+    slug: string;
+    title?: string | null;
+    publishedSlugs: Iterable<string>;
+    tags?: string[] | null;
+    enforceBrokenLinks?: boolean;
+  },
+): { wrote: boolean; content: string; blockReason?: string } {
+  const prepared = prepareLiveMutationHtml({
+    html: nextHtml,
+    slug: opts.slug,
+    title: opts.title,
+    publishedSlugs: opts.publishedSlugs,
+    tags: opts.tags,
+    enforceBrokenLinks: opts.enforceBrokenLinks,
+  });
+  if (!prepared.ok) {
+    return { wrote: false, content: liveHtml, blockReason: prepared.blockReason };
+  }
+  return { wrote: true, content: prepared.html };
+}
+
 /** Auto-correct quality rules, then block if they still fail (including link-count range). */
 export function preparePublishablePage(input: PreparePublishOptions): PreparePublishResult {
   const published = publishedSet(input.publishedSlugs);

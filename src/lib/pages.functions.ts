@@ -281,6 +281,49 @@ export const savePage = createServerFn({ method: "POST" })
     } as never);
     return { ok: true, id: ins.id, slug, content_status, seo_score };
   });
+export const listPageKeywordTargets = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth, withRateLimit("admin.read")])
+  .handler(async ({ context }) => {
+    await assertExistingContentEditor(context.userId);
+    const { data, error } = await (await getSupabaseAdmin())
+      .from("custom_pages")
+      .select("id, slug, title, h1, meta_title, tags")
+      .order("updated_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return (data ?? []) as Array<{
+      id: string;
+      slug: string;
+      title: string;
+      h1: string | null;
+      meta_title: string | null;
+      tags: string[] | null;
+    }>;
+  });
+
+export const updatePageTags = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
+  .inputValidator((input) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        tags: z.array(z.string().max(80)).max(20),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertExistingContentEditor(context.userId);
+    const sb = await getSupabaseAdmin();
+    const { data: row, error } = await sb
+      .from("custom_pages")
+      .update({ tags: data.tags })
+      .eq("id", data.id)
+      .select("id, tags")
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!row) throw new Error("No matching published item found");
+    return { ok: true, id: row.id as string, tags: (row.tags ?? []) as string[] };
+  });
+
 export const deletePage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))

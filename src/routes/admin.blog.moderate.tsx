@@ -62,6 +62,17 @@ function ModeratePage() {
     setPosts((prev) => prev.filter((p) => p.id !== id));
   }
 
+  async function saveTaxonomy(id: string, payload: { tags: string[]; keywords: string }): Promise<void> {
+    const { error } = await supabase
+      .from("blog_posts")
+      .update({ tags: payload.tags, keywords: payload.keywords })
+      .eq("id", id);
+    if (error) throw new Error(error.message);
+    setPosts((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, tags: payload.tags, keywords: payload.keywords } : p)),
+    );
+  }
+
   async function deletePost(id: string): Promise<{ ok: boolean; error?: string }> {
     if (!isValidBlogDeleteId(id)) {
       return { ok: false, error: "Missing blog post id." };
@@ -90,6 +101,7 @@ function ModeratePage() {
       loading={loading}
       onUpdateStatus={updateStatus}
       onDelete={deletePost}
+      onSaveTaxonomy={saveTaxonomy}
       canModerate={isAdmin}
     />
   );

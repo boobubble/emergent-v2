@@ -20,6 +20,7 @@ import {
   Undo2,
   MousePointerClick,
   CodeXml,
+  ClipboardPaste,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,6 +55,7 @@ import { normalizeBlogImageAlign, type BlogImageAlign } from "@/lib/blog-image";
 import { applyHtmlSource } from "@/lib/tiptap-html-source";
 import { applyEditorTextLink } from "@/lib/pages-cms/tiptap-html-blocks";
 import { CtaButtonDialog, useCtaButtonDialog } from "@/components/admin/CtaButtonDialog";
+import { PasteKeywordResearchDialog } from "@/lib/content-automation/paste-keyword-research-dialog";
 import { toast } from "sonner";
 import "@/components/blog/blog-ui.css";
 import "@/lib/cta-button.css";
@@ -103,6 +105,7 @@ export function BlogEditorView(props: BlogEditorViewProps) {
   const [sourceMode, setSourceMode] = useState(false);
   const [sourceHtml, setSourceHtml] = useState("");
   const [sourceError, setSourceError] = useState<string | null>(null);
+  const [pasteOpen, setPasteOpen] = useState(false);
   const ctaDialog = useCtaButtonDialog(props.editor);
   useEditorTick(props.editor);
 
@@ -231,6 +234,7 @@ export function BlogEditorView(props: BlogEditorViewProps) {
                 <div className="mt-4">
                   <EditorSidebar
                     {...props}
+                    onPasteKeywords={() => setPasteOpen(true)}
                     onAddImage={() => { setReplaceIndex(null); setImageOpen(true); }}
                     onFixImage={fixImage}
                     onRemoveImage={(index) => removeEditorImage(props.editor, index)}
@@ -312,6 +316,7 @@ export function BlogEditorView(props: BlogEditorViewProps) {
           <div className="sticky top-14 max-h-[calc(100vh-3.5rem)] overflow-y-auto p-5">
             <EditorSidebar
               {...props}
+              onPasteKeywords={() => setPasteOpen(true)}
               onAddImage={() => { setReplaceIndex(null); setImageOpen(true); }}
               onFixImage={fixImage}
               onRemoveImage={(index) => removeEditorImage(props.editor, index)}
@@ -350,6 +355,20 @@ export function BlogEditorView(props: BlogEditorViewProps) {
         initialLabel={ctaDialog.initialLabel}
         initialHref={ctaDialog.initialHref}
         onConfirm={ctaDialog.confirm}
+      />
+      <PasteKeywordResearchDialog
+        open={pasteOpen}
+        onOpenChange={setPasteOpen}
+        variant="tags"
+        requireMatch={false}
+        existingTags={props.tags}
+        maxTags={MAX_BLOG_TAGS}
+        maxPhrases={MAX_BLOG_KEYWORDS}
+        applyLabel="Apply tags"
+        onApply={({ tags, keywordPhrases }) => {
+          props.onTagsChange(tags);
+          props.onKeywordsChange(keywordPhrases);
+        }}
       />
     </div>
   );
@@ -392,7 +411,9 @@ function EditorSidebar({
   postStatus,
   mode,
   existingSlug,
+  onPasteKeywords,
 }: BlogEditorViewProps & {
+  onPasteKeywords: () => void;
   onAddImage: () => void;
   onFixImage: (index: number) => void;
   onRemoveImage: (index: number) => void;
@@ -446,6 +467,13 @@ function EditorSidebar({
       </section>
 
       <section className="rounded-xl border border-border bg-background p-4">
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <span className="text-xs uppercase tracking-wide text-muted-foreground">Keyword research</span>
+          <Button type="button" variant="outline" size="sm" className="h-7 text-[11px]" onClick={onPasteKeywords}>
+            <ClipboardPaste className="mr-1 h-3.5 w-3.5" />
+            Paste Keyword Research
+          </Button>
+        </div>
         <BlogChipField
           id="blog-tags"
           label="Tags"

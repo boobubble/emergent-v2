@@ -35,6 +35,8 @@ describe("blog writer contracts", () => {
     const editor = read("src/components/blog/BlogEditorView.tsx");
     expect(editor).toContain("SEO Keywords");
     expect(editor).toContain("Tags");
+    expect(editor).toContain("Paste Keyword Research");
+    expect(editor).toContain("PasteKeywordResearchDialog");
   });
 
   it("reuses TipTap Image with persistent alt and alignment", () => {
@@ -107,6 +109,7 @@ describe("blog writer contracts", () => {
     expect(moderate).toContain("Manage, review, edit and publish blog posts.");
     expect(moderate).toContain("New Blog");
     expect(moderate).toContain("Reset Filters");
+    expect(moderate).toContain("Paste Keyword Research");
     expect(moderate).toContain("<table");
     expect(moderate).toContain("No blogs match filters.");
     expect(moderate).toContain("onUpdateStatus");
