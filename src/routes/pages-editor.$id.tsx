@@ -461,6 +461,95 @@ function PageEditor() {
     ],
   );
 
+
+  const manualSeoQa = useMemo(() => {
+    const html = `${row.intro_content ?? ""} ${row.content ?? ""}`;
+    const text = html
+      .replace(/<[^>]*>/g, " ")
+      .replace(/&nbsp;/gi, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    const words = text ? text.split(/\s+/).length : 0;
+    const keyword = (row.primary_keyword ?? "").trim().toLowerCase();
+    const lowerText = text.toLowerCase();
+
+    let keywordUses = 0;
+    if (keyword) {
+      let pos = 0;
+      while ((pos = lowerText.indexOf(keyword, pos)) !== -1) {
+        keywordUses++;
+        pos += keyword.length;
+      }
+    }
+
+    const slug = slugifyPageSlug(row.slug);
+    const canonical = (row.canonical_url ?? "").trim().replace(/\/+$/, "");
+    const canonicalOk = !canonical || (!!slug && canonical.endsWith(`/${slug}`));
+
+    const checks = [
+      {
+        label: "Primary keyword",
+        ok: !!keyword && keywordUses > 0,
+        detail: keyword
+          ? `${keywordUses} use${keywordUses === 1 ? "" : "s"}`
+          : "Add primary keyword",
+      },
+      {
+        label: "H1",
+        ok: !!row.h1?.trim(),
+        detail: row.h1?.trim() ? "Present" : "Add H1",
+      },
+      {
+        label: "SEO title",
+        ok: !!row.meta_title?.trim(),
+        detail: row.meta_title?.trim() ? "Present" : "Add SEO title",
+      },
+      {
+        label: "Meta description",
+        ok: !!row.meta_description?.trim(),
+        detail: row.meta_description?.trim() ? "Present" : "Add meta description",
+      },
+      {
+        label: "Content length",
+        ok: words >= 700,
+        detail: `${words} words`,
+      },
+      {
+        label: "Internal links",
+        ok: (row.internal_link_count ?? 0) >= 4,
+        detail: `${row.internal_link_count ?? 0} links`,
+      },
+      {
+        label: "Canonical",
+        ok: canonicalOk,
+        detail: canonical ? "Configured" : "Self-canonical",
+      },
+      {
+        label: "Indexable",
+        ok: !row.noindex,
+        detail: row.noindex ? "NOINDEX enabled" : "Indexable",
+      },
+    ];
+
+    return {
+      passed: checks.filter((check) => check.ok).length,
+      total: checks.length,
+      checks,
+    };
+  }, [
+    row.intro_content,
+    row.content,
+    row.primary_keyword,
+    row.h1,
+    row.meta_title,
+    row.meta_description,
+    row.internal_link_count,
+    row.canonical_url,
+    row.slug,
+    row.noindex,
+  ]);
+
   useEffect(() => {
     if (!hydrated.current) return;
     if (skipNextSave.current) { skipNextSave.current = false; return; }
@@ -812,6 +901,38 @@ function PageEditor() {
                   </AlertDescription>
                 </Alert>
               )}
+
+
+              <div className="mb-4 rounded-lg border border-border bg-muted/20 p-3">
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <div className="text-xs font-semibold uppercase tracking-wide">
+                    Manual SEO QA
+                  </div>
+                  <Badge
+                    variant={manualSeoQa.passed === manualSeoQa.total ? "default" : "outline"}
+                  >
+                    {manualSeoQa.passed}/{manualSeoQa.total} checks passed
+                  </Badge>
+                </div>
+                <div className="grid gap-1.5 sm:grid-cols-2">
+                  {manualSeoQa.checks.map((check) => (
+                    <div
+                      key={check.label}
+                      className={`flex items-center justify-between gap-2 text-[11px] ${
+                        check.ok ? "text-muted-foreground" : "text-destructive"
+                      }`}
+                    >
+                      <span>{check.label}</span>
+                      <span className="font-medium">{check.ok ? "PASS" : "FIX"}</span>
+                    </div>
+                  ))}
+                </div>
+                {manualSeoQa.passed < manualSeoQa.total && (
+                  <p className="mt-2 text-[11px] text-muted-foreground">
+                    Fix failed checks before publishing for a cleaner SEO page.
+                  </p>
+                )}
+              </div>
 
               <RichTextEditor
                 ref={editorRef}
