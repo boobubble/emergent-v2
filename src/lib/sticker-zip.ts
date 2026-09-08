@@ -2,7 +2,9 @@ import JSZip from "jszip";
 import { supabase } from "@/integrations/supabase/client";
 import { STICKERS_BUCKET, uniqueZipName } from "./sticker-catalog";
 
-const storage = (supabase as any).storage;
+function stickerStorage() {
+  return (supabase as any).storage;
+}
 
 export type ZipSource = {
   name: string;
@@ -25,7 +27,7 @@ function triggerDownload(blob: Blob, filename: string) {
 
 async function fetchStickerBlob(row: ZipSource): Promise<{ blob: Blob } | { error: string }> {
   if (row.storage_path && !row.storage_path.includes("..") && !row.storage_path.startsWith("/")) {
-    const { data, error } = await storage.from(STICKERS_BUCKET).download(row.storage_path);
+    const { data, error } = await stickerStorage().from(STICKERS_BUCKET).download(row.storage_path);
     if (!error && data) return { blob: data };
     if (error && !/not found|object not found/i.test(error.message)) {
       return { error: error.message };

@@ -7,8 +7,10 @@ import {
   slugToken,
 } from "./sticker-catalog";
 
-const sb = supabase as any;
-const storage = sb.storage;
+function stickerClient() {
+  const sb = supabase as any;
+  return { sb, storage: sb.storage };
+}
 
 function readImageDimensions(file: File): Promise<{ w: number; h: number } | null> {
   return new Promise((resolve) => {
@@ -60,6 +62,7 @@ export async function uploadOneSticker(opts: {
   const safeName = display.toLowerCase().replace(/[^a-z0-9_-]+/g, "-").slice(0, 40) || "sticker";
   const packSlug = slugToken(opts.packName);
   const path = `${opts.kind}/${packSlug}/${Date.now()}-${safeName}.${ext}`;
+  const { sb, storage } = stickerClient();
 
   const up = await storage.from(STICKERS_BUCKET).upload(path, opts.file, {
     cacheControl: "31536000",
