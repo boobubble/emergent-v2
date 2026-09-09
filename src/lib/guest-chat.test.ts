@@ -194,6 +194,12 @@ describe("no auth-guest regression", () => {
 
     expect(auth).toMatch(/LoginAsGuestButton/);
     expect(auth).toMatch(/Login with Username/);
+    const signUpBlock = auth.slice(auth.indexOf("function SignUpDialog"), auth.indexOf("function ForgotDialog"));
+    expect(signUpBlock.match(/Already have one/g)?.length).toBe(1);
+    expect(signUpBlock.match(/LoginAsGuestButton/g)?.length).toBe(1);
+    expect(signUpBlock).toMatch(/data-signup-dialog-top/);
+    expect(signUpBlock.indexOf("Already have one")).toBeLessThan(signUpBlock.indexOf("Profile picture (optional)"));
+    expect(signUpBlock).toMatch(/shrink-0[\s\S]*overflow-y-auto/);
     expect(btn).toMatch(/Login as Guest/);
     expect(btn).toMatch(/navigateToLobby:\s*true/);
     expect(btn).not.toMatch(/signInAnonymously|loginAsGuest/);

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import "@/styles/tw-animate.css";
 import { useAuth } from "@/lib/auth-store";
 import { useBrand } from "@/lib/branding";
@@ -134,6 +134,12 @@ function SignUpDialog({ open, onOpenChange, onSwitchSignin }: { open: boolean; o
   const [info, setInfo] = useState("");
   const [busy, setBusy] = useState(false);
   const usernameStatus = useUsernameCheck(open ? username : "");
+  const formScrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    formScrollRef.current?.scrollTo({ top: 0 });
+  }, [open]);
 
   function onPickAvatar(file: File | null) {
     setErr("");
@@ -171,28 +177,31 @@ function SignUpDialog({ open, onOpenChange, onSwitchSignin }: { open: boolean; o
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-sm overflow-y-auto rounded-3xl">
-        <DialogHeader>
-          <DialogTitle>Create your account</DialogTitle>
-          <DialogDescription>Join {brand.name} in a few seconds.</DialogDescription>
-        </DialogHeader>
+      <DialogContent className="flex max-h-[90vh] max-w-sm flex-col gap-0 overflow-hidden rounded-3xl p-0">
+        <div className="shrink-0 space-y-3 px-6 pt-6" data-signup-dialog-top="">
+          <DialogHeader>
+            <DialogTitle>Create your account</DialogTitle>
+            <DialogDescription>Join {brand.name} in a few seconds.</DialogDescription>
+          </DialogHeader>
 
-        <div className="text-center text-xs text-muted-foreground">
-          Already have one?{" "}
-          <button type="button" onClick={onSwitchSignin} className="font-semibold text-primary hover:underline">Sign in</button>
+          <div className="text-center text-xs text-muted-foreground">
+            Already have one?{" "}
+            <button type="button" onClick={onSwitchSignin} className="font-semibold text-primary hover:underline">Sign in</button>
+          </div>
+
+          {guestChat.enabled && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="h-px flex-1 bg-border" />
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">OR</span>
+                <div className="h-px flex-1 bg-border" />
+              </div>
+              <LoginAsGuestButton onBeforeOpen={() => onOpenChange(false)} />
+            </div>
+          )}
         </div>
 
-        {guestChat.enabled && (
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="h-px flex-1 bg-border" />
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">OR</span>
-              <div className="h-px flex-1 bg-border" />
-            </div>
-            <LoginAsGuestButton onBeforeOpen={() => onOpenChange(false)} />
-          </div>
-        )}
-
+        <div ref={formScrollRef} className="min-h-0 flex-1 overflow-y-auto px-6 pb-6 pt-3">
         <form onSubmit={onSubmit} className="space-y-3">
           <div>
             <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Profile picture (optional)</label>
@@ -253,6 +262,7 @@ function SignUpDialog({ open, onOpenChange, onSwitchSignin }: { open: boolean; o
             {busy ? "..." : "Create account"}
           </button>
         </form>
+        </div>
       </DialogContent>
     </Dialog>
   );
