@@ -14,7 +14,8 @@ import { useIgnore } from "@/lib/ignore-store";
 import { linkify } from "@/lib/linkify";
 import { MediaEmbed } from "./MediaEmbed";
 import { InlineImageAttachment } from "./InlineImageAttachment";
-import { stripEmbeddableUrlFromText } from "@/lib/media-embed-text";
+import { messageDisplayText, mergeMediaFromSettings } from "@/lib/media-embed-text";
+import { useAppSettings } from "@/lib/app-settings";
 import { VoiceNoteBubble } from "./VoiceNoteBubble";
 import { useDmUrlMask } from "@/lib/dm-url-mask";
 import { useGuestLobbyFeed, confirmGuestOptimistic, failGuestOptimistic, markGuestOptimisticSending } from "@/lib/use-guest-lobby-feed";
@@ -70,8 +71,37 @@ function AttachmentView({ a }: { a: Attachment }) {
   );
 }
 
-function mediaStrippedText(text: string): string {
-  return stripEmbeddableUrlFromText(safeMessageText(text));
+function MessageBubbleBody({
+  text,
+  attachment,
+  authorId,
+  msgBodyClass,
+  maskText,
+}: {
+  text: string;
+  attachment?: Attachment;
+  authorId?: string;
+  msgBodyClass: string;
+  maskText?: (authorId: string, body: string) => string;
+}) {
+  const { raw } = useAppSettings();
+  const media = useMemo(() => mergeMediaFromSettings(raw), [raw]);
+  const displayText = useMemo(() => {
+    const body = messageDisplayText(safeMessageText(text), media, { hasAttachment: !!attachment });
+    return maskText && authorId ? maskText(authorId, body) : body;
+  }, [text, media, attachment, maskText, authorId]);
+
+  return (
+    <>
+      {displayText && (
+        <div className={`${BUBBLE_TEXT} [color:inherit]`}>
+          {renderText(displayText, msgBodyClass)}
+        </div>
+      )}
+      {text && <MediaEmbed text={text} />}
+      {attachment && <AttachmentView a={attachment} />}
+    </>
+  );
 }
 
 function formatTime(ts: number) {
@@ -422,21 +452,13 @@ export function MessageList({ channelId }: { channelId: string }) {
                                   className={bubbleClass}
                                   style={{ backgroundColor: "var(--primary)", color: "var(--primary-foreground)" }}
                                 >
-                                  {mediaStrippedText(m.text) && (
-                                    <div className={`${BUBBLE_TEXT} [color:inherit]`}>{renderText(mediaStrippedText(m.text), msgBodyClass)}</div>
-                                  )}
-                                  {m.text && <MediaEmbed text={m.text} />}
-                                  {m.attachment && <AttachmentView a={m.attachment} />}
+                                  <MessageBubbleBody text={m.text} attachment={m.attachment} msgBodyClass={msgBodyClass} />
                                 </div>
                               </>
                             ) : (
                               <>
                                 <div className={bubbleClass}>
-                                  {mediaStrippedText(m.text) && (
-                                    <div className={`${BUBBLE_TEXT} [color:inherit]`}>{renderText(mediaStrippedText(m.text), msgBodyClass)}</div>
-                                  )}
-                                  {m.text && <MediaEmbed text={m.text} />}
-                                  {m.attachment && <AttachmentView a={m.attachment} />}
+                                  <MessageBubbleBody text={m.text} attachment={m.attachment} msgBodyClass={msgBodyClass} />
                                 </div>
                                 <ReplyButton onClick={() => setReplyingTo(m)} />
                                 <StaffActionsMenu
@@ -495,11 +517,13 @@ export function MessageList({ channelId }: { channelId: string }) {
                                   : `${BUBBLE_SHELL} rounded-2xl rounded-tr-md bg-primary px-3 py-2 ${msgBodyClass} font-medium text-primary-foreground shadow-lg shadow-primary/20 chat-msg-in ${isReplyTarget ? "ring-2 ring-primary-foreground/40" : ""}`,
                               )}
                             >
-                              {mediaStrippedText(m.text) && (
-                                <div className={BUBBLE_TEXT}>{renderText(applyMask(m.authorId, mediaStrippedText(m.text)), msgBodyClass)}</div>
-                              )}
-                              {m.text && <MediaEmbed text={m.text} />}
-                              {m.attachment && <AttachmentView a={m.attachment} />}
+                              <MessageBubbleBody
+                                text={m.text}
+                                attachment={m.attachment}
+                                authorId={m.authorId}
+                                msgBodyClass={msgBodyClass}
+                                maskText={applyMask}
+                              />
                             </div>
                           </div>
                           <SendStatusBits m={m} onRetry={() => retrySend(m.id)} />
@@ -560,11 +584,13 @@ export function MessageList({ channelId }: { channelId: string }) {
                                 : `${BUBBLE_SHELL} rounded-2xl rounded-tl-md border border-border bg-card/70 px-3 py-2 ${msgBodyClass} leading-snug text-foreground/90 shadow-sm backdrop-blur-sm chat-msg-in ${isReplyTarget ? "ring-2 ring-primary/40" : ""}`
                             }
                           >
-                            {mediaStrippedText(m.text) && (
-                              <div className={BUBBLE_TEXT}>{renderText(applyMask(m.authorId, mediaStrippedText(m.text)), msgBodyClass)}</div>
-                            )}
-                            {m.text && <MediaEmbed text={m.text} />}
-                            {m.attachment && <AttachmentView a={m.attachment} />}
+                            <MessageBubbleBody
+                              text={m.text}
+                              attachment={m.attachment}
+                              authorId={m.authorId}
+                              msgBodyClass={msgBodyClass}
+                              maskText={applyMask}
+                            />
                           </div>
                           <ReplyButton onClick={() => setReplyingTo(m)} />
                           <HighlightButton messageId={m.id} channelId={state.activeChannel} />

@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Play } from "lucide-react";
 import { useAppSettings } from "@/lib/app-settings";
-import { firstUrlInText } from "@/lib/media-embed-text";
-import { mergeMediaConfig, parseYoutubeId, parseGiphyUrl } from "@/lib/media-providers-config";
+import { mergeMediaFromSettings, resolveActiveMediaEmbed } from "@/lib/media-embed-text";
+import { parseYoutubeId, parseGiphyUrl } from "@/lib/media-providers-config";
 
 function LazyYoutubeEmbed({
   videoId,
@@ -52,12 +52,13 @@ function LazyYoutubeEmbed({
 /** Detect and render YouTube / Giphy embeds from message text. */
 export function MediaEmbed({ text }: { text: string }) {
   const { raw } = useAppSettings();
-  const media = mergeMediaConfig((raw as { media?: unknown }).media);
-  const url = firstUrlInText(text);
-  if (!url) return null;
+  const media = mergeMediaFromSettings(raw);
+  const resolved = resolveActiveMediaEmbed(text, media);
+  if (!resolved.willRender || !resolved.url) return null;
 
-  const ytId = parseYoutubeId(url);
-  if (ytId && media.youtube.enabled) {
+  if (resolved.kind === "youtube") {
+    const ytId = parseYoutubeId(resolved.url);
+    if (!ytId) return null;
     const host = media.youtube.defaultPrivacy === "unlisted"
       ? "https://www.youtube-nocookie.com"
       : "https://www.youtube.com";
@@ -70,21 +71,21 @@ export function MediaEmbed({ text }: { text: string }) {
     );
   }
 
-  const giphy = parseGiphyUrl(url);
-  if (giphy && media.giphy.enabled) {
+  const giphy = parseGiphyUrl(resolved.url);
+  if (giphy) {
     return (
-      <a href={url} target="_blank" rel="noreferrer"
+      <a href={resolved.url} target="_blank" rel="noreferrer"
          className="mt-1 block max-w-[280px] overflow-hidden rounded-xl border border-border">
         <img src={giphy.gifUrl} alt="GIF" loading="lazy" className="block max-h-72 w-full object-contain bg-black/30" />
       </a>
     );
   }
 
-  if (/\.gif($|\?)/i.test(url) && /giphy\.com/i.test(url) && media.giphy.enabled) {
+  if (/\.gif($|\?)/i.test(resolved.url) && /giphy\.com/i.test(resolved.url)) {
     return (
-      <a href={url} target="_blank" rel="noreferrer"
+      <a href={resolved.url} target="_blank" rel="noreferrer"
          className="mt-1 block max-w-[280px] overflow-hidden rounded-xl border border-border">
-        <img src={url} alt="GIF" loading="lazy" className="block max-h-72 w-full object-contain bg-black/30" />
+        <img src={resolved.url} alt="GIF" loading="lazy" className="block max-h-72 w-full object-contain bg-black/30" />
       </a>
     );
   }

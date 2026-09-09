@@ -49,6 +49,7 @@ import {
   parseGuestDmComposeRecipient,
 } from "@/lib/guest-dm-utils";
 import type { Attachment } from "@/lib/chat-types";
+import { uploadChatImage } from "@/lib/chat-image.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { VoiceRecorder } from "./VoiceRecorder";
 import { TypingIndicator } from "./TypingIndicator";
@@ -98,6 +99,7 @@ export function MessageInput({
   const startGuestDmFn = useServerFn(startGuestDmConversation);
   const sendGuestDmFn = useServerFn(sendGuestDmMessage);
   const sendRegisteredGuestDmFn = useServerFn(sendRegisteredGuestDmReply);
+  const uploadChatImageFn = useServerFn(uploadChatImage);
   const me = user && !user.isGuest ? { id: user.id, name: user.username } : null;
   const { typers, sendTyping, stopTyping } = useTyping(channelId, me, !!me);
   const [text, setText] = useState("");
@@ -634,7 +636,7 @@ export function MessageInput({
       return;
     }
 
-    const accepted = requireAuth(() => {
+    const accepted = requireAuth(async () => {
       if (/^\/clearcache\b/i.test(trimmed)) {
         setText(""); setAttachment(null); setAttachError("");
         void handleClearCache();
@@ -648,8 +650,35 @@ export function MessageInput({
         return;
       }
       const outgoing = autoMentionUsernames(text);
-      const snapAttachment = attachment;
+      let snapAttachment = attachment;
       const snapReplyId = replyForThis?.id;
+      const targetChannel = channelIdProp || channelId;
+
+      if (
+        snapAttachment?.kind === "image"
+        && !snapAttachment.assetId
+        && snapAttachment.dataUrl.startsWith("data:")
+      ) {
+        try {
+          const { attachment: uploaded } = await uploadChatImageFn({
+            data: {
+              channelId: targetChannel,
+              name: snapAttachment.name,
+              mime: snapAttachment.mime,
+              size: snapAttachment.size,
+              dataBase64: snapAttachment.dataUrl,
+            },
+          });
+          snapAttachment = uploaded;
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : "Image upload failed";
+          setAttachError(msg);
+          toast.error(msg);
+          releaseSubmitLock();
+          return;
+        }
+      }
+
       send(outgoing, {
         attachment: snapAttachment || undefined,
         replyToId: snapReplyId,

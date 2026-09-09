@@ -40,6 +40,16 @@ export interface Attachment {
   size: number;
   dataUrl: string;
   duration?: number; // seconds, for audio/voice notes
+  /** Registry id for ephemeral chat images (authoritative ownership). */
+  assetId?: string;
+  /** @deprecated Server-owned; never set on new ephemeral uploads. */
+  storagePath?: string;
+  /** ISO timestamp when the image becomes inaccessible. */
+  imageExpiresAt?: string;
+  /** ISO timestamp when a DM recipient read the image message. */
+  imageSeenAt?: string;
+  /** Set after server cleanup deletes the storage object. */
+  imageExpired?: boolean;
 }
 
 export interface Message {

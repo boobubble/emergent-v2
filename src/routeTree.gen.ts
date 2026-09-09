@@ -143,6 +143,7 @@ import { Route as AdminWalletRouteImport } from './routes/admin.wallet'
 import { Route as AdminWalletAnalyticsRouteImport } from './routes/admin.wallet-analytics'
 import { Route as AdminWalletRulesRouteImport } from './routes/admin.wallet-rules'
 import { Route as ApiRunBlogPublishRouteImport } from './routes/api/run-blog-publish'
+import { Route as ApiRunChatImageCleanupRouteImport } from './routes/api/run-chat-image-cleanup'
 import { Route as ApiRunStaticPublishRouteImport } from './routes/api/run-static-publish'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
@@ -914,6 +915,11 @@ const ApiRunBlogPublishRoute = ApiRunBlogPublishRouteImport.update({
   path: '/api/run-blog-publish',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiRunChatImageCleanupRoute = ApiRunChatImageCleanupRouteImport.update({
+  id: '/api/run-chat-image-cleanup',
+  path: '/api/run-chat-image-cleanup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiRunStaticPublishRoute = ApiRunStaticPublishRouteImport.update({
   id: '/api/run-static-publish',
   path: '/api/run-static-publish',
@@ -1551,6 +1557,7 @@ export interface FileRoutesByFullPath {
   '/admin/wallet-analytics': typeof AdminWalletAnalyticsRoute
   '/admin/wallet-rules': typeof AdminWalletRulesRoute
   '/api/run-blog-publish': typeof ApiRunBlogPublishRoute
+  '/api/run-chat-image-cleanup': typeof ApiRunChatImageCleanupRoute
   '/api/run-static-publish': typeof ApiRunStaticPublishRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/blog/write': typeof BlogWriteRoute
@@ -1779,6 +1786,7 @@ export interface FileRoutesByTo {
   '/admin/wallet-analytics': typeof AdminWalletAnalyticsRoute
   '/admin/wallet-rules': typeof AdminWalletRulesRoute
   '/api/run-blog-publish': typeof ApiRunBlogPublishRoute
+  '/api/run-chat-image-cleanup': typeof ApiRunChatImageCleanupRoute
   '/api/run-static-publish': typeof ApiRunStaticPublishRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/blog/write': typeof BlogWriteRoute
@@ -2012,6 +2020,7 @@ export interface FileRoutesById {
   '/admin/wallet-analytics': typeof AdminWalletAnalyticsRoute
   '/admin/wallet-rules': typeof AdminWalletRulesRoute
   '/api/run-blog-publish': typeof ApiRunBlogPublishRoute
+  '/api/run-chat-image-cleanup': typeof ApiRunChatImageCleanupRoute
   '/api/run-static-publish': typeof ApiRunStaticPublishRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/blog/write': typeof BlogWriteRoute
@@ -2246,6 +2255,7 @@ export interface FileRouteTypes {
     | '/admin/wallet-analytics'
     | '/admin/wallet-rules'
     | '/api/run-blog-publish'
+    | '/api/run-chat-image-cleanup'
     | '/api/run-static-publish'
     | '/blog/$slug'
     | '/blog/write'
@@ -2474,6 +2484,7 @@ export interface FileRouteTypes {
     | '/admin/wallet-analytics'
     | '/admin/wallet-rules'
     | '/api/run-blog-publish'
+    | '/api/run-chat-image-cleanup'
     | '/api/run-static-publish'
     | '/blog/$slug'
     | '/blog/write'
@@ -2706,6 +2717,7 @@ export interface FileRouteTypes {
     | '/admin/wallet-analytics'
     | '/admin/wallet-rules'
     | '/api/run-blog-publish'
+    | '/api/run-chat-image-cleanup'
     | '/api/run-static-publish'
     | '/blog/$slug'
     | '/blog/write'
@@ -2849,6 +2861,7 @@ export interface RootRouteChildren {
   WalletRoute: typeof WalletRoute
   WelcomeRoute: typeof WelcomeRoute
   ApiRunBlogPublishRoute: typeof ApiRunBlogPublishRoute
+  ApiRunChatImageCleanupRoute: typeof ApiRunChatImageCleanupRoute
   ApiRunStaticPublishRoute: typeof ApiRunStaticPublishRoute
   BlogSlugRoute: typeof BlogSlugRoute
   BlogWriteRoute: typeof BlogWriteRoute
@@ -3842,6 +3855,13 @@ declare module '@tanstack/react-router' {
       path: '/api/run-blog-publish'
       fullPath: '/api/run-blog-publish'
       preLoaderRoute: typeof ApiRunBlogPublishRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/run-chat-image-cleanup': {
+      id: '/api/run-chat-image-cleanup'
+      path: '/api/run-chat-image-cleanup'
+      fullPath: '/api/run-chat-image-cleanup'
+      preLoaderRoute: typeof ApiRunChatImageCleanupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/run-static-publish': {
@@ -4945,6 +4965,7 @@ const rootRouteChildren: RootRouteChildren = {
   WalletRoute: WalletRoute,
   WelcomeRoute: WelcomeRoute,
   ApiRunBlogPublishRoute: ApiRunBlogPublishRoute,
+  ApiRunChatImageCleanupRoute: ApiRunChatImageCleanupRoute,
   ApiRunStaticPublishRoute: ApiRunStaticPublishRoute,
   BlogSlugRoute: BlogSlugRoute,
   BlogWriteRoute: BlogWriteRoute,

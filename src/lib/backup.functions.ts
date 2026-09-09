@@ -220,6 +220,7 @@ const REQUIRED_BUCKETS: { name: string; public: boolean }[] = [
   { name: "feed-media",   public: true  },
   { name: "brand-assets", public: false },
   { name: "stickers",     public: true  },
+  { name: "chat-images",  public: false },
 ];
 
 export const ensureRequiredBuckets = createServerFn({ method: "POST" })
