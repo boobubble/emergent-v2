@@ -45,7 +45,7 @@ export function linkify(text: string, keyPrefix = "l"): ReactNode[] {
           href={href}
           target="_blank"
           rel="noopener noreferrer nofollow ugc external"
-          className="underline underline-offset-2 decoration-current/60 hover:decoration-current font-medium break-all [color:inherit]"
+          className="underline underline-offset-2 decoration-current/60 hover:decoration-current font-medium break-words [overflow-wrap:anywhere] [color:inherit]"
         >
           {raw}
         </a>

@@ -8,6 +8,8 @@ import { GAMES_CHANNEL_ID, isGameBotId } from "@/lib/chat-bot-channels";
 import { useAuth } from "@/lib/auth-store";
 import { useAuthGate } from "@/lib/auth-gate";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
+import { useGuestLobbyPresence } from "@/lib/use-guest-lobby-presence";
+import { GUEST_LOBBY_CHANNEL_ID } from "@/lib/guest-chat-config";
 import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Avatar } from "./Avatar";
@@ -215,6 +217,7 @@ export function MembersPanel({
   }
 
   const room = state.rooms[roomId];
+  const lobbyGuestPresence = useGuestLobbyPresence(roomId === GUEST_LOBBY_CHANNEL_ID);
 
   // Merge bots/me from local seed with remote profiles (skip our own remote profile — "me" represents us).
   const usersById: Record<string, User> = { ...state.users };
@@ -222,6 +225,9 @@ export function MembersPanel({
     if (authUser && id === authUser.id) return;
     usersById[id] = u;
   });
+  for (const guest of lobbyGuestPresence.guests) {
+    usersById[guest.id] = guest;
+  }
 
   const localIds = room?.members ?? [];
   const remoteIds = Object.keys(profiles).filter(id => !authUser || id !== authUser.id);
@@ -278,6 +284,13 @@ export function MembersPanel({
     return true;
   };
   const onlineUsers = useMemo(() => online.filter(id => !isBot(id)), [online]);
+  const onlineGuestIds = useMemo(() => {
+    if (roomId !== GUEST_LOBBY_CHANNEL_ID) return [];
+    return lobbyGuestPresence.guests
+      .map((g) => g.id)
+      .filter((id) => matchesQuery(id))
+      .sort((a, b) => (usersById[a]?.name || "").localeCompare(usersById[b]?.name || ""));
+  }, [roomId, lobbyGuestPresence.guests, q, usersById]);
   const onlineBots = useMemo(() => online.filter(id => isRoomBot(id)), [online, roomMemberSet]);
   const offlineUsers = useMemo(() => offline.filter(id => !isBot(id)), [offline]);
   const offlineSortedUsers = useMemo(() => offlineSorted.filter(id => !isBot(id)), [offlineSorted]);
@@ -287,6 +300,16 @@ export function MembersPanel({
 
   const effectiveMode: "split" | "merged" =
     botMode === "auto" ? (onlineUsers.length >= 8 ? "split" : "merged") : botMode;
+
+  const onlineWithGuests = useMemo(() => {
+    const base = effectiveMode === "split" ? onlineUsers : online;
+    if (roomId !== GUEST_LOBBY_CHANNEL_ID) return base;
+    const merged = [...base];
+    for (const id of onlineGuestIds) {
+      if (!merged.includes(id)) merged.push(id);
+    }
+    return merged;
+  }, [effectiveMode, onlineUsers, online, roomId, onlineGuestIds]);
 
   const meRole = (meId && room?.roles[meId]) || "member";
   const isStaff = meRole === "owner" || meRole === "admin";
@@ -539,7 +562,8 @@ export function MembersPanel({
             key: "users" as const,
             label: "Users",
             icon: <Users2 className="h-3.5 w-3.5" />,
-            count: effectiveMode === "merged" ? totalUsersCount + totalBotsCount : totalUsersCount,
+            count: (effectiveMode === "merged" ? totalUsersCount + totalBotsCount : totalUsersCount)
+              + (roomId === GUEST_LOBBY_CHANNEL_ID ? onlineGuestIds.length : 0),
           },
           {
             key: "friends" as const,
@@ -663,14 +687,14 @@ export function MembersPanel({
           <div className="space-y-[2px]">
             <div className="flex h-auto min-h-0 items-center gap-1 px-0.5 pb-0 text-[10px] font-bold uppercase tracking-wider text-emerald-400/90 lg:h-[22px] lg:min-h-[22px]">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden />
-              Online — {(effectiveMode === "split" ? onlineUsers : online).length}
+              Online — {onlineWithGuests.length}
             </div>
-            {(effectiveMode === "split" ? onlineUsers : online).length === 0 ? (
+            {onlineWithGuests.length === 0 ? (
               <p className="px-3 py-6 text-center text-xs text-muted-foreground">
                 {q ? "No users match your search." : "No users online."}
               </p>
             ) : (
-              (effectiveMode === "split" ? onlineUsers : online).map((id) => (
+              onlineWithGuests.map((id) => (
                 <div key={id}>{renderMemberRow(id, () => openDM(id))}</div>
               ))
             )}

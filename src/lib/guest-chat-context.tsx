@@ -34,6 +34,10 @@ import {
   getGuestChatPublicConfig,
   startGuestChatSession,
 } from "@/lib/guest-chat.functions";
+import {
+  trackGuestLobbyPresence,
+  untrackGuestLobbyPresence,
+} from "@/lib/use-guest-lobby-presence";
 
 export interface OpenGuestNicknameOptions {
   /** After a successful ephemeral session start, go to /chatroom with Lobby. */
@@ -126,9 +130,22 @@ export function GuestChatProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (config.enabled) return;
     if (!session) return;
+    void untrackGuestLobbyPresence();
     clearGuestChatSession();
     setSession(null);
   }, [config.enabled, session]);
+
+  // Ephemeral lobby presence while a guest session is active.
+  useEffect(() => {
+    if (user || !session || !config.enabled) {
+      void untrackGuestLobbyPresence();
+      return;
+    }
+    void trackGuestLobbyPresence(session.visitorId, session.displayName);
+    return () => {
+      void untrackGuestLobbyPresence();
+    };
+  }, [user, session, config.enabled]);
 
   const openNicknameDialog = useCallback((opts?: OpenGuestNicknameOptions) => {
     setError(null);
@@ -141,6 +158,7 @@ export function GuestChatProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const endGuestChat = useCallback(() => {
+    void untrackGuestLobbyPresence();
     clearGuestChatSession();
     setSession(null);
     navigateToLobbyAfterStartRef.current = false;

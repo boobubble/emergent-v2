@@ -228,9 +228,9 @@ describe("no auth-guest regression", () => {
 
   it("own guest bubbles keep opaque primary contrast in light and dark", () => {
     const src = readFileSync(resolve(srcRoot, "components/chat/MessageList.tsx"), "utf8");
-    const own = src.match(/isOwnGuest\s*\?\s*"(msg-mine[^"]+)"/);
-    expect(own?.[1]).toBeTruthy();
-    const cls = own![1];
+    const own = src.match(/isOwnGuest\s*\?\s*(?:`([^`]*msg-mine[^`]*)`|"(msg-mine[^"]+)")/);
+    const cls = own?.[1] ?? own?.[2];
+    expect(cls).toBeTruthy();
     expect(cls).toMatch(/\bbg-primary\b/);
     expect(cls).not.toMatch(/bg-primary\//);
     expect(cls).toMatch(/\btext-primary-foreground\b/);
@@ -239,9 +239,10 @@ describe("no auth-guest regression", () => {
     expect(src).toMatch(/backgroundColor:\s*"var\(--primary\)"/);
     expect(src).toMatch(/color:\s*"var\(--primary-foreground\)"/);
     expect(src).toMatch(/\[color:inherit\]/);
-    const other = src.match(/isOwnGuest\s*\?\s*"msg-mine[^"]+"\s*:\s*"([^"]+)"/);
-    expect(other?.[1]).toMatch(/text-foreground\/90/);
-    expect(other?.[1]).not.toMatch(/text-primary-foreground/);
+    const other = src.match(/isOwnGuest\s*\?\s*(?:`[^`]*msg-mine[^`]*`|"msg-mine[^"]+")\s*:\s*(?:`([^`]+)`|"([^"]+)")/);
+    const otherCls = other?.[1] ?? other?.[2];
+    expect(otherCls).toMatch(/text-foreground\/90/);
+    expect(otherCls).not.toMatch(/text-primary-foreground/);
     expect(src).toMatch(/rounded-tr-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground/);
     expect(src).not.toMatch(/bg-primary\/90 px-3 py-2 text-xs font-medium text-primary-foreground/);
   });

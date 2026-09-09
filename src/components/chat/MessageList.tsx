@@ -129,6 +129,9 @@ function ReplyPreview({ message, align = "left" }: { message: Message; align?: "
   );
 }
 
+const BUBBLE_SHELL = "w-fit max-w-[min(80%,20rem)] shrink-0";
+const BUBBLE_TEXT = "whitespace-pre-wrap break-normal [overflow-wrap:anywhere]";
+
 function ReplyButton({ onClick }: { onClick: () => void }) {
   return (
     <button
@@ -326,8 +329,8 @@ export function MessageList({ channelId }: { channelId: string }) {
                           className={bubblePendingClass(
                             m,
                             isOwnGuest
-                              ? "msg-mine max-w-[min(80%,20rem)] rounded-2xl rounded-tr-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground shadow-lg shadow-primary/20 chat-bubble-in"
-                              : "max-w-[min(80%,20rem)] rounded-2xl rounded-tl-md border border-border bg-muted/40 px-3 py-2 text-xs leading-snug text-foreground/90",
+                              ? `msg-mine ${BUBBLE_SHELL} rounded-2xl rounded-tr-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground shadow-lg shadow-primary/20 chat-bubble-in`
+                              : `${BUBBLE_SHELL} rounded-2xl rounded-tl-md border border-border bg-muted/40 px-3 py-2 text-xs leading-snug text-foreground/90`,
                           )}
                           style={
                             isOwnGuest
@@ -335,7 +338,7 @@ export function MessageList({ channelId }: { channelId: string }) {
                               : undefined
                           }
                         >
-                          <div className="whitespace-pre-wrap break-words [color:inherit]">{renderText(m.text)}</div>
+                          <div className={`${BUBBLE_TEXT} [color:inherit]`}>{renderText(m.text)}</div>
                         </div>
                         {isOwnGuest && (
                           <SendStatusBits m={m} onRetry={() => void retryGuestMessage(m)} />
@@ -370,7 +373,7 @@ export function MessageList({ channelId }: { channelId: string }) {
                       const replied = m.replyToId ? findMessage(m.replyToId) : null;
                       const isReplyTarget = replyingTo?.id === m.id;
                       return (
-                        <div key={m.id} className="flex w-full flex-col items-end">
+                        <div key={m.id} className="flex w-fit max-w-full flex-col items-end">
                           {replied && <ReplyPreview message={replied} align="right" />}
                           <div className="group/msg flex items-center gap-0.5 sm:gap-1">
                             <ReplyButton onClick={() => setReplyingTo(m)} />
@@ -378,11 +381,11 @@ export function MessageList({ channelId }: { channelId: string }) {
                               className={bubblePendingClass(
                                 m,
                                 m.kind === "me"
-                                  ? `rounded-2xl bg-white/5 px-3 py-2 text-xs italic text-primary chat-bubble-in ${isReplyTarget ? "ring-2 ring-primary/50" : ""}`
-                                  : `rounded-2xl rounded-tr-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground shadow-lg shadow-primary/20 chat-bubble-in ${isReplyTarget ? "ring-2 ring-primary-foreground/40" : ""}`,
+                                  ? `${BUBBLE_SHELL} rounded-2xl bg-white/5 px-3 py-2 text-xs italic text-primary chat-bubble-in ${isReplyTarget ? "ring-2 ring-primary/50" : ""}`
+                                  : `${BUBBLE_SHELL} rounded-2xl rounded-tr-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground shadow-lg shadow-primary/20 chat-bubble-in ${isReplyTarget ? "ring-2 ring-primary-foreground/40" : ""}`,
                               )}
                             >
-                              <div className="whitespace-pre-wrap break-words">{renderText(applyMask(m.authorId, m.text))}</div>
+                              <div className={BUBBLE_TEXT}>{renderText(applyMask(m.authorId, m.text))}</div>
                               {m.text && <MediaEmbed text={m.text} />}
                               {m.attachment && <AttachmentView a={m.attachment} />}
                             </div>
@@ -433,11 +436,11 @@ export function MessageList({ channelId }: { channelId: string }) {
                           <div
                             className={
                               m.kind === "me"
-                                ? `rounded-2xl bg-white/5 px-3 py-2 text-xs italic text-primary chat-bubble-in ${isReplyTarget ? "ring-2 ring-primary/50" : ""}`
-                                : `max-w-[min(80%,20rem)] rounded-2xl rounded-tl-md border border-border bg-card/70 px-3 py-2 text-xs leading-snug text-foreground/90 shadow-sm backdrop-blur-sm chat-bubble-in ${isReplyTarget ? "ring-2 ring-primary/40" : ""}`
+                                ? `${BUBBLE_SHELL} rounded-2xl bg-white/5 px-3 py-2 text-xs italic text-primary chat-bubble-in ${isReplyTarget ? "ring-2 ring-primary/50" : ""}`
+                                : `${BUBBLE_SHELL} rounded-2xl rounded-tl-md border border-border bg-card/70 px-3 py-2 text-xs leading-snug text-foreground/90 shadow-sm backdrop-blur-sm chat-bubble-in ${isReplyTarget ? "ring-2 ring-primary/40" : ""}`
                             }
                           >
-                            <div className="whitespace-pre-wrap break-words">{renderText(applyMask(m.authorId, m.text))}</div>
+                            <div className={BUBBLE_TEXT}>{renderText(applyMask(m.authorId, m.text))}</div>
                             {m.text && <MediaEmbed text={m.text} />}
                             {m.attachment && <AttachmentView a={m.attachment} />}
                           </div>
