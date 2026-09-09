@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { MessageCircle, X, Bot, BotOff, Users, Palette, Minus, Sparkles, Bell, BellOff } from "lucide-react";
+import { MessageCircle, X, Bot, BotOff, Users, Palette, Minus, Sparkles, Bell, BellOff, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import {
   CHAT_INAPP_ALERT_EVENT,
@@ -22,11 +22,16 @@ interface ChatHeaderProps {
   desktopShell?: boolean;
   /** Client lg+ mount: hide the members icon that lg:hidden would hide. */
   largeDesktop?: boolean;
+  /** Desktop chatroom left sidebar open state. */
+  sidebarOpen?: boolean;
+  onToggleSidebar?: () => void;
 }
 
 export function ChatHeader({
   desktopShell = false,
   largeDesktop = false,
+  sidebarOpen = true,
+  onToggleSidebar,
 }: ChatHeaderProps = {}) {
   const { state, isDM, dmUser, channelLabel, closeDM, setActive } = useChat();
   const { ignoreAllBots, setIgnoreAllBots } = useIgnore();
@@ -141,8 +146,19 @@ export function ChatHeader({
         )}
       </button>
     )}
-    <header className={`chat-glass sticky top-0 z-20 flex h-16 items-center justify-between gap-1 px-2 ${desktopShell ? "pl-6 sm:gap-2 sm:px-6" : "pl-12 sm:gap-2 sm:px-6 sm:pl-14 md:pl-6"}`}>
+    <header className={`chat-glass sticky top-0 z-20 flex h-16 items-center justify-between gap-1 px-2 ${desktopShell ? "pl-3 sm:gap-2 sm:px-6" : "pl-12 sm:gap-2 sm:px-6 sm:pl-14 md:pl-6"}`}>
       <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden sm:gap-3">
+        {desktopShell && onToggleSidebar && (
+          <button
+            type="button"
+            onClick={onToggleSidebar}
+            className="hidden md:grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted-foreground transition hover:bg-white/5 hover:text-foreground"
+            title={sidebarOpen ? "Hide sidebar" : "Show sidebar"}
+            aria-label={sidebarOpen ? "Hide sidebar" : "Show sidebar"}
+          >
+            {sidebarOpen ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
+          </button>
+        )}
         <BrandMark
           slot="chat"
           roomId={id}

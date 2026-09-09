@@ -1,4 +1,4 @@
-import { Component, useEffect, useRef, useState, type ReactNode } from "react";
+import { Component, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { Navigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -43,6 +43,7 @@ import { getDiscoveryPrefs } from "@/lib/discovery/functions";
 import { shouldShowFullScreenDiscovery } from "@/lib/discovery/country";
 import { YaarzoDiscoverySheet } from "@/components/discovery/YaarzoDiscoverySheet";
 import { cn } from "@/lib/utils";
+import { readSidebarOpenPreference, writeSidebarOpenPreference } from "@/lib/sidebar-prefs";
 import {
   CHATROOM_LG_MQ,
   CHATROOM_MD_MQ,
@@ -249,9 +250,24 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
     const t = window.setTimeout(() => setFeedbotChip(null), 30_000);
     return () => window.clearTimeout(t);
   }, [feedbotChip]);
-  // Mobile drawer only. Default closed so small screens never flash an overlay;
-  // desktop layout ignores this flag via md:static (always a visible column).
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  // Mobile drawer: default closed. Desktop: hydrate saved preference (default open).
+  const [sidebarOpen, setSidebarOpenState] = useState(false);
+  const sidebarPrefHydrated = useRef(false);
+
+  useEffect(() => {
+    if (sidebarPrefHydrated.current) return;
+    sidebarPrefHydrated.current = true;
+    if (window.matchMedia(CHATROOM_MD_MQ).matches) {
+      setSidebarOpenState(readSidebarOpenPreference(false));
+    }
+  }, []);
+
+  const setSidebarOpen = useCallback((next: boolean) => {
+    setSidebarOpenState(next);
+    if (window.matchMedia(CHATROOM_MD_MQ).matches) {
+      writeSidebarOpenPreference(next);
+    }
+  }, []);
 
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -394,7 +410,7 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
           data-chatroom-sidebar=""
           className={cn(chatroomSidebarClassName(shellLayout, sidebarOpen))}
           style={chatroomSidebarStyle(shellLayout, sidebarOpen)}
-          aria-hidden={isMobile && !sidebarOpen}
+          aria-hidden={!sidebarOpen}
         >
           <SidebarPanelBoundary onFail={() => setSidebarOpen(false)}>
             <Sidebar
@@ -438,6 +454,8 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
                       hubOpen={hubOpen}
                       desktopShell={isClientDesktopShell(shellLayout)}
                       largeDesktop={isClientLargeDesktopShell(shellLayout)}
+                      sidebarOpen={sidebarOpen}
+                      onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
                     />
                   </ChatErrorBoundary>
                 )}

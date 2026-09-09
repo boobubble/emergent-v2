@@ -53,19 +53,21 @@ describe("desktop app layout CSS split", () => {
     expect(read("components/app/app-shells.tsx")).toContain('import "@/styles/app-surfaces.css"');
   });
 
-  it("chatroom left menu is a closed mobile drawer and an always-open desktop column", () => {
-    expect(chat).toContain("const [sidebarOpen, setSidebarOpen] = useState(false)");
+  it("chatroom left menu is a closed mobile drawer and a collapsible desktop column", () => {
+    expect(chat).toContain("setSidebarOpenState");
     expect(chat).toContain("useState(readChatroomShellLayout)");
-    expect(chat).not.toContain("readSidebarOpenPreference");
+    expect(chat).toContain("readSidebarOpenPreference");
+    expect(chat).toContain("writeSidebarOpenPreference");
     expect(chatShell).toContain("md:translate-x-0");
     expect(chatShell).toContain("-translate-x-full");
-    expect(chatShell).not.toContain("md:w-0");
-    expect(chatShell).not.toContain("md:opacity-0");
-    expect(chat).not.toContain("readSidebarOpenPreference");
+    expect(chatShell).toContain("w-0 max-w-0");
     expect(chat).toContain("md:hidden");
     const sidebar = read("components/chat/Sidebar.tsx");
     expect(sidebar).toContain("md:hidden");
     expect(sidebar).toContain("onCollapse?.()");
+    const header = read("components/chat/ChatHeader.tsx");
+    expect(header).toContain("onToggleSidebar");
+    expect(header).toContain("PanelLeftClose");
   });
 
   it("post-login client mount uses matchMedia, not a later CSS/hydration pass", () => {
@@ -83,10 +85,16 @@ describe("desktop app layout CSS split", () => {
     expect(chatroomSidebarToggleVisible(desktop, false)).toBe(false);
     expect(chatroomSidebarBackdropVisible(desktop, true)).toBe(false);
     expect(chatroomSidebarClassName(desktop, false)).not.toContain("-translate-x-full");
-    expect(chatroomSidebarStyle(desktop)).toMatchObject({
+    expect(chatroomSidebarClassName(desktop, false)).toContain("w-0");
+    expect(chatroomSidebarStyle(desktop, true)).toMatchObject({
       position: "static",
       width: 272,
       transform: "none",
+    });
+    expect(chatroomSidebarStyle(desktop, false)).toMatchObject({
+      position: "static",
+      width: 0,
+      opacity: 0,
     });
 
     const tablet = readChatroomShellLayout(mqFor(800));

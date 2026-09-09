@@ -86,7 +86,7 @@ function formatTime(ts: number) {
   return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
-function renderText(text: string) {
+function renderText(text: string, bodyClass = "text-xs") {
   const parts: React.ReactNode[] = [];
   const lines = safeMessageText(text).split("\n");
   lines.forEach((line, li) => {
@@ -95,7 +95,7 @@ function renderText(text: string) {
       if (/^\*\*.+\*\*$/.test(t))
         parts.push(<strong key={`${li}-${i}`} className="font-semibold">{linkify(t.slice(2, -2), `${li}-${i}`)}</strong>);
       else if (/^`.+`$/.test(t))
-        parts.push(<code key={`${li}-${i}`} className="rounded-md bg-white/5 px-1.5 py-0.5 font-mono text-xs text-primary">{t.slice(1, -1)}</code>);
+        parts.push(<code key={`${li}-${i}`} className={`rounded-md bg-white/5 px-1.5 py-0.5 font-mono ${bodyClass} text-primary`}>{t.slice(1, -1)}</code>);
       else if (/^_.+_$/.test(t))
         parts.push(<em key={`${li}-${i}`} className="text-muted-foreground">{linkify(t.slice(1, -1), `${li}-${i}`)}</em>);
       else parts.push(<span key={`${li}-${i}`}>{linkify(t, `${li}-${i}`)}</span>);
@@ -206,6 +206,12 @@ export function MessageList({ channelId }: { channelId: string }) {
   const sendGuest = useServerFn(sendGuestLobbyMessage);
   const maskDmUrls = useDmUrlMask();
   const isDmChan = typeof channelId === "string" && isDM(channelId);
+  const useRoomDesktopTypography =
+    !isDmChan && !isGuestDmChannel(channelId) && !isGuestDmComposeChannel(channelId);
+  const msgBodyClass = useRoomDesktopTypography ? "text-xs md:text-[13.5px]" : "text-xs";
+  const msgAuthorClass = useRoomDesktopTypography
+    ? "text-xs md:text-[13px] font-bold text-foreground"
+    : "text-xs font-bold text-foreground";
   const applyMask = (authorId: string, text: string) =>
     isDmChan && authorId !== "me" ? maskDmUrls(safeMessageText(text)) : safeMessageText(text);
   const baseMsgs = typeof channelId === "string" ? channelMessages(channelId) : [];
@@ -378,7 +384,7 @@ export function MessageList({ channelId }: { channelId: string }) {
                 <Avatar user={author} size={28} />
                 <div className={`min-w-0 flex-1 ${isOwnGuest ? "flex flex-col items-end" : ""}`}>
                   <div className="mb-1 flex items-center gap-1.5">
-                    <span className="text-xs font-bold text-foreground">{author.name}</span>
+                    <span className={msgAuthorClass}>{author.name}</span>
                     <span className="rounded-md bg-muted px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-tight text-muted-foreground">
                       Guest
                     </span>
@@ -395,8 +401,8 @@ export function MessageList({ channelId }: { channelId: string }) {
                       const bubbleClass = bubblePendingClass(
                         m,
                         isOwnGuest
-                          ? `msg-mine ${BUBBLE_SHELL} rounded-2xl rounded-tr-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground shadow-lg shadow-primary/20 chat-msg-in ${isReplyTarget ? "ring-2 ring-primary-foreground/40" : ""}`
-                          : `${BUBBLE_SHELL} rounded-2xl rounded-tl-md border border-border bg-muted/40 px-3 py-2 text-xs leading-snug text-foreground/90 ${isReplyTarget ? "ring-2 ring-primary/40" : ""}`,
+                          ? `msg-mine ${BUBBLE_SHELL} rounded-2xl rounded-tr-md bg-primary px-3 py-2 ${msgBodyClass} font-medium text-primary-foreground shadow-lg shadow-primary/20 chat-msg-in ${isReplyTarget ? "ring-2 ring-primary-foreground/40" : ""}`
+                          : `${BUBBLE_SHELL} rounded-2xl rounded-tl-md border border-border bg-muted/40 px-3 py-2 ${msgBodyClass} leading-snug text-foreground/90 ${isReplyTarget ? "ring-2 ring-primary/40" : ""}`,
                       );
                       return (
                         <div key={m.id} className={`flex w-fit max-w-full flex-col ${isOwnGuest ? "items-end" : ""}`}>
@@ -412,13 +418,13 @@ export function MessageList({ channelId }: { channelId: string }) {
                                   className={bubbleClass}
                                   style={{ backgroundColor: "var(--primary)", color: "var(--primary-foreground)" }}
                                 >
-                                  <div className={`${BUBBLE_TEXT} [color:inherit]`}>{renderText(m.text)}</div>
+                                  <div className={`${BUBBLE_TEXT} [color:inherit]`}>{renderText(m.text, msgBodyClass)}</div>
                                 </div>
                               </>
                             ) : (
                               <>
                                 <div className={bubbleClass}>
-                                  <div className={`${BUBBLE_TEXT} [color:inherit]`}>{renderText(m.text)}</div>
+                                  <div className={`${BUBBLE_TEXT} [color:inherit]`}>{renderText(m.text, msgBodyClass)}</div>
                                 </div>
                                 <ReplyButton onClick={() => setReplyingTo(m)} />
                                 <StaffActionsMenu
@@ -452,7 +458,7 @@ export function MessageList({ channelId }: { channelId: string }) {
 
                     <Time ts={g[0].ts} />
                     <UserMenu userId={author.id} username={author.name}>
-                      <span className="inline-flex items-center gap-1 text-xs font-bold text-foreground">
+                      <span className={`inline-flex items-center gap-1 ${msgAuthorClass}`}>
 
                         <CosmeticName userId={author.id} name={author.name} />
                         <NameAdornments user={author} />
@@ -473,11 +479,11 @@ export function MessageList({ channelId }: { channelId: string }) {
                               className={bubblePendingClass(
                                 m,
                                 m.kind === "me"
-                                  ? `${BUBBLE_SHELL} rounded-2xl bg-white/5 px-3 py-2 text-xs italic text-primary chat-msg-in ${isReplyTarget ? "ring-2 ring-primary/50" : ""}`
-                                  : `${BUBBLE_SHELL} rounded-2xl rounded-tr-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground shadow-lg shadow-primary/20 chat-msg-in ${isReplyTarget ? "ring-2 ring-primary-foreground/40" : ""}`,
+                                  ? `${BUBBLE_SHELL} rounded-2xl bg-white/5 px-3 py-2 ${msgBodyClass} italic text-primary chat-msg-in ${isReplyTarget ? "ring-2 ring-primary/50" : ""}`
+                                  : `${BUBBLE_SHELL} rounded-2xl rounded-tr-md bg-primary px-3 py-2 ${msgBodyClass} font-medium text-primary-foreground shadow-lg shadow-primary/20 chat-msg-in ${isReplyTarget ? "ring-2 ring-primary-foreground/40" : ""}`,
                               )}
                             >
-                              <div className={BUBBLE_TEXT}>{renderText(applyMask(m.authorId, m.text))}</div>
+                              <div className={BUBBLE_TEXT}>{renderText(applyMask(m.authorId, m.text), msgBodyClass)}</div>
                               {m.text && <MediaEmbed text={m.text} />}
                               {m.attachment && <AttachmentView a={m.attachment} />}
                             </div>
@@ -508,7 +514,7 @@ export function MessageList({ channelId }: { channelId: string }) {
               <div className="min-w-0 flex-1">
                 <div className="mb-1 flex items-center gap-1.5">
                   <UserMenu userId={author.id} username={author.name}>
-                    <span className="inline-flex items-center gap-1 text-xs font-bold text-foreground">
+                    <span className={`inline-flex items-center gap-1 ${msgAuthorClass}`}>
                       {author.isBot ? (
                         author.name
                       ) : (
@@ -536,11 +542,11 @@ export function MessageList({ channelId }: { channelId: string }) {
                           <div
                             className={
                               m.kind === "me"
-                                ? `${BUBBLE_SHELL} rounded-2xl bg-white/5 px-3 py-2 text-xs italic text-primary chat-msg-in ${isReplyTarget ? "ring-2 ring-primary/50" : ""}`
-                                : `${BUBBLE_SHELL} rounded-2xl rounded-tl-md border border-border bg-card/70 px-3 py-2 text-xs leading-snug text-foreground/90 shadow-sm backdrop-blur-sm chat-msg-in ${isReplyTarget ? "ring-2 ring-primary/40" : ""}`
+                                ? `${BUBBLE_SHELL} rounded-2xl bg-white/5 px-3 py-2 ${msgBodyClass} italic text-primary chat-msg-in ${isReplyTarget ? "ring-2 ring-primary/50" : ""}`
+                                : `${BUBBLE_SHELL} rounded-2xl rounded-tl-md border border-border bg-card/70 px-3 py-2 ${msgBodyClass} leading-snug text-foreground/90 shadow-sm backdrop-blur-sm chat-msg-in ${isReplyTarget ? "ring-2 ring-primary/40" : ""}`
                             }
                           >
-                            <div className={BUBBLE_TEXT}>{renderText(applyMask(m.authorId, m.text))}</div>
+                            <div className={BUBBLE_TEXT}>{renderText(applyMask(m.authorId, m.text), msgBodyClass)}</div>
                             {m.text && <MediaEmbed text={m.text} />}
                             {m.attachment && <AttachmentView a={m.attachment} />}
                           </div>

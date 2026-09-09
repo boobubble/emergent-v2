@@ -56,7 +56,10 @@ export function chatroomSidebarClassName(
   sidebarOpen: boolean,
 ): string {
   if (isClientDesktopShell(layout)) {
-    return "relative z-auto w-[272px] max-w-none shrink-0 translate-x-0 opacity-100 pointer-events-auto shadow-none";
+    if (sidebarOpen) {
+      return "relative z-auto w-[272px] max-w-none shrink-0 translate-x-0 opacity-100 pointer-events-auto shadow-none";
+    }
+    return "relative z-auto w-0 max-w-0 shrink-0 overflow-hidden translate-x-0 opacity-0 pointer-events-none shadow-none";
   }
   return [
     "fixed inset-y-0 left-0 z-40 w-[85vw] max-w-xs shadow-2xl transition-transform duration-200 ease-out",
@@ -76,14 +79,27 @@ export function chatroomSidebarStyle(
 ): CSSProperties | undefined {
   if (!layout.clientMounted) return undefined;
   if (layout.isDesktop) {
+    if (sidebarOpen) {
+      return {
+        position: "static",
+        transform: "none",
+        width: CHATROOM_DESKTOP_SIDEBAR_PX,
+        maxWidth: "none",
+        zIndex: "auto",
+        opacity: 1,
+        pointerEvents: "auto",
+        boxShadow: "none",
+      };
+    }
     return {
       position: "static",
       transform: "none",
-      width: CHATROOM_DESKTOP_SIDEBAR_PX,
-      maxWidth: "none",
+      width: 0,
+      maxWidth: 0,
+      overflow: "hidden",
       zIndex: "auto",
-      opacity: 1,
-      pointerEvents: "auto",
+      opacity: 0,
+      pointerEvents: "none",
       boxShadow: "none",
     };
   }

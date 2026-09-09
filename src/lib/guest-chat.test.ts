@@ -258,7 +258,8 @@ describe("no auth-guest regression", () => {
     const otherCls = other?.[1] ?? other?.[2];
     expect(otherCls).toMatch(/text-foreground\/90/);
     expect(otherCls).not.toMatch(/text-primary-foreground/);
-    expect(src).toMatch(/rounded-tr-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground/);
+    expect(src).toMatch(/rounded-tr-md bg-primary px-3 py-2 \$\{msgBodyClass\} font-medium text-primary-foreground/);
+    expect(src).toMatch(/md:text-\[13\.5px\]/);
     expect(src).not.toMatch(/bg-primary\/90 px-3 py-2 text-xs font-medium text-primary-foreground/);
   });
 
