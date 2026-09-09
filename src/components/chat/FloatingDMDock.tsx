@@ -4,7 +4,6 @@ import { useServerFn } from "@tanstack/react-start";
 import { deleteMyDmConversation } from "@/lib/account-dm.functions";
 
 import { useChat } from "@/lib/chat-store";
-import { isRemoteDmChannel } from "@/lib/dm-utils";
 import { useAuth } from "@/lib/auth-store";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
 import { resolveMiniDmPeer } from "@/lib/mini-dm";
@@ -23,7 +22,7 @@ const MAX_OPEN = 2;
  */
 export function FloatingDMDock() {
   const chat = useChat();
-  const { state, dmChannelFor, startDM, setActive, markDmRead, watchRemoteChannel } = chat;
+  const { state, dmChannelFor, startDM, setActive, setOpenDmPeers, watchRemoteChannel } = chat;
   const { user: authUser } = useAuth();
   const isMobile = useIsMobile();
 
@@ -123,15 +122,9 @@ export function FloatingDMDock() {
     });
   }, []);
 
-  // Mark DM read whenever a mini window for that peer is open (and on new msgs while open)
   useEffect(() => {
-    if (!authUser?.id || open.length === 0) return;
-    open.forEach(peerId => {
-      const ch = dmChannelFor(peerId);
-      if (!ch || !isRemoteDmChannel(ch, authUser.id)) return;
-      void markDmRead(ch);
-    });
-  }, [open, authUser?.id, dmChannelFor, state.messages, markDmRead]);
+    setOpenDmPeers(open);
+  }, [open, setOpenDmPeers]);
 
   if (isMobile) return null;
   if (!authUser?.id) return null;

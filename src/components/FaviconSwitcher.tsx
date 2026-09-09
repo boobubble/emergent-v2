@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useOptionalChat } from "@/lib/chat-store";
+import { useGlobalUnread } from "@/lib/global-unread";
 import { useBrandingMap } from "@/components/BrandMark";
 
 const DEFAULT_BLUE = "/favicon-blue.png";
@@ -18,7 +19,7 @@ function setFavicon(href: string) {
 export function FaviconSwitcher() {
   const chat = useOptionalChat();
   const branding = useBrandingMap();
-  const dmUnreadCount = chat?.dmUnreadCount ?? 0;
+  const { hasUnread } = useGlobalUnread();
   const activeId = chat?.state.activeChannel;
 
   useEffect(() => {
@@ -31,12 +32,12 @@ export function FaviconSwitcher() {
     const globalFav = (isDark ? branding.favicon_dark : branding.favicon_light)
       || branding.favicon_light
       || branding.favicon_dark;
-    if (dmUnreadCount > 0) {
+    if (hasUnread) {
       setFavicon(DEFAULT_RED);
     } else {
       setFavicon(roomFav || globalFav || DEFAULT_BLUE);
     }
-  }, [dmUnreadCount, activeId, branding]);
+  }, [hasUnread, activeId, branding]);
 
   return null;
 }

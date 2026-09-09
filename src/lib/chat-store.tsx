@@ -38,6 +38,7 @@ import { evaluateBadges, todayKey, daysBetween } from "./achievements";
 import { supabase } from "@/integrations/supabase/client";
 import { rtLog } from "./realtime-debug";
 import { sanitizeRemoteReplyToId } from "./message-list-model";
+import { computeDmUnreadCount, isPeerDmUnread } from "./global-unread";
 import { extraRemoteDmChannelsToFetch } from "./mini-dm";
 import { useRemoteProfiles } from "./use-remote-profiles";
 import { playDmPing, playMentionPing, playPublicChatTick } from "./sounds";
@@ -627,6 +628,8 @@ interface Ctx {
   dmChannelFor: (peerId: string) => string | null;
   /** Ensure a desktop mini-DM channel is included in the history fetch. */
   watchRemoteChannel: (channelId: string | null | undefined) => void;
+  /** Desktop mini-DM windows currently open (peer profile ids). */
+  setOpenDmPeers: (peerIds: string[]) => void;
   replyingTo: Message | null;
   setReplyingTo: (m: Message | null) => void;
   findMessage: (id: string) => Message | undefined;
@@ -815,6 +818,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
   const [dmReads, setDmReads] = useState<Record<string, Record<string, number>>>({});
   // Latest message timestamp per DM channel (for unread badges across reloads)
   const [dmLatestTs, setDmLatestTs] = useState<Record<string, number>>({});
+  const [openDmPeerIds, setOpenDmPeerIds] = useState<string[]>([]);
 
 
 
@@ -1022,7 +1026,13 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
         }
       }
       if (Object.keys(latest).length) {
-        setDmLatestTs(prev => ({ ...latest, ...prev }));
+        setDmLatestTs((prev) => {
+          const next = { ...prev };
+          for (const [ch, ts] of Object.entries(latest)) {
+            next[ch] = Math.max(next[ch] ?? 0, ts);
+          }
+          return next;
+        });
       }
       if (!peers.length) return;
       setState(s => {
@@ -1345,6 +1355,27 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       return { ...prev, [channelId]: ch };
     });
   }, [authUserId]);
+
+  const setOpenDmPeers = useCallback((peerIds: string[]) => {
+    setOpenDmPeerIds(peerIds);
+  }, []);
+
+  // Mark read when switching to a full-page remote DM.
+  useEffect(() => {
+    if (!authUserId) return;
+    const channelId = state.activeChannel;
+    if (!channelId.startsWith("dm:") || !isRemoteDmChannel(channelId, authUserId)) return;
+    void markDmRead(channelId);
+  }, [authUserId, state.activeChannel, markDmRead]);
+
+  // Mark read for every open desktop mini-DM window.
+  useEffect(() => {
+    if (!authUserId || openDmPeerIds.length === 0) return;
+    for (const peerId of openDmPeerIds) {
+      const ch = dmChannelFor(authUserId, peerId);
+      if (ch && isRemoteDmChannel(ch, authUserId)) void markDmRead(ch);
+    }
+  }, [authUserId, openDmPeerIds, state.messages, markDmRead]);
 
   // Upsert my read marker when I open a DM or new msgs arrive while viewing
   const [roomUnread, setRoomUnread] = useState<Record<string, number>>({});
@@ -2343,36 +2374,29 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       }
       return max;
     },
-    isDmUnread: (peerId: string) => {
-      if (!authUserId || !isUuid(peerId)) return false;
-      const ch = dmChannelFor(authUserId, peerId);
-      if (!ch || !isRemoteDmChannel(ch, authUserId)) return false;
-      if (state.activeChannel === ch) return false;
-      const latest = dmLatestTs[ch] ?? 0;
-      if (!latest) return false;
-      const myRead = dmReads[ch]?.[authUserId] ?? 0;
-      return latest > myRead;
-    },
-    dmUnreadCount: (() => {
-      if (!authUserId) return 0;
-      let n = 0;
-      for (const peerId of state.dmOrder ?? []) {
-        if (!isUuid(peerId)) continue;
-        const ch = dmChannelFor(authUserId, peerId);
-        if (!ch || !isRemoteDmChannel(ch, authUserId)) continue;
-        if (state.activeChannel === ch) continue;
-        const latest = dmLatestTs[ch] ?? 0;
-        if (!latest) continue;
-        const myRead = dmReads[ch]?.[authUserId] ?? 0;
-        if (latest > myRead) n++;
-      }
-      return n;
-    })(),
+    isDmUnread: (peerId: string) =>
+      isPeerDmUnread(
+        peerId,
+        authUserId,
+        state.activeChannel,
+        openDmPeerIds,
+        dmLatestTs,
+        dmReads,
+      ),
+    dmUnreadCount: computeDmUnreadCount(
+      authUserId,
+      state.dmOrder ?? [],
+      state.activeChannel,
+      openDmPeerIds,
+      dmLatestTs,
+      dmReads,
+    ),
+    setOpenDmPeers,
     staffKick,
     staffLocalMute,
     markDmRead,
     roomUnread,
-  }), [state, setActive, send, retrySend, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser, reset, replyingTo, findMessage, authUserId, dmReads, dmLatestTs, staffKick, staffLocalMute, pushSystem, pushPresenceEvent, wipeChannel, deleteRoom, syncAdminChannels, registerCommunityRoom, leaveCommunityRoom, markDmRead, roomUnread, watchRemoteChannel]);
+  }), [state, setActive, send, retrySend, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser, reset, replyingTo, findMessage, authUserId, dmReads, dmLatestTs, openDmPeerIds, staffKick, staffLocalMute, pushSystem, pushPresenceEvent, wipeChannel, deleteRoom, syncAdminChannels, registerCommunityRoom, leaveCommunityRoom, markDmRead, roomUnread, watchRemoteChannel, setOpenDmPeers]);
 
 
   return <ChatCtx.Provider value={value}>{children}</ChatCtx.Provider>;

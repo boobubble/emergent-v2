@@ -278,6 +278,8 @@ export const MODULES = {
       "src/lib/mini-dm.ts",
       "src/lib/mini-dm-messages.test.tsx",
       "src/lib/message-list-model.ts",
+      "src/lib/global-unread.ts",
+      "src/lib/global-unread.test.ts",
       "src/lib/dm-url-mask.tsx",
       "supabase/migrations/20260904180000_dm_participant_channel_rls.sql",
     ],
