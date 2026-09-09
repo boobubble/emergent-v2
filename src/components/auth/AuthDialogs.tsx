@@ -176,6 +176,23 @@ function SignUpDialog({ open, onOpenChange, onSwitchSignin }: { open: boolean; o
           <DialogTitle>Create your account</DialogTitle>
           <DialogDescription>Join {brand.name} in a few seconds.</DialogDescription>
         </DialogHeader>
+
+        <div className="text-center text-xs text-muted-foreground">
+          Already have one?{" "}
+          <button type="button" onClick={onSwitchSignin} className="font-semibold text-primary hover:underline">Sign in</button>
+        </div>
+
+        {guestChat.enabled && (
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="h-px flex-1 bg-border" />
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">OR</span>
+              <div className="h-px flex-1 bg-border" />
+            </div>
+            <LoginAsGuestButton onBeforeOpen={() => onOpenChange(false)} />
+          </div>
+        )}
+
         <form onSubmit={onSubmit} className="space-y-3">
           <div>
             <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Profile picture (optional)</label>
@@ -236,22 +253,6 @@ function SignUpDialog({ open, onOpenChange, onSwitchSignin }: { open: boolean; o
             {busy ? "..." : "Create account"}
           </button>
         </form>
-
-        {guestChat.enabled && (
-          <div className="space-y-3 pt-1">
-            <div className="flex items-center gap-3">
-              <div className="h-px flex-1 bg-border" />
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">OR</span>
-              <div className="h-px flex-1 bg-border" />
-            </div>
-            <LoginAsGuestButton onBeforeOpen={() => onOpenChange(false)} />
-          </div>
-        )}
-
-        <div className="text-center text-xs text-muted-foreground">
-          Already have one?{" "}
-          <button onClick={onSwitchSignin} className="font-semibold text-primary hover:underline">Sign in</button>
-        </div>
       </DialogContent>
     </Dialog>
   );
