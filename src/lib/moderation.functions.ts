@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { GUEST_LOBBY_CHANNEL_ID } from "./guest-chat-config";
 import { withRateLimit } from "./rate-limit-middleware";
 
 async function getSupabaseAdmin() {
@@ -28,25 +29,42 @@ type ModActionName =
   | "resolve_report" | "dismiss_report" | "note"
   | "add_word_filter" | "remove_word_filter" | "add_url_rule" | "remove_url_rule";
 
-async function assertCanClearChannel(userId: string, channelId: string) {
+async function loadUserRoles(userId: string): Promise<string[]> {
   const admin = await getSupabaseAdmin();
-  const { data: roles } = await admin
-    .from("user_roles").select("role").eq("user_id", userId);
-  const list = (roles ?? []).map(r => r.role as string);
-  const isAdmin = list.includes("super_admin") || list.includes("admin");
-  if (isAdmin) return;
+  const { data: roles } = await admin.from("user_roles").select("role").eq("user_id", userId);
+  return (roles ?? []).map((r) => r.role as string);
+}
 
-  // Per-chatroom moderator with delete permission can clear that room
+async function loadRoomModDelete(userId: string, channelId: string): Promise<boolean> {
+  const admin = await getSupabaseAdmin();
   const { data: roomMod } = await admin
     .from("room_moderators")
     .select("can_delete")
     .eq("channel_id", channelId)
     .eq("user_id", userId)
     .maybeSingle();
-  if (roomMod?.can_delete) return;
+  return !!roomMod?.can_delete;
+}
+
+/** Admins, global moderators, or per-room moderators with can_delete. */
+async function assertCanDeleteMessage(userId: string, channelId: string) {
+  const list = await loadUserRoles(userId);
+  if (list.includes("super_admin") || list.includes("admin")) return;
+  if (list.includes("moderator")) return;
+  if (await loadRoomModDelete(userId, channelId)) return;
+  throw new Error("Forbidden: moderator only");
+}
+
+async function assertCanClearChannel(userId: string, channelId: string) {
+  const list = await loadUserRoles(userId);
+  const isAdmin = list.includes("super_admin") || list.includes("admin");
+  if (isAdmin) return;
+
+  if (await loadRoomModDelete(userId, channelId)) return;
 
   // Global moderator, gated by admin-configured staff permissions
   if (list.includes("moderator")) {
+    const admin = await getSupabaseAdmin();
     const { data: settings } = await admin
       .from("app_settings").select("value").eq("key", "staff_permissions").maybeSingle();
     const allowed = !!(settings?.value as Record<string, unknown> | null)?.["mod_can_clear"];
@@ -55,6 +73,11 @@ async function assertCanClearChannel(userId: string, channelId: string) {
   }
 
   throw new Error("Forbidden: admins only");
+}
+
+function guestDb(sb: Awaited<ReturnType<typeof getSupabaseAdmin>>) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return sb as any;
 }
 
 async function logAction(actor_id: string, action: ModActionName, extra: Record<string, unknown> = {}) {
@@ -502,12 +525,51 @@ export const listModLogs = createServerFn({ method: "GET" })
 // ---------- Message moderation actions ----------
 export const deleteMessageMod = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth, withRateLimit("report.submit")])
-  .inputValidator((input) => z.object({ message_id: z.string().uuid() }).parse(input))
+  .inputValidator((input) =>
+    z.object({
+      message_id: z.string().uuid(),
+      channel_id: z.string().min(1).max(120).optional(),
+    }).parse(input),
+  )
   .handler(async ({ data, context }) => {
-    await assertMod(context.userId);
-    const { error } = await (await getSupabaseAdmin()).from("messages").delete().eq("id", data.message_id);
+    const admin = await getSupabaseAdmin();
+    const { data: row } = await admin
+      .from("messages")
+      .select("channel_id")
+      .eq("id", data.message_id)
+      .maybeSingle();
+    if (!row?.channel_id) throw new Error("Message not found");
+    const channelId = data.channel_id ?? row.channel_id;
+    if (channelId !== row.channel_id) throw new Error("Message not in this channel");
+    await assertCanDeleteMessage(context.userId, channelId);
+    const { error } = await admin.from("messages").delete().eq("id", data.message_id);
     if (error) throw new Error(error.message);
-    await logAction(context.userId, "delete_message", { target_id: data.message_id });
+    await logAction(context.userId, "delete_message", { target_id: data.message_id, payload: { channel_id: channelId } });
+    return { ok: true };
+  });
+
+export const deleteGuestMessageMod = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth, withRateLimit("report.submit")])
+  .inputValidator((input) =>
+    z.object({
+      message_id: z.string().uuid(),
+      channel_id: z.string().min(1).max(120),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertCanDeleteMessage(context.userId, data.channel_id);
+    const sb = guestDb(await getSupabaseAdmin());
+    const { error, count } = await sb
+      .from("guest_chat_messages")
+      .delete({ count: "exact" })
+      .eq("id", data.message_id)
+      .eq("channel_id", data.channel_id);
+    if (error) throw new Error(error.message);
+    if (!count) throw new Error("Guest message not found");
+    await logAction(context.userId, "delete_message", {
+      target_id: data.message_id,
+      payload: { channel_id: data.channel_id, guest: true },
+    });
     return { ok: true };
   });
 
@@ -524,12 +586,23 @@ export const clearChannelMessages = createServerFn({ method: "POST" })
       .delete({ count: "exact" })
       .eq("channel_id", data.channel_id);
     if (error) throw new Error(error.message);
+
+    let guestDeleted = 0;
+    if (data.channel_id === GUEST_LOBBY_CHANNEL_ID) {
+      const { error: gErr, count: gCount } = await guestDb(admin)
+        .from("guest_chat_messages")
+        .delete({ count: "exact" })
+        .eq("channel_id", data.channel_id);
+      if (gErr) throw new Error(gErr.message);
+      guestDeleted = gCount ?? 0;
+    }
+
     await logAction(context.userId, "clear_channel", {
       target_type: "room",
       target_id: data.channel_id,
-      payload: { deleted: count ?? 0 },
+      payload: { deleted: count ?? 0, guest_deleted: guestDeleted },
     });
-    return { ok: true, deleted: count ?? 0 };
+    return { ok: true, deleted: count ?? 0, guestDeleted };
   });
 
 // ---------- Room moderators ----------

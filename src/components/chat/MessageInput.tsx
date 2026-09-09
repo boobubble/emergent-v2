@@ -13,6 +13,7 @@ import { publishGuestLobbyRow } from "@/lib/guest-lobby-feed";
 import { isBotCommandOrAction } from "@/lib/guest-nickname";
 import {
   appendGuestOptimistic,
+  clearGuestLobbyRows,
   confirmGuestOptimistic,
   failGuestOptimistic,
   useGuestLobbyFeed,
@@ -28,6 +29,25 @@ import { mergeMediaConfig } from "@/lib/media-providers-config";
 import { earnChatMessage } from "@/lib/economy.functions";
 import { clearCaches, formatClearReport, isCurrentUserAdmin } from "@/lib/cache-manager";
 import { clearChannelMessages } from "@/lib/moderation.functions";
+import {
+  startGuestDmConversation,
+  sendGuestDmMessage,
+  sendRegisteredGuestDmReply,
+} from "@/lib/guest-dm.functions";
+import {
+  isGuestDmChannel,
+  parseGuestDmChannel,
+} from "@/lib/guest-dm-utils";
+import {
+  appendGuestDmOptimistic,
+  confirmGuestDmOptimistic,
+  failGuestDmOptimistic,
+  publishGuestDmRow,
+} from "@/lib/use-guest-dm-feed";
+import {
+  isGuestDmComposeChannel,
+  parseGuestDmComposeRecipient,
+} from "@/lib/guest-dm-utils";
 import type { Attachment } from "@/lib/chat-types";
 import { supabase } from "@/integrations/supabase/client";
 import { VoiceRecorder } from "./VoiceRecorder";
@@ -57,7 +77,17 @@ export function MessageInput({
   autoFocus?: boolean;
   placeholder?: string;
 } = {}) {
-  const { send, state, replyingTo, setReplyingTo, pushSystem, wipeChannel, isDM } = useChat();
+  const {
+    send,
+    state,
+    replyingTo,
+    setReplyingTo,
+    pushSystem,
+    wipeChannel,
+    isDM,
+    registerGuestDmConversation,
+    setActive,
+  } = useChat();
   const channelId = channelIdProp || state.activeChannel;
   const compact = compactProp ?? isDM(channelId);
   const { user } = useAuth();
@@ -65,6 +95,9 @@ export function MessageInput({
   const guestChat = useGuestChat();
   const guestFeed = useGuestLobbyFeed(channelId === GUEST_LOBBY_CHANNEL_ID);
   const sendGuest = useServerFn(sendGuestLobbyMessage);
+  const startGuestDmFn = useServerFn(startGuestDmConversation);
+  const sendGuestDmFn = useServerFn(sendGuestDmMessage);
+  const sendRegisteredGuestDmFn = useServerFn(sendRegisteredGuestDmReply);
   const me = user && !user.isGuest ? { id: user.id, name: user.username } : null;
   const { typers, sendTyping, stopTyping } = useTyping(channelId, me, !!me);
   const [text, setText] = useState("");
@@ -307,10 +340,13 @@ export function MessageInput({
     try {
       const res = await clearChannelFn({ data: { channel_id: channelId } });
       const count = res?.deleted ?? 0;
+      const guestCount = res?.guestDeleted ?? 0;
       wipeChannel(channelId);
-      toast.success("Chat cleared", { id: "clearchat", description: `${count} messages removed.` });
+      if (channelId === GUEST_LOBBY_CHANNEL_ID) clearGuestLobbyRows();
+      const total = count + guestCount;
+      toast.success("Chat cleared", { id: "clearchat", description: `${total} messages removed.` });
       const who = user?.username ? `@${user.username}` : "An admin";
-      pushSystem(channelId, `🧹 Chat history cleared by ${who} — ${count} message${count === 1 ? "" : "s"} removed.`);
+      pushSystem(channelId, `🧹 Chat history cleared by ${who} — ${total} message${total === 1 ? "" : "s"} removed.`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed to clear chat";
       toast.error("Cannot clear chat", { id: "clearchat", description: msg });
@@ -334,6 +370,157 @@ export function MessageInput({
       out = out.replace(re, (_m, pre) => `${pre}@${name}`);
     }
     return out;
+  }
+
+  async function submitGuestDm(plain: string) {
+    if (!guestChat.session) {
+      guestChat.openNicknameDialog();
+      return;
+    }
+    if (attachment) {
+      requireAuth();
+      return;
+    }
+    const visitorId = guestChat.session.visitorId;
+    const optId = `opt-${typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : String(Date.now())}`;
+    const nowIso = new Date().toISOString();
+
+    if (isGuestDmComposeChannel(channelId)) {
+      const recipientId = parseGuestDmComposeRecipient(channelId);
+      if (!recipientId) return;
+      appendGuestDmOptimistic(`compose:${recipientId}`, {
+        id: optId,
+        conversationId: `compose:${recipientId}`,
+        senderKind: "guest",
+        text: plain,
+        createdAt: nowIso,
+        expiresAt: new Date(Date.now() + 120 * 60_000).toISOString(),
+        visitorId,
+      });
+      setText("");
+      setReplyingTo(null);
+      scheduleComposerAutosize();
+      try {
+        const res = await startGuestDmFn({
+          data: { visitorId, recipientId, text: plain },
+        });
+        const convId = res.conversationId;
+        const ch = registerGuestDmConversation(
+          convId,
+          visitorId,
+          recipientId,
+          res.guestDisplayName,
+          state.users[recipientId]?.name,
+        );
+        confirmGuestDmOptimistic(`compose:${recipientId}`, optId, {
+          id: res.message.id,
+          conversationId: convId,
+          senderKind: "guest",
+          text: res.message.text,
+          createdAt: res.message.createdAt,
+          expiresAt: res.message.expiresAt,
+          visitorId,
+        });
+        publishGuestDmRow({
+          id: res.message.id,
+          conversationId: convId,
+          senderKind: "guest",
+          text: res.message.text,
+          createdAt: res.message.createdAt,
+          expiresAt: res.message.expiresAt,
+          visitorId,
+        });
+        setActive(ch);
+      } catch (e: unknown) {
+        failGuestDmOptimistic(`compose:${recipientId}`, optId, e instanceof Error ? e.message : "Failed to send");
+        toast.error(e instanceof Error ? e.message : "Failed to send");
+      }
+      return;
+    }
+
+    const conversationId = parseGuestDmChannel(channelId);
+    if (!conversationId) return;
+    appendGuestDmOptimistic(conversationId, {
+      id: optId,
+      conversationId,
+      senderKind: "guest",
+      text: plain,
+      createdAt: nowIso,
+      expiresAt: new Date(Date.now() + 120 * 60_000).toISOString(),
+      visitorId,
+    });
+    setText("");
+    setReplyingTo(null);
+    scheduleComposerAutosize();
+    try {
+      const row = await sendGuestDmFn({
+        data: { visitorId, conversationId, text: plain },
+      });
+      confirmGuestDmOptimistic(conversationId, optId, {
+        id: row.id,
+        conversationId: row.conversationId,
+        senderKind: "guest",
+        text: row.text,
+        createdAt: row.createdAt,
+        expiresAt: row.expiresAt,
+        visitorId,
+      });
+      publishGuestDmRow({
+        id: row.id,
+        conversationId: row.conversationId,
+        senderKind: "guest",
+        text: row.text,
+        createdAt: row.createdAt,
+        expiresAt: row.expiresAt,
+        visitorId,
+      });
+    } catch (e: unknown) {
+      failGuestDmOptimistic(conversationId, optId, e instanceof Error ? e.message : "Failed to send");
+      toast.error(e instanceof Error ? e.message : "Failed to send");
+    }
+  }
+
+  async function submitRegisteredGuestDm(plain: string) {
+    const conversationId = parseGuestDmChannel(channelId);
+    if (!conversationId || !user?.id) return;
+    const optId = `opt-${typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : String(Date.now())}`;
+    const nowIso = new Date().toISOString();
+    appendGuestDmOptimistic(conversationId, {
+      id: optId,
+      conversationId,
+      senderKind: "registered",
+      text: plain,
+      createdAt: nowIso,
+      expiresAt: new Date(Date.now() + 120 * 60_000).toISOString(),
+      recipientId: user.id,
+    });
+    setText("");
+    setReplyingTo(null);
+    scheduleComposerAutosize();
+    try {
+      const row = await sendRegisteredGuestDmFn({ data: { conversationId, text: plain } });
+      confirmGuestDmOptimistic(conversationId, optId, {
+        id: row.id,
+        conversationId: row.conversationId,
+        senderKind: "registered",
+        text: row.text,
+        createdAt: row.createdAt,
+        expiresAt: row.expiresAt,
+        recipientId: user.id,
+      });
+      publishGuestDmRow({
+        id: row.id,
+        conversationId: row.conversationId,
+        senderKind: "registered",
+        text: row.text,
+        createdAt: row.createdAt,
+        expiresAt: row.expiresAt,
+        visitorId: row.visitorId,
+      });
+    } catch (e: unknown) {
+      failGuestDmOptimistic(conversationId, optId, e instanceof Error ? e.message : "Failed to send");
+      toast.error(e instanceof Error ? e.message : "Failed to send");
+    }
   }
 
   async function submitGuestLobby(plain: string) {
@@ -416,13 +603,30 @@ export function MessageInput({
 
     const trimmed = text.trim();
 
-    // Ephemeral guest Lobby path — never creates auth/profile.
-    if (!user && guestChat.isGuestChatting) {
-      void submitGuestLobby(trimmed).finally(() => {
+    if (user && isGuestDmChannel(channelId)) {
+      void submitRegisteredGuestDm(trimmed).finally(() => {
         releaseSubmitLock();
         requestAnimationFrame(() => inputRef.current?.focus());
       });
       return;
+    }
+
+    // Ephemeral guest paths — never creates auth/profile.
+    if (!user && guestChat.isGuestChatting) {
+      if (isGuestDmChannel(channelId) || isGuestDmComposeChannel(channelId)) {
+        void submitGuestDm(trimmed).finally(() => {
+          releaseSubmitLock();
+          requestAnimationFrame(() => inputRef.current?.focus());
+        });
+        return;
+      }
+      if (channelId === GUEST_LOBBY_CHANNEL_ID) {
+        void submitGuestLobby(trimmed).finally(() => {
+          releaseSubmitLock();
+          requestAnimationFrame(() => inputRef.current?.focus());
+        });
+        return;
+      }
     }
     if (!user && guestChat.enabled && channelId === GUEST_LOBBY_CHANNEL_ID && !attachment && !isBotCommandOrAction(trimmed)) {
       guestChat.openNicknameDialog();

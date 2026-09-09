@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-store";
 import * as trio from "@/services/trio-rooms.service";
+import { playCallRing } from "@/lib/sounds";
 
 /**
  * App-wide listener for incoming 3some (trio) room invitations.
@@ -67,16 +68,19 @@ export function TrioInvitesListener() {
         }
 
         shown.current.add(key);
+        const stopRing = playCallRing();
+        const endRing = () => { stopRing(); shown.current.delete(key); };
         toast(`💬 ${inviterName} invited you to "${room.name}"`, {
           // Sonner-level dedup: same id replaces instead of stacking.
           id: `trio-invite-${room.id}`,
           duration: 30_000,
           description: "3some private room invitation",
-          onDismiss: () => { shown.current.delete(key); },
-          onAutoClose: () => { shown.current.delete(key); },
+          onDismiss: endRing,
+          onAutoClose: endRing,
           action: {
             label: "Accept",
             onClick: async () => {
+              stopRing();
               actioned.current.add(key);
               shown.current.delete(key);
               try {
@@ -91,6 +95,7 @@ export function TrioInvitesListener() {
           cancel: {
             label: "Decline",
             onClick: async () => {
+              stopRing();
               actioned.current.add(key);
               shown.current.delete(key);
               try { await trio.rejectInvite(room.id); } catch { /* ignore */ }

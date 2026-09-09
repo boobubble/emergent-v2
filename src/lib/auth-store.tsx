@@ -486,3 +486,8 @@ export function useAuth() {
   if (!ctx) throw new Error("useAuth must be inside AuthProvider");
   return ctx;
 }
+
+/** Non-throwing variant for components that render outside AuthProvider (e.g. tests). */
+export function useAuthOptional() {
+  return useContext(AuthCtx);
+}

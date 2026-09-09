@@ -25,4 +25,5 @@ export const DEFAULT_LIMITS: Record<string, RateLimitDef> = {
   "api":                   { limit: 120, window: 60 },
   "guest_chat.message":   { limit: 20,  window: 60 },
   "guest_chat.session":   { limit: 8,   window: 300 },
+  "guest_dm.message":     { limit: 20,  window: 60 },
 };

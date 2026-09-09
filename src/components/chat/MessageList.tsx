@@ -19,8 +19,11 @@ import { useGuestLobbyFeed, confirmGuestOptimistic, failGuestOptimistic, markGue
 import { GUEST_LOBBY_CHANNEL_ID } from "@/lib/guest-chat-config";
 import { useGuestChat } from "@/lib/guest-chat-context";
 import { sendGuestLobbyMessage } from "@/lib/guest-chat.functions";
+import { isGuestDmChannel, isGuestDmComposeChannel } from "@/lib/guest-dm-utils";
+import { useGuestDmFeed } from "@/lib/use-guest-dm-feed";
 import { isPresenceSystemMessage as isRoomPresenceLine } from "@/lib/presence-ui";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
+import { useAuthOptional } from "@/lib/auth-store";
 import {
   filterChatMessages,
   groupChatMessages,
@@ -188,11 +191,18 @@ function bubblePendingClass(m: Message, extra: string) {
 }
 
 export function MessageList({ channelId }: { channelId: string }) {
-  const { channelMessages, state, setReplyingTo, findMessage, isDM, dmPeerReadAt, replyingTo, retrySend } = useChat();
+  const { channelMessages, state, setReplyingTo, findMessage, isDM, dmPeerReadAt, replyingTo, retrySend, guestDmThreads } = useChat();
   const { isIgnored } = useIgnore();
+  const authUser = useAuthOptional()?.user ?? null;
   const { isGuestChatting, session } = useGuestChat();
   const { profiles } = useRemoteProfiles();
   const guestFeed = useGuestLobbyFeed(channelId === GUEST_LOBBY_CHANNEL_ID);
+  const guestDmMeta = isGuestDmChannel(channelId) ? guestDmThreads[channelId] ?? null : null;
+  const guestDmFeed = useGuestDmFeed(
+    isGuestDmChannel(channelId) ? channelId : null,
+    guestDmMeta,
+    isGuestDmChannel(channelId),
+  );
   const sendGuest = useServerFn(sendGuestLobbyMessage);
   const maskDmUrls = useDmUrlMask();
   const isDmChan = typeof channelId === "string" && isDM(channelId);
@@ -200,6 +210,8 @@ export function MessageList({ channelId }: { channelId: string }) {
     isDmChan && authorId !== "me" ? maskDmUrls(safeMessageText(text)) : safeMessageText(text);
   const baseMsgs = typeof channelId === "string" ? channelMessages(channelId) : [];
   const allMsgs = useMemo(() => {
+    if (isGuestDmChannel(channelId)) return guestDmFeed.messages;
+    if (isGuestDmComposeChannel(channelId)) return [];
     if (channelId !== GUEST_LOBBY_CHANNEL_ID) return baseMsgs;
     const merged = [...baseMsgs, ...guestFeed.messages];
     const seen = new Set<string>();
@@ -210,11 +222,32 @@ export function MessageList({ channelId }: { channelId: string }) {
         return true;
       })
       .sort((a, b) => a.ts - b.ts);
-  }, [baseMsgs, guestFeed.messages, channelId]);
-  const usersById = useMemo(
-    () => ({ ...profiles, ...state.users, ...guestFeed.users }),
-    [profiles, state.users, guestFeed.users],
-  );
+  }, [baseMsgs, guestFeed.messages, guestDmFeed.messages, channelId]);
+  const usersById = useMemo(() => {
+    const map = { ...profiles, ...state.users, ...guestFeed.users };
+    if (guestDmMeta) {
+      map[guestDmMeta.visitorId] = {
+        id: guestDmMeta.visitorId,
+        name: guestDmMeta.guestDisplayName,
+        avatarColor: "oklch(0.62 0.02 250)",
+        status: "online",
+        isGuest: true,
+        xp: 0,
+        level: 1,
+      };
+      if (guestDmMeta.recipientName) {
+        map[guestDmMeta.recipientId] = {
+          id: guestDmMeta.recipientId,
+          name: guestDmMeta.recipientName,
+          avatarColor: "oklch(0.58 0.08 250)",
+          status: "offline",
+          xp: 0,
+          level: 1,
+        };
+      }
+    }
+    return map;
+  }, [profiles, state.users, guestFeed.users, guestDmMeta]);
   const msgs = useMemo(
     () => filterChatMessages(allMsgs, usersById, isIgnored),
     [allMsgs, usersById, isIgnored],
@@ -273,6 +306,9 @@ export function MessageList({ channelId }: { channelId: string }) {
     if (fromStore) return fromStore;
     if (channelId === GUEST_LOBBY_CHANNEL_ID) {
       return guestFeed.messages.find((m) => m.id === id);
+    }
+    if (isGuestDmChannel(channelId)) {
+      return guestDmFeed.messages.find((m) => m.id === id);
     }
     return undefined;
   }
@@ -333,7 +369,8 @@ export function MessageList({ channelId }: { channelId: string }) {
           const author = resolveMessageAuthor(usersById, g[0].authorId);
           const isEphemeralGuest = Boolean(author.isGuest || author.id.startsWith("visitor_"));
           const isOwnGuest = Boolean(isGuestChatting && session && author.id === session.visitorId);
-          const isMe = author.id === "me" || isOwnGuest;
+          const isOwnRegistered = Boolean(authUser?.id && g[0].authorId === authUser.id);
+          const isMe = author.id === "me" || isOwnGuest || isOwnRegistered;
 
           if (isEphemeralGuest) {
             return (
@@ -384,6 +421,13 @@ export function MessageList({ channelId }: { channelId: string }) {
                                   <div className={`${BUBBLE_TEXT} [color:inherit]`}>{renderText(m.text)}</div>
                                 </div>
                                 <ReplyButton onClick={() => setReplyingTo(m)} />
+                                <StaffActionsMenu
+                                  targetUserId={author.id}
+                                  targetName={author.name}
+                                  messageId={m.id}
+                                  channelId={GUEST_LOBBY_CHANNEL_ID}
+                                  size="xs"
+                                />
                               </>
                             )}
                           </div>
@@ -502,7 +546,7 @@ export function MessageList({ channelId }: { channelId: string }) {
                           </div>
                           <ReplyButton onClick={() => setReplyingTo(m)} />
                           <HighlightButton messageId={m.id} channelId={state.activeChannel} />
-                          <StaffActionsMenu targetUserId={author.id} targetName={author.name} isBot={author.isBot} messageId={m.id} size="xs" />
+                          <StaffActionsMenu targetUserId={author.id} targetName={author.name} isBot={author.isBot} messageId={m.id} channelId={state.activeChannel} size="xs" />
                         </div>
                       </div>
                     );

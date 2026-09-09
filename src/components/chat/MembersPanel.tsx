@@ -152,6 +152,7 @@ export function MembersPanel({
 
   const openDM = (id: string) => {
     if (!id || id === "me") return;
+    if (id.startsWith("visitor_")) return;
     requireAuth(() => {
       if (isMobile) {
         startDM(id);

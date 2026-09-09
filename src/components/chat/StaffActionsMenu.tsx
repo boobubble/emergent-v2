@@ -4,16 +4,18 @@ import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
-import { useMyRoles } from "@/lib/use-my-role";
 import { useStaffPermissions } from "@/lib/use-staff-permissions";
-import { banUser, muteUser, deleteMessageMod } from "@/lib/moderation.functions";
+import { useChannelModeration } from "@/lib/use-channel-moderation";
+import { banUser, muteUser, deleteMessageMod, deleteGuestMessageMod } from "@/lib/moderation.functions";
+import { isGuestMessageId } from "@/lib/message-list-model";
+import { removeGuestLobbyRow } from "@/lib/use-guest-lobby-feed";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
 /**
- * Staff actions dropdown (kick / mute / ban) for use in member rows and
+ * Staff actions dropdown (kick / mute / ban / delete) for use in member rows and
  * message hover. Renders nothing when the current user isn't staff or the
  * target isn't actionable (self/bot).
  */
@@ -22,6 +24,7 @@ export function StaffActionsMenu({
   targetName,
   isBot,
   messageId,
+  channelId,
   size = "sm",
   alwaysVisible = false,
 }: {
@@ -29,36 +32,39 @@ export function StaffActionsMenu({
   targetName: string;
   isBot?: boolean;
   messageId?: string;
+  channelId?: string;
   size?: "sm" | "xs";
   alwaysVisible?: boolean;
 }) {
-  const { state, staffKick, staffLocalMute } = useChat();
+  const { state, staffKick, staffLocalMute, removeMessage } = useChat();
   const { user: authUser } = useAuth();
-  const { isAdmin, isModerator } = useMyRoles();
   const perms = useStaffPermissions();
+  const activeChannel = channelId ?? state.activeChannel;
+  const { isAdmin, isModerator, roomPerms, isStaff } = useChannelModeration(activeChannel);
   const banFn = useServerFn(banUser);
   const muteFn = useServerFn(muteUser);
   const delFn = useServerFn(deleteMessageMod);
+  const delGuestFn = useServerFn(deleteGuestMessageMod);
   const [busy, setBusy] = useState(false);
 
   const isMe = !authUser || targetUserId === authUser.id || targetUserId === "me";
-  if (!isModerator || isMe || isBot) return null;
+  const isGuestTarget = targetUserId.startsWith("visitor_");
+  if (isMe || isBot || !isStaff) return null;
 
-  const canKick = isAdmin || perms.mod_can_kick;
-  const canMute = isAdmin || perms.mod_can_mute;
-  const canBan = isAdmin || perms.mod_can_ban;
-  const canDelete = isAdmin || perms.mod_can_ban; // delete piggybacks on ban perm
+  const canKick = !isGuestTarget && (isAdmin || (isModerator && perms.mod_can_kick) || roomPerms.can_kick);
+  const canMute = !isGuestTarget && (isAdmin || (isModerator && perms.mod_can_mute) || roomPerms.can_mute);
+  const canBan = !isGuestTarget && (isAdmin || (isModerator && perms.mod_can_ban));
+  const canDelete = isAdmin || isModerator || roomPerms.can_delete;
   if (!canKick && !canMute && !canBan && !canDelete) return null;
 
-  const channelId = state.activeChannel;
   const realId = targetUserId === "me" ? authUser?.id ?? "" : targetUserId;
 
   async function doMute(minutes: number) {
     if (busy) return;
     setBusy(true);
     try {
-      await muteFn({ data: { user_id: realId, scope: "room", channel_id: channelId, expires_in_minutes: minutes, reason: "Staff mute" } });
-      staffLocalMute(targetUserId, channelId, minutes, targetName);
+      await muteFn({ data: { user_id: realId, scope: "room", channel_id: activeChannel, expires_in_minutes: minutes, reason: "Staff mute" } });
+      staffLocalMute(targetUserId, activeChannel, minutes, targetName);
       toast.success(`Muted ${targetName} for ${minutes}m`);
     } catch (e) {
       toast.error(`Mute failed: ${(e as Error).message}`);
@@ -80,7 +86,14 @@ export function StaffActionsMenu({
     if (busy || !messageId) return;
     setBusy(true);
     try {
-      await delFn({ data: { message_id: messageId } });
+      if (isGuestMessageId(messageId)) {
+        const rawId = messageId.slice("guestmsg:".length);
+        await delGuestFn({ data: { message_id: rawId, channel_id: activeChannel } });
+        removeGuestLobbyRow(messageId);
+      } else {
+        await delFn({ data: { message_id: messageId, channel_id: activeChannel } });
+        removeMessage(activeChannel, messageId);
+      }
       toast.success("Message deleted");
     } catch (e) {
       toast.error(`Delete failed: ${(e as Error).message}`);
@@ -111,7 +124,7 @@ export function StaffActionsMenu({
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {canKick && (
-          <DropdownMenuItem onSelect={() => { staffKick(targetUserId, channelId, targetName); toast.success(`Kicked ${targetName} from this room (5 min)`); }} className="gap-2 text-warning">
+          <DropdownMenuItem onSelect={() => { staffKick(targetUserId, activeChannel, targetName); toast.success(`Kicked ${targetName} from this room (5 min)`); }} className="gap-2 text-warning">
             <LogOut className="h-3.5 w-3.5" /> Kick from room (5 min)
           </DropdownMenuItem>
         )}

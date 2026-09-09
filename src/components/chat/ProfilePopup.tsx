@@ -10,6 +10,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useIgnore } from "@/lib/ignore-store";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useChat } from "@/lib/chat-store";
+import { useGuestChat } from "@/lib/guest-chat-context";
 import { useAuth } from "@/lib/auth-store";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
 import { useMyRoles } from "@/lib/use-my-role";
@@ -67,7 +68,8 @@ export function ProfilePopup({
     onClose(reason);
     pendingCloseReasonRef.current = "programmatic";
   };
-  const { state, startDM, staffKick } = useChat();
+  const { state, startDM, startGuestDm, staffKick } = useChat();
+  const guestChat = useGuestChat();
   const social = useSocialGraph();
   const { requireAuth } = useAuthGate();
   const { isIgnored, toggleIgnoreUser } = useIgnore();
@@ -314,10 +316,15 @@ export function ProfilePopup({
         </div>
 
         {/* Footer actions - fixed sizes */}
-        {!isMe && (
+        {!isMe && !user?.isGuest && !userId.startsWith("visitor_") && (
           <div className="flex items-center gap-2 border-t border-border bg-card px-4 py-3">
             <button
               onClick={() => {
+                if (guestChat.isGuestChatting && !isMe && !user?.isBot && realId && realId !== "me" && !user?.isGuest) {
+                  void startGuestDm(realId).then(() => closeNow("action"));
+                  return;
+                }
+                if (user?.isGuest || userId.startsWith("visitor_") || userId.startsWith("guest:")) return;
                 requireAuth(() => {
                   const isMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches;
                   if (isMobile) startDM(userId);

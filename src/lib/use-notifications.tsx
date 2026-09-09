@@ -14,6 +14,7 @@ import { useAuth } from "@/lib/auth-store";
 import { isNavigableSlug } from "@/lib/route-slug";
 import type { User } from "@/lib/chat-types";
 import { DM_CONVERSATION_READ_EVENT } from "@/lib/dm-read";
+import { playNotificationPing } from "@/lib/sounds";
 
 export interface AppNotification {
   id: string;
@@ -87,6 +88,7 @@ const KIND_LABELS: Record<string, string> = {
   chatroom_invite: "invited you to a chatroom",
   moderation_action: "took a moderation action",
   moderation_warning: "issued a moderation warning",
+  guest_dm: "sent you a guest message",
 };
 
 const POST_KINDS = new Set([
@@ -167,6 +169,17 @@ export async function navigateForNotification(
       navigate({ to: "/feed/$slug", params: { slug } });
       return;
     }
+  }
+
+  if (n.kind === "guest_dm") {
+    const visitorId = typeof payload.visitor_id === "string" ? payload.visitor_id : null;
+    navigate({ to: "/chatroom" });
+    if (visitorId && typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("palrgo:openMiniDM", { detail: { peerId: `guest:${visitorId}` } }),
+      );
+    }
+    return;
   }
 
   if (n.kind === "friend_request") {
@@ -321,7 +334,10 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${meId}` },
-        () => { void loadRef.current(); },
+        (payload) => {
+          if (payload.eventType === "INSERT") playNotificationPing();
+          void loadRef.current();
+        },
       )
       .subscribe();
     return () => { supabase.removeChannel(ch); };

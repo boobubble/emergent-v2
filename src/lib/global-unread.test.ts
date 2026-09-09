@@ -23,7 +23,7 @@ describe("global unread aggregation", () => {
     expect(
       isPeerDmUnread(ASSISTANT, ME, "lobby", [], dmLatestTs, dmReadsUnread),
     ).toBe(true);
-    expect(computeGlobalHasUnread(1, 0)).toBe(true);
+    expect(computeGlobalHasUnread(1, 0, 0)).toBe(true);
   });
 
   it("opening PM (active channel) clears peer unread", () => {
@@ -49,19 +49,19 @@ describe("global unread aggregation", () => {
   });
 
   it("new notification keeps global red when PM is read", () => {
-    expect(computeGlobalHasUnread(0, 2)).toBe(true);
+    expect(computeGlobalHasUnread(0, 0, 2)).toBe(true);
   });
 
   it("read PM + unread notification stays red", () => {
-    expect(computeGlobalHasUnread(0, 1)).toBe(true);
+    expect(computeGlobalHasUnread(0, 0, 1)).toBe(true);
   });
 
   it("unread PM + no notifications stays red", () => {
-    expect(computeGlobalHasUnread(1, 0)).toBe(true);
+    expect(computeGlobalHasUnread(1, 0, 0)).toBe(true);
   });
 
   it("no unread PM and no notifications returns normal", () => {
-    expect(computeGlobalHasUnread(0, 0)).toBe(false);
+    expect(computeGlobalHasUnread(0, 0, 0)).toBe(false);
   });
 
   it("duplicate latest timestamp does not change unread count", () => {
@@ -100,6 +100,8 @@ describe("global unread wiring", () => {
     expect(store).toContain("openDmPeerIds");
     expect(store).toContain("computeDmUnreadCount");
     expect(store).toContain("isPeerDmUnread");
+    expect(store).toContain("guestDmLatestTs");
+    expect(store).toContain("computeGuestDmUnreadCount");
   });
 
   it("FloatingDMDock registers open peers with chat-store", () => {

@@ -4,6 +4,8 @@
  * like "me", "bot-gamebot", or malformed channel strings.
  */
 
+import { isGuestDmChannel, isGuestDmPeer } from "./guest-dm-utils";
+
 export const CHAT_STORAGE_VERSION = 4;
 export const CHAT_STORAGE_KEY_BASE = `palrgo:state:v${CHAT_STORAGE_VERSION}`;
 export const CHAT_SYNC_CHANNEL = `palrgo:sync:v${CHAT_STORAGE_VERSION}`;
@@ -113,6 +115,11 @@ export function sanitizeDmOrder(dmOrder: string[] | undefined, authUserId: strin
       out.push(id);
       continue;
     }
+    if (isGuestDmPeer(id) && !seen.has(id)) {
+      seen.add(id);
+      out.push(id);
+      continue;
+    }
     if (isBotUiId(id) && !seen.has(id)) {
       seen.add(id);
       out.push(id);
@@ -129,6 +136,7 @@ export function sanitizeActiveChannel(
 ): string {
   if (activeChannel === "lobby" || activeChannel === "games") return activeChannel;
   if (rooms[activeChannel]) return activeChannel;
+  if (isGuestDmChannel(activeChannel) || activeChannel.startsWith("gdm:compose:")) return activeChannel;
   if (isLocalBotDmChannel(activeChannel)) return activeChannel;
   if (isRemoteDmChannel(activeChannel, authUserId)) return activeChannel;
   const fixed = fixLegacyDmChannel(activeChannel, authUserId);

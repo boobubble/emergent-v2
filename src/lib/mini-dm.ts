@@ -1,5 +1,6 @@
 import type { User } from "./chat-types";
 import { dmChannelFor, isRemoteDmChannel } from "./dm-utils";
+import { formatGuestDmLabel, isGuestDmPeer } from "./guest-dm-utils";
 
 /** Stub shown while chat-store has not merged the remote profile yet. */
 export function placeholderMiniDmPeer(peerId: string): User {
@@ -23,12 +24,22 @@ export function resolveMiniDmPeer(
   storeUsers: Record<string, User | undefined>,
   remoteProfiles: Record<string, User | undefined>,
   channelId: string | null,
+  guestLabel?: string,
 ): User | undefined {
-  return (
-    storeUsers[peerId] ??
-    remoteProfiles[peerId] ??
-    (channelId ? placeholderMiniDmPeer(peerId) : undefined)
-  );
+  const fromStore = storeUsers[peerId];
+  if (fromStore) return fromStore;
+  if (isGuestDmPeer(peerId)) {
+    return {
+      id: peerId,
+      name: guestLabel ? formatGuestDmLabel(guestLabel) : "Guest",
+      avatarColor: "oklch(0.62 0.02 250)",
+      status: "online",
+      isGuest: true,
+      xp: 0,
+      level: 1,
+    };
+  }
+  return remoteProfiles[peerId] ?? (channelId ? placeholderMiniDmPeer(peerId) : undefined);
 }
 
 /**

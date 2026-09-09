@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, useCallback, type ReactNode } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { flushSync } from "react-dom";
 import type { User, Message, Room, GameState, Attachment, RoomGameConfig } from "./chat-types";
 import { canonicalGameType } from "./games-registry";
@@ -39,6 +40,34 @@ import { supabase } from "@/integrations/supabase/client";
 import { rtLog } from "./realtime-debug";
 import { sanitizeRemoteReplyToId } from "./message-list-model";
 import { computeDmUnreadCount, isPeerDmUnread } from "./global-unread";
+import {
+  computeGuestDmUnreadCount,
+  isGuestDmPeerUnread,
+  resolveGuestDmReadCursor,
+} from "./guest-dm-unread";
+import { guestDmMessageId } from "./guest-dm-feed";
+import {
+  formatGuestDmLabel,
+  guestDmChannelId,
+  guestDmComposeChannel,
+  isGuestDmChannel,
+  isGuestDmComposeChannel,
+  isGuestDmPeer,
+  parseGuestDmComposeRecipient,
+  parseGuestDmPeer,
+} from "./guest-dm-utils";
+import {
+  buildGuestDmThreadMeta,
+  guestDmPeerUser,
+  resolveGuestDmChannel,
+  useGuestDmRecipientSync,
+  type GuestDmConversationRow,
+} from "./guest-dm-store";
+import {
+  listGuestDmConversationsForGuest,
+  markGuestDmRead as markGuestDmReadFn,
+} from "./guest-dm.functions";
+import { getGuestDmSharedRows, type GuestDmThreadMeta } from "./use-guest-dm-feed";
 import { extraRemoteDmChannelsToFetch } from "./mini-dm";
 import { useRemoteProfiles } from "./use-remote-profiles";
 import { playDmPing, playMentionPing, playPublicChatTick } from "./sounds";
@@ -637,12 +666,23 @@ interface Ctx {
   isDmUnread: (peerId: string) => boolean;
   dmUnreadCount: number;
   markDmRead: (channelId: string) => Promise<void>;
+  guestDmUnreadCount: number;
+  guestDmThreads: Record<string, GuestDmThreadMeta>;
+  startGuestDm: (recipientId: string) => Promise<void>;
+  registerGuestDmConversation: (
+    conversationId: string,
+    visitorId: string,
+    recipientId: string,
+    guestDisplayName: string,
+    recipientName?: string,
+  ) => string;
   roomUnread: Record<string, number>;
   staffKick: (targetId: string, channelId: string, targetName: string) => void;
   staffLocalMute: (targetId: string, channelId: string, minutes: number, targetName: string) => void;
   pushSystem: (channelId: string, text: string) => void;
   pushPresenceEvent: (channelId: string, kind: "join" | "leave", userName: string) => void;
   wipeChannel: (channelId: string) => void;
+  removeMessage: (channelId: string, messageId: string) => void;
   deleteRoom: (roomId: string) => void;
   syncAdminChannels: (channels: AdminChannelInput[]) => void;
   registerCommunityRoom: (room: CommunityRoomInput) => void;
@@ -803,6 +843,8 @@ function pickBotReply(text: string): string {
 
 function ChatProviderInner({ username, authUserId = null, isGuest = false, children }: { username: string; authUserId?: string | null; isGuest?: boolean; children: ReactNode }) {
   const [state, setState] = useState<State>(() => seed(username));
+  const stateRef = useRef(state);
+  useEffect(() => { stateRef.current = state; }, [state]);
   const [storageReady, setStorageReady] = useState(false);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const syncRef = useRef<BroadcastChannel | null>(null);
@@ -818,7 +860,14 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
   const [dmReads, setDmReads] = useState<Record<string, Record<string, number>>>({});
   // Latest message timestamp per DM channel (for unread badges across reloads)
   const [dmLatestTs, setDmLatestTs] = useState<Record<string, number>>({});
+  const [guestDmConvByPeer, setGuestDmConvByPeer] = useState<Record<string, string>>({});
+  const [guestDmPeerMeta, setGuestDmPeerMeta] = useState<Record<string, { displayName: string }>>({});
+  const [guestDmLatestTs, setGuestDmLatestTs] = useState<Record<string, number>>({});
+  const [guestDmReads, setGuestDmReads] = useState<Record<string, number>>({});
+  const [guestDmThreads, setGuestDmThreads] = useState<Record<string, GuestDmThreadMeta>>({});
   const [openDmPeerIds, setOpenDmPeerIds] = useState<string[]>([]);
+  const listGuestDmForGuestFn = useServerFn(listGuestDmConversationsForGuest);
+  const markGuestDmReadServerFn = useServerFn(markGuestDmReadFn);
 
 
 
@@ -1044,6 +1093,180 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     })();
     return () => { cancelled = true; };
   }, [authUserId]);
+
+  const hydrateGuestDmConversations = useCallback((rows: GuestDmConversationRow[]) => {
+    if (!authUserId) return;
+    const convByPeer: Record<string, string> = {};
+    const peerMeta: Record<string, { displayName: string }> = {};
+    const latestTs: Record<string, number> = {};
+    const reads: Record<string, number> = {};
+    const threads: Record<string, GuestDmThreadMeta> = {};
+    const peerIds: string[] = [];
+    for (const row of rows) {
+      convByPeer[row.peerId] = row.id;
+      peerMeta[row.peerId] = { displayName: row.guestDisplayName };
+      if (row.lastMessageAt) latestTs[row.peerId] = new Date(row.lastMessageAt).getTime();
+      if (row.recipientLastReadAt) reads[row.peerId] = new Date(row.recipientLastReadAt).getTime();
+      const ch = guestDmChannelId(row.id);
+      threads[ch] = buildGuestDmThreadMeta(row.id, row.visitorId, authUserId, row.guestDisplayName);
+      peerIds.push(row.peerId);
+    }
+    setGuestDmConvByPeer((prev) => ({ ...prev, ...convByPeer }));
+    setGuestDmPeerMeta((prev) => ({ ...prev, ...peerMeta }));
+    setGuestDmLatestTs((prev) => {
+      const next = { ...prev };
+      for (const [k, v] of Object.entries(latestTs)) next[k] = Math.max(next[k] ?? 0, v);
+      return next;
+    });
+    setGuestDmReads((prev) => ({ ...prev, ...reads }));
+    setGuestDmThreads((prev) => ({ ...prev, ...threads }));
+    setState((s) => {
+      const existing = new Set(s.dmOrder);
+      const additions = peerIds.filter((p) => !existing.has(p));
+      if (!additions.length) return s;
+      const users = { ...s.users };
+      for (const row of rows) {
+        if (!users[row.peerId]) users[row.peerId] = guestDmPeerUser(row.peerId, row.guestDisplayName);
+      }
+      return { ...s, dmOrder: [...s.dmOrder, ...additions], users };
+    });
+  }, [authUserId]);
+
+  const onInboundGuestDmMessage = useCallback((row: {
+    messageId: string;
+    conversationId: string;
+    visitorId: string;
+    guestDisplayName: string;
+    createdAt: string;
+    text: string;
+  }) => {
+    if (!authUserId) return;
+    const peerId = `guest:${row.visitorId}`;
+    const ch = guestDmChannelId(row.conversationId);
+    const ts = new Date(row.createdAt).getTime();
+    const msgId = guestDmMessageId(row.messageId);
+    setGuestDmConvByPeer((prev) => ({ ...prev, [peerId]: row.conversationId }));
+    setGuestDmPeerMeta((prev) => ({ ...prev, [peerId]: { displayName: row.guestDisplayName } }));
+    setGuestDmLatestTs((prev) => ({ ...prev, [peerId]: Math.max(prev[peerId] ?? 0, ts) }));
+    setGuestDmThreads((prev) => ({
+      ...prev,
+      [ch]: buildGuestDmThreadMeta(row.conversationId, row.visitorId, authUserId, row.guestDisplayName),
+    }));
+    setState((s) => {
+      const users = { ...s.users };
+      if (!users[peerId]) users[peerId] = guestDmPeerUser(peerId, row.guestDisplayName);
+      const dmOrder = s.dmOrder.includes(peerId) ? s.dmOrder : [...s.dmOrder, peerId];
+      const existing = s.messages[ch] ?? [];
+      if (existing.some((m) => m.id === msgId)) {
+        return { ...s, dmOrder, users };
+      }
+      const msg: Message = {
+        id: msgId,
+        channelId: ch,
+        authorId: row.visitorId,
+        text: row.text,
+        ts,
+        kind: "text",
+      };
+      return {
+        ...s,
+        dmOrder,
+        users,
+        messages: { ...s.messages, [ch]: [...existing, msg] },
+      };
+    });
+  }, [authUserId]);
+
+  useGuestDmRecipientSync({
+    authUserId,
+    isGuest,
+    onHydrate: hydrateGuestDmConversations,
+    onInboundGuestMessage: onInboundGuestDmMessage,
+  });
+
+  const markGuestDmRead = useCallback(async (peerId: string, channelId?: string) => {
+    const convId = guestDmConvByPeer[peerId];
+    if (!convId) return;
+    const ch = channelId ?? guestDmChannelId(convId);
+    const feedRows = getGuestDmSharedRows(convId);
+    const feedLatestMs = feedRows.length
+      ? new Date(feedRows[feedRows.length - 1].createdAt).getTime()
+      : 0;
+    const ts = resolveGuestDmReadCursor(
+      peerId,
+      guestDmLatestTs,
+      stateRef.current.messages[ch] ?? [],
+      feedLatestMs,
+    );
+    if (ts > 0) {
+      setGuestDmReads((prev) => ({ ...prev, [peerId]: Math.max(prev[peerId] ?? 0, ts) }));
+    }
+    try {
+      const result = await markGuestDmReadServerFn({ data: { conversationId: convId } });
+      if (result?.readAt) {
+        const serverTs = new Date(result.readAt).getTime();
+        setGuestDmReads((prev) => ({ ...prev, [peerId]: Math.max(prev[peerId] ?? 0, serverTs) }));
+      }
+    } catch { /* ignore */ }
+  }, [guestDmConvByPeer, guestDmLatestTs, markGuestDmReadServerFn]);
+
+  const registerGuestDmThread = useCallback((
+    conversationId: string,
+    visitorId: string,
+    recipientId: string,
+    guestDisplayName: string,
+    recipientName?: string,
+  ) => {
+    const ch = guestDmChannelId(conversationId);
+    const peerId = `guest:${visitorId}`;
+    const meta = buildGuestDmThreadMeta(conversationId, visitorId, recipientId, guestDisplayName, recipientName);
+    setGuestDmConvByPeer((prev) => ({ ...prev, [peerId]: conversationId }));
+    setGuestDmPeerMeta((prev) => ({ ...prev, [peerId]: { displayName: guestDisplayName } }));
+    setGuestDmThreads((prev) => ({ ...prev, [ch]: meta }));
+    setState((s) => {
+      const users = { ...s.users };
+      if (!users[peerId]) users[peerId] = guestDmPeerUser(peerId, guestDisplayName);
+      if (recipientName && !users[recipientId]) {
+        users[recipientId] = {
+          id: recipientId,
+          name: recipientName,
+          avatarColor: "oklch(0.58 0.08 250)",
+          status: "offline",
+          xp: 0,
+          level: 1,
+        };
+      }
+      return { ...s, users };
+    });
+    return { channelId: ch, peerId, meta };
+  }, []);
+
+  const startGuestDm = useCallback(async (recipientId: string) => {
+    const session = typeof window !== "undefined"
+      ? (await import("./visitor-session")).readGuestChatSession()
+      : null;
+    if (!session?.visitorId) return;
+    try {
+      const rows = await listGuestDmForGuestFn({ data: { visitorId: session.visitorId } });
+      const existing = Array.isArray(rows)
+        ? rows.find((r: { recipientId: string }) => r.recipientId === recipientId)
+        : null;
+      if (existing) {
+        const { channelId } = registerGuestDmThread(
+          existing.id,
+          existing.visitorId,
+          existing.recipientId,
+          existing.guestDisplayName,
+          existing.recipientName,
+        );
+        setState((s) => ({ ...s, activeChannel: channelId }));
+        return;
+      }
+      setState((s) => ({ ...s, activeChannel: guestDmComposeChannel(recipientId) }));
+    } catch {
+      setState((s) => ({ ...s, activeChannel: guestDmComposeChannel(recipientId) }));
+    }
+  }, [listGuestDmForGuestFn, registerGuestDmThread]);
 
   // Fetch all my DM read markers up-front so unread state survives reloads
   useEffect(() => {
@@ -1364,18 +1587,28 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
   useEffect(() => {
     if (!authUserId) return;
     const channelId = state.activeChannel;
+    if (isGuestDmChannel(channelId)) {
+      const meta = guestDmThreads[channelId];
+      if (meta) void markGuestDmRead(`guest:${meta.visitorId}`, channelId);
+      return;
+    }
     if (!channelId.startsWith("dm:") || !isRemoteDmChannel(channelId, authUserId)) return;
     void markDmRead(channelId);
-  }, [authUserId, state.activeChannel, markDmRead]);
+  }, [authUserId, state.activeChannel, markDmRead, guestDmThreads, markGuestDmRead]);
 
   // Mark read for every open desktop mini-DM window.
   useEffect(() => {
     if (!authUserId || openDmPeerIds.length === 0) return;
     for (const peerId of openDmPeerIds) {
+      if (isGuestDmPeer(peerId)) {
+        const ch = resolveGuestDmChannel(peerId, guestDmConvByPeer);
+        if (ch) void markGuestDmRead(peerId, ch);
+        continue;
+      }
       const ch = dmChannelFor(authUserId, peerId);
       if (ch && isRemoteDmChannel(ch, authUserId)) void markDmRead(ch);
     }
-  }, [authUserId, openDmPeerIds, state.messages, markDmRead]);
+  }, [authUserId, openDmPeerIds, state.messages, markDmRead, guestDmConvByPeer, markGuestDmRead]);
 
   // Upsert my read marker when I open a DM or new msgs arrive while viewing
   const [roomUnread, setRoomUnread] = useState<Record<string, number>>({});
@@ -1397,9 +1630,6 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
   // Expose a logout hook: when the starter of a Ludo game signs out,
   // automatically post a stop message to each affected channel so all
   // other players see the game end and clear it from their state.
-  const stateRef = useRef(state);
-  useEffect(() => { stateRef.current = state; }, [state]);
-
   const handleLobbyIrcMessageRef = useRef<(incoming: LobbyIrcIncomingMessage) => void>(() => {});
   useEffect(() => {
     handleLobbyIrcMessageRef.current = (incoming) => {
@@ -1965,6 +2195,17 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       // Public browse / unauthenticated: UI must open AuthGate — never start a DM session.
       return;
     }
+    if (isGuestDmPeer(userId)) {
+      const channelId = resolveGuestDmChannel(userId, guestDmConvByPeer);
+      if (!channelId) return;
+      setState((s) => ({
+        ...s,
+        dmOrder: s.dmOrder.includes(userId) ? s.dmOrder : [...s.dmOrder, userId],
+        activeChannel: channelId,
+      }));
+      void markGuestDmRead(userId, channelId);
+      return;
+    }
     if (isLocalBotPeerId(userId)) {
       const channelId = dmChannelFor(authUserId, userId);
       if (!channelId) return;
@@ -2010,7 +2251,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       return badged.state;
     });
     void markDmRead(channelId);
-  }, [authUserId, isGuest, markDmRead]);
+  }, [authUserId, isGuest, markDmRead, guestDmConvByPeer, markGuestDmRead]);
 
   const closeDM = useCallback((userId: string) => {
     const channelId = dmChannelFor(authUserId, userId);
@@ -2238,6 +2479,16 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     setState(s => ({ ...s, messages: { ...s.messages, [channelId]: [] } }));
   }, []);
 
+  const removeMessage = useCallback((channelId: string, messageId: string) => {
+    setState((s) => {
+      const list = s.messages[channelId];
+      if (!list?.length) return s;
+      const filtered = list.filter((m) => m.id !== messageId);
+      if (filtered.length === list.length) return s;
+      return { ...s, messages: { ...s.messages, [channelId]: filtered } };
+    });
+  }, []);
+
   const deleteRoom = useCallback((roomId: string) => {
     setState(s => {
       if (!s.rooms[roomId]) return s;
@@ -2341,13 +2592,22 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
   const value = useMemo<Ctx>(() => ({
     state, setActive, send, retrySend, startDM, closeDM, joinRoom, createRoom, updateMe,
     adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser,
-    pushSystem, pushPresenceEvent, wipeChannel, deleteRoom, syncAdminChannels, registerCommunityRoom, leaveCommunityRoom,
+    pushSystem, pushPresenceEvent, wipeChannel, removeMessage, deleteRoom, syncAdminChannels, registerCommunityRoom, leaveCommunityRoom,
 
     isFriend: (id) => (state.me.friends ?? []).includes(id),
     isBlocked: (id) => (state.me.blocked ?? []).includes(id),
     reset,
     channelMessages: (id) => filterVisibleMessages(id, (state.messages || {})[id] || []),
     channelLabel: (id) => {
+      if (typeof id === "string" && isGuestDmChannel(id)) {
+        const meta = guestDmThreads[id];
+        return meta ? formatGuestDmLabel(meta.guestDisplayName) : "Guest Message";
+      }
+      if (typeof id === "string" && isGuestDmComposeChannel(id)) {
+        const recipientId = parseGuestDmComposeRecipient(id);
+        const u = recipientId ? state.users[recipientId] : undefined;
+        return u ? `Message ${u.name}` : "New Guest Message";
+      }
       if (typeof id === "string" && id.startsWith("dm:")) {
         const { peerId } = parseDmChannel(id, authUserId);
         const u = peerId ? state.users[peerId] : undefined;
@@ -2355,13 +2615,16 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       }
       return state.rooms[id]?.name || id;
     },
-    isDM: (id) => typeof id === "string" && id.startsWith("dm:"),
+    isDM: (id) => typeof id === "string" && (id.startsWith("dm:") || isGuestDmChannel(id) || isGuestDmComposeChannel(id)),
     dmUser: (id) => {
       if (typeof id !== "string" || !id.startsWith("dm:")) return undefined;
       const { peerId } = parseDmChannel(id, authUserId);
       return peerId ? state.users[peerId] : undefined;
     },
-    dmChannelFor: (peerId: string) => dmChannelFor(authUserId, peerId),
+    dmChannelFor: (peerId: string) => {
+      if (isGuestDmPeer(peerId)) return resolveGuestDmChannel(peerId, guestDmConvByPeer);
+      return dmChannelFor(authUserId, peerId);
+    },
     watchRemoteChannel,
     replyingTo, setReplyingTo,
     findMessage,
@@ -2374,15 +2637,26 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       }
       return max;
     },
-    isDmUnread: (peerId: string) =>
-      isPeerDmUnread(
+    isDmUnread: (peerId: string) => {
+      if (isGuestDmPeer(peerId)) {
+        return isGuestDmPeerUnread(
+          peerId,
+          state.activeChannel,
+          openDmPeerIds,
+          guestDmLatestTs,
+          guestDmReads,
+          guestDmConvByPeer,
+        );
+      }
+      return isPeerDmUnread(
         peerId,
         authUserId,
         state.activeChannel,
         openDmPeerIds,
         dmLatestTs,
         dmReads,
-      ),
+      );
+    },
     dmUnreadCount: computeDmUnreadCount(
       authUserId,
       state.dmOrder ?? [],
@@ -2391,12 +2665,29 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       dmLatestTs,
       dmReads,
     ),
+    guestDmUnreadCount: computeGuestDmUnreadCount(
+      state.dmOrder ?? [],
+      state.activeChannel,
+      openDmPeerIds,
+      guestDmLatestTs,
+      guestDmReads,
+      guestDmConvByPeer,
+    ),
+    guestDmThreads,
+    startGuestDm,
+    registerGuestDmConversation: (
+      conversationId: string,
+      visitorId: string,
+      recipientId: string,
+      guestDisplayName: string,
+      recipientName?: string,
+    ) => registerGuestDmThread(conversationId, visitorId, recipientId, guestDisplayName, recipientName).channelId,
     setOpenDmPeers,
     staffKick,
     staffLocalMute,
     markDmRead,
     roomUnread,
-  }), [state, setActive, send, retrySend, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser, reset, replyingTo, findMessage, authUserId, dmReads, dmLatestTs, openDmPeerIds, staffKick, staffLocalMute, pushSystem, pushPresenceEvent, wipeChannel, deleteRoom, syncAdminChannels, registerCommunityRoom, leaveCommunityRoom, markDmRead, roomUnread, watchRemoteChannel, setOpenDmPeers]);
+  }), [state, setActive, send, retrySend, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser, reset, replyingTo, findMessage, authUserId, dmReads, dmLatestTs, guestDmConvByPeer, guestDmLatestTs, guestDmReads, guestDmThreads, openDmPeerIds, staffKick, staffLocalMute, pushSystem, pushPresenceEvent, wipeChannel, removeMessage, deleteRoom, syncAdminChannels, registerCommunityRoom, leaveCommunityRoom, markDmRead, markGuestDmRead, startGuestDm, roomUnread, watchRemoteChannel, setOpenDmPeers]);
 
 
   return <ChatCtx.Provider value={value}>{children}</ChatCtx.Provider>;

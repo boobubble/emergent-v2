@@ -56,8 +56,12 @@ export function computeDmUnreadCount(
   return n;
 }
 
-export function computeGlobalHasUnread(dmUnread: number, notificationUnread: number): boolean {
-  return dmUnread > 0 || notificationUnread > 0;
+export function computeGlobalHasUnread(
+  dmUnread: number,
+  guestDmUnread: number,
+  notificationUnread: number,
+): boolean {
+  return dmUnread > 0 || guestDmUnread > 0 || notificationUnread > 0;
 }
 
 export function useGlobalUnread() {
@@ -65,15 +69,17 @@ export function useGlobalUnread() {
   const notifs = useNotificationsOptional();
 
   const dmUnread = chat?.dmUnreadCount ?? 0;
+  const guestDmUnread = chat?.guestDmUnreadCount ?? 0;
   const notificationUnread = notifs?.unread ?? 0;
   const hasUnread = useMemo(
-    () => computeGlobalHasUnread(dmUnread, notificationUnread),
-    [dmUnread, notificationUnread],
+    () => computeGlobalHasUnread(dmUnread, guestDmUnread, notificationUnread),
+    [dmUnread, guestDmUnread, notificationUnread],
   );
 
   return {
     hasUnread,
     dmUnread,
+    guestDmUnread,
     notificationUnread,
   };
 }

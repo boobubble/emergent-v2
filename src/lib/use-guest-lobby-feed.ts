@@ -68,6 +68,14 @@ function onGuestLobbyInsert(payload: { new: Record<string, unknown> }) {
   emitGuestRows(mergeGuestLobbyRows(sharedRows, [row]));
 }
 
+function onGuestLobbyDelete(payload: { old: Record<string, unknown> }) {
+  const n = payload.old;
+  const id = String(n.id ?? "");
+  if (!id) return;
+  if (n.channel_id && String(n.channel_id) !== GUEST_LOBBY_CHANNEL_ID) return;
+  emitGuestRows(sharedRows.filter((r) => r.id !== id));
+}
+
 async function openGuestMessagesChannel(): Promise<MessagesChannel> {
   if (messagesChannel) return messagesChannel;
   if (messagesChannelOpening) return messagesChannelOpening;
@@ -81,6 +89,11 @@ async function openGuestMessagesChannel(): Promise<MessagesChannel> {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "guest_chat_messages" },
         onGuestLobbyInsert,
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "guest_chat_messages" },
+        onGuestLobbyDelete,
       );
 
     await new Promise<void>((resolve) => {
@@ -139,6 +152,17 @@ export function failGuestOptimistic(optId: string, error: string) {
 
 export function markGuestOptimisticSending(optId: string) {
   emitGuestRows(markGuestLobbyRowSending(sharedRows, optId));
+}
+
+/** Remove one guest row locally (optimistic mod delete or clear). */
+export function removeGuestLobbyRow(messageId: string) {
+  const rawId = messageId.startsWith("guestmsg:") ? messageId.slice("guestmsg:".length) : messageId;
+  emitGuestRows(sharedRows.filter((r) => r.id !== rawId));
+}
+
+/** Wipe all guest lobby rows (after /clear). */
+export function clearGuestLobbyRows() {
+  emitGuestRows([]);
 }
 
 export function useGuestLobbyFeed(enabled: boolean) {

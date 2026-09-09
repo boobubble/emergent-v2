@@ -227,7 +227,8 @@ function MiniDMWindow({
   const unread = chat.isDmUnread(peerId);
   const { profiles } = useRemoteProfiles();
   const channelId = dmChannelFor(peerId);
-  const u = resolveMiniDmPeer(peerId, state.users, profiles, channelId);
+  const guestLabel = chat.guestDmThreads[channelId ?? ""]?.guestDisplayName;
+  const u = resolveMiniDmPeer(peerId, state.users, profiles, channelId, guestLabel);
   const [deleting, setDeleting] = useState(false);
   const deleteDm = useServerFn(deleteMyDmConversation);
 
@@ -279,11 +280,16 @@ function MiniDMWindow({
           onClick={async () => {
             if (!window.confirm(`Delete the entire chat with ${u.name}? This removes messages for both of you and cannot be undone.`)) return;
             setDeleting(true);
+            if (peerId.startsWith("guest:")) {
+              alert("Guest conversations expire automatically.");
+              setDeleting(false);
+              return;
+            }
             try {
               await deleteDm({ data: { peerId: u.id } });
               onClose();
             } catch (e) {
-              alert((e as Error).message || 'Failed to delete chat');
+              alert((e as Error).message || "Failed to delete chat");
             } finally {
               setDeleting(false);
             }
