@@ -111,6 +111,11 @@ import {
   type AuthenticatedInsertRow,
   type MessageLookupResult,
 } from "./chat-optimistic";
+import {
+  lobbyIrcTransport,
+  usesLobbyIrcLive,
+  type LobbyIrcIncomingMessage,
+} from "./lobby-irc-transport";
 
 export { dmChannelFor } from "./dm-utils";
 
@@ -195,6 +200,24 @@ function settleRemoteOutgoing(outs: AuthenticatedOutgoing[], authorId: string) {
     retryInsert: () => insertAuthenticatedMessages(rows),
   });
 }
+
+function maybeSendLobbyIrc(out: AuthenticatedOutgoing, ircSentIds: Set<string>): void {
+  if (
+    !usesLobbyIrcLive(out.channelId) ||
+    (out.kind !== "text" && out.kind !== "me")
+  ) {
+    return;
+  }
+  if (ircSentIds.has(out.id)) return;
+  if (!lobbyIrcTransport.connected) return;
+  if (!lobbyIrcTransport.send(out.id, out.text)) return;
+  ircSentIds.add(out.id);
+}
+
+function releaseIrcSentIds(ircSentIds: Set<string>, ids: Iterable<string>): void {
+  for (const id of ids) ircSentIds.delete(id);
+}
+
 function rowToMessage(row: { id: string; channel_id: string; author_id: string; text: string; kind: string | null; attachment: unknown; reply_to_id: string | null; created_at: string }, meAuthUuid: string | null): Message {
   const authorId = meAuthUuid && row.author_id === meAuthUuid ? "me" : row.author_id;
   return {
@@ -783,6 +806,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
   const streakChecked = useRef<string | null>(null);
   const { profiles: remoteProfiles } = useRemoteProfiles();
   const seenRemoteMsgIds = useRef<Set<string>>(new Set());
+  const ircSentMsgIds = useRef<Set<string>>(new Set());
   const fetchErrorsShown = useRef<Set<string>>(new Set());
   // dmReads[channelId][userId] = epoch ms of last read
   const [dmReads, setDmReads] = useState<Record<string, Record<string, number>>>({});
@@ -1127,6 +1151,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
         if (seenRemoteMsgIds.current.has(row.id)) {
           // Secondary sync: INSERT settlement already confirms; this only applies the server timestamp.
           const serverTs = new Date(row.created_at).getTime();
+          releaseIrcSentIds(ircSentMsgIds.current, [row.id]);
           setState((s) => {
             const next = confirmMessages(s.messages, [row.id], { [row.id]: serverTs });
             return next === s.messages ? s : { ...s, messages: next };
@@ -1316,6 +1341,93 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
   // other players see the game end and clear it from their state.
   const stateRef = useRef(state);
   useEffect(() => { stateRef.current = state; }, [state]);
+
+  const handleLobbyIrcMessageRef = useRef<(incoming: LobbyIrcIncomingMessage) => void>(() => {});
+  useEffect(() => {
+    handleLobbyIrcMessageRef.current = (incoming) => {
+      if (!authUserId || incoming.userId === authUserId) return;
+      const channelId = LOBBY_CHANNEL_ID;
+
+      const msg: Message = {
+        id: incoming.messageId,
+        channelId,
+        authorId: incoming.userId,
+        text: incoming.text,
+        ts: Date.now(),
+        kind: "text",
+      };
+
+      setState((s) => {
+        const existing = s.messages[channelId] || [];
+        if (existing.some((m) => m.id === incoming.messageId)) return s;
+        return {
+          ...s,
+          messages: {
+            ...s.messages,
+            [channelId]: [...existing, msg].sort((a, b) => a.ts - b.ts),
+          },
+        };
+      });
+
+      playPublicChatTick();
+      const myName = username;
+      if (myName && new RegExp(`@${myName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(msg.text)) {
+        playMentionPing();
+      }
+      if (shouldNotifyChatMessage({
+        authorId: msg.authorId,
+        channelId: msg.channelId,
+        kind: msg.kind,
+        authUserId,
+      })) {
+        const path = typeof window !== "undefined" ? window.location.pathname : "";
+        const onChatPage = path === "/chatroom" || path === "/chat" || path === "/";
+        const viewingThisRoom = onChatPage && stateRef.current.activeChannel === msg.channelId;
+        if (!viewingThisRoom) {
+          setRoomUnread((prev) => ({ ...prev, [msg.channelId]: (prev[msg.channelId] ?? 0) + 1 }));
+        }
+        const roomName = roomDisplayName(msg.channelId, stateRef.current.rooms[msg.channelId]?.name);
+        const actorName = stateRef.current.users[msg.authorId]?.name || incoming.nick || "Someone";
+        showChatBrowserNotification({
+          eventId: `irc:${incoming.messageId}`,
+          kind: "message",
+          channelId: msg.channelId,
+          roomName,
+          actorName,
+          preview: msg.text,
+        });
+      }
+      rtLog("msg", "irc-in", `${channelId} · ${msg.text.slice(0, 30)}`);
+    };
+  }, [authUserId, username]);
+
+  useEffect(() => {
+    if (isGuest || !authUserId || !usesLobbyIrcLive(state.activeChannel)) {
+      lobbyIrcTransport.disconnect();
+      return;
+    }
+
+    let cancelled = false;
+    void (async () => {
+      const { data } = await supabase.auth.getSession();
+      if (cancelled) return;
+      const token = data.session?.access_token;
+      if (!token) return;
+
+      lobbyIrcTransport.connect(
+        "wss://ws.yaarzo.com",
+        token,
+        (incoming) => handleLobbyIrcMessageRef.current(incoming),
+        (status, detail) => rtLog("ws", status, detail ? `lobby-irc · ${detail}` : "lobby-irc"),
+      );
+    })();
+
+    return () => {
+      cancelled = true;
+      lobbyIrcTransport.disconnect();
+    };
+  }, [authUserId, isGuest, state.activeChannel]);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     (window as unknown as { __lovableEndMyLudoGames?: () => Promise<void> }).__lovableEndMyLudoGames = async () => {
@@ -1696,6 +1808,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       const safeRemotes = outgoingRemotes.filter((out) => isRemoteChannel(out.channelId, authUserId));
       for (const out of safeRemotes) {
         rtLog(out.channelId.startsWith("dm:") ? "dm" : "msg", "out", `${out.channelId} · ${out.text.slice(0, 30)}`);
+        maybeSendLobbyIrc(out, ircSentMsgIds.current);
       }
       if (safeRemotes.length) {
       const ids = safeRemotes.map((out) => out.id);
@@ -1710,6 +1823,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
           return;
         }
         setState((s) => ({ ...s, messages: confirmMessages(s.messages, ids, outcome.tsById) }));
+        releaseIrcSentIds(ircSentMsgIds.current, ids);
         // Fire-and-forget AI chatbot reply for chatroom messages
         for (const out of safeRemotes) {
           if (out.channelId.startsWith("dm:") || out.kind === "system") continue;
@@ -1742,34 +1856,29 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
 
   const retrySend = useCallback((messageId: string) => {
     if (!authUserId) return;
-    type Outgoing = { id: string; channelId: string; text: string; kind: string; attachment: Attachment | null; replyToId: string | null };
-    let payload: Outgoing | null = null;
-    setState((s) => {
-      let found: Message | undefined;
-      let channelId = "";
-      for (const [ch, msgs] of Object.entries(s.messages)) {
-        const m = msgs.find((x) => x.id === messageId);
-        if (m) {
-          found = m;
-          channelId = ch;
-          break;
-        }
+    let found: Message | undefined;
+    let channelId = "";
+    for (const [ch, msgs] of Object.entries(stateRef.current.messages)) {
+      const m = msgs.find((x) => x.id === messageId);
+      if (m) {
+        found = m;
+        channelId = ch;
+        break;
       }
-      if (!found || found.sendStatus !== "failed") return s;
-      if (!isRemoteChannel(channelId, authUserId)) return s;
-      payload = {
-        id: found.id,
-        channelId,
-        text: found.text,
-        kind: found.kind ?? "text",
-        attachment: found.attachment ?? null,
-        replyToId: found.replyToId ?? null,
-      };
-      return { ...s, messages: markMessagesSending(s.messages, [messageId]) };
-    });
-    if (!payload) return;
-    const out = payload;
+    }
+    if (!found || found.sendStatus !== "failed") return;
+    if (!isRemoteChannel(channelId, authUserId)) return;
+    const out: AuthenticatedOutgoing = {
+      id: found.id,
+      channelId,
+      text: found.text,
+      kind: found.kind ?? "text",
+      attachment: found.attachment ?? null,
+      replyToId: found.replyToId ?? null,
+    };
+    setState((s) => ({ ...s, messages: markMessagesSending(s.messages, [messageId]) }));
     rtLog(out.channelId.startsWith("dm:") ? "dm" : "msg", "retry", `${out.channelId} · ${out.text.slice(0, 30)}`);
+    maybeSendLobbyIrc(out, ircSentMsgIds.current);
     void settleRemoteOutgoing([out], authUserId).then((outcome) => {
       if (outcome.action === "fail") {
         console.error("retry send failed", outcome.error);
@@ -1781,6 +1890,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
         return;
       }
       setState((s) => ({ ...s, messages: confirmMessages(s.messages, [out.id], outcome.tsById) }));
+      releaseIrcSentIds(ircSentMsgIds.current, [out.id]);
     }).catch((err: unknown) => {
       const message = err instanceof Error && err.message ? err.message : "Failed to send";
       console.error("retry send failed", err);
