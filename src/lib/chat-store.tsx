@@ -37,6 +37,7 @@ import { runCommand } from "./commands";
 import { evaluateBadges, todayKey, daysBetween } from "./achievements";
 import { supabase } from "@/integrations/supabase/client";
 import { rtLog } from "./realtime-debug";
+import { sanitizeRemoteReplyToId } from "./message-list-model";
 import { extraRemoteDmChannelsToFetch } from "./mini-dm";
 import { useRemoteProfiles } from "./use-remote-profiles";
 import { playDmPing, playMentionPing, playPublicChatTick } from "./sounds";
@@ -170,7 +171,7 @@ function toMessageInsertRow(out: AuthenticatedOutgoing, authorId: string) {
     text: out.text,
     kind: out.kind,
     attachment: out.attachment as unknown as never,
-    reply_to_id: out.replyToId,
+    reply_to_id: sanitizeRemoteReplyToId(out.replyToId),
   };
 }
 
@@ -1608,7 +1609,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
           id: msgId, channelId, text: trimmed,
           kind: userMsg.kind ?? "text",
           attachment: attachment ?? null,
-          replyToId: replyToId ?? null,
+          replyToId: sanitizeRemoteReplyToId(replyToId),
         });
       }
       const existing = s.messages[channelId] || [];
@@ -1874,7 +1875,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       text: found.text,
       kind: found.kind ?? "text",
       attachment: found.attachment ?? null,
-      replyToId: found.replyToId ?? null,
+      replyToId: sanitizeRemoteReplyToId(found.replyToId),
     };
     setState((s) => ({ ...s, messages: markMessagesSending(s.messages, [messageId]) }));
     rtLog(out.channelId.startsWith("dm:") ? "dm" : "msg", "retry", `${out.channelId} · ${out.text.slice(0, 30)}`);

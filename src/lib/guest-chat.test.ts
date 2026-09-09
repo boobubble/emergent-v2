@@ -21,6 +21,7 @@ import {
   mergeGuestLobbyRows,
   type GuestLobbyRow,
 } from "./guest-lobby-feed";
+import { isGuestMessageId, sanitizeRemoteReplyToId } from "./message-list-model";
 
 const testDir = dirname(fileURLToPath(import.meta.url));
 const srcRoot = resolve(testDir, "..");
@@ -226,6 +227,14 @@ describe("no auth-guest regression", () => {
     expect(src).toMatch(/isEphemeralGuest|visitor_/);
   });
 
+  it("ephemeral guest messages include Reply action in MSG_ACTION_ROW", () => {
+    const src = readFileSync(resolve(srcRoot, "components/chat/MessageList.tsx"), "utf8");
+    const guestBranch = src.slice(src.indexOf("if (isEphemeralGuest)"), src.indexOf("if (isMe)"));
+    expect(guestBranch).toMatch(/MSG_ACTION_ROW/);
+    expect(guestBranch).toMatch(/<ReplyButton/);
+    expect(guestBranch).toMatch(/BUBBLE_SHELL/);
+  });
+
   it("own guest bubbles keep opaque primary contrast in light and dark", () => {
     const src = readFileSync(resolve(srcRoot, "components/chat/MessageList.tsx"), "utf8");
     const own = src.match(/isOwnGuest\s*\?\s*(?:`([^`]*msg-mine[^`]*)`|"(msg-mine[^"]+)")/);
@@ -235,7 +244,7 @@ describe("no auth-guest regression", () => {
     expect(cls).not.toMatch(/bg-primary\//);
     expect(cls).toMatch(/\btext-primary-foreground\b/);
     expect(cls).not.toMatch(/text-transparent|opacity-0|text-background|text-muted/);
-    expect(src).toMatch(/data-message-role=\{isOwnGuest \? "me" : undefined\}/);
+    expect(src).toMatch(/data-message-role="me"/);
     expect(src).toMatch(/backgroundColor:\s*"var\(--primary\)"/);
     expect(src).toMatch(/color:\s*"var\(--primary-foreground\)"/);
     expect(src).toMatch(/\[color:inherit\]/);
@@ -377,5 +386,13 @@ describe("guest lobby feed merge", () => {
     expect(u.isGuest).toBe(true);
     expect(u.showGuestBadge).toBe(true);
     expect(u.name).toBe("Guest");
+  });
+
+  it("guest message ids are omitted from remote reply_to_id inserts", () => {
+    expect(isGuestMessageId("guestmsg:abc-123")).toBe(true);
+    expect(sanitizeRemoteReplyToId("guestmsg:abc-123")).toBeNull();
+    expect(sanitizeRemoteReplyToId("550e8400-e29b-41d4-a716-446655440000")).toBe(
+      "550e8400-e29b-41d4-a716-446655440000",
+    );
   });
 });

@@ -5,7 +5,7 @@ import { Avatar } from "./Avatar";
 import { FrameAvatar, CosmeticName, RankChip } from "@/components/cosmetics/CosmeticBits";
 import { UserMenu } from "./UserMenu";
 import { StaffActionsMenu } from "./StaffActionsMenu";
-import type { Message, Attachment } from "@/lib/chat-types";
+import type { Message, Attachment, User } from "@/lib/chat-types";
 import { Download, Reply, CornerDownRight, CheckCheck, Clock } from "lucide-react";
 import { NameEmojiBadge, NameAdornments } from "@/lib/name-emoji";
 import { EmojiEffectLayer } from "./EmojiEffectLayer";
@@ -109,9 +109,16 @@ function Time({ ts }: { ts: number }) {
   );
 }
 
-function ReplyPreview({ message, align = "left" }: { message: Message; align?: "left" | "right" }) {
-  const { state } = useChat();
-  const author = state.users[message.authorId];
+function ReplyPreview({
+  message,
+  usersById,
+  align = "left",
+}: {
+  message: Message;
+  usersById: Record<string, User | undefined>;
+  align?: "left" | "right";
+}) {
+  const author = resolveMessageAuthor(usersById, message.authorId);
   return (
     <div
       className={`mb-1.5 flex max-w-[min(80%,20rem)] items-start gap-1.5 rounded-lg border border-primary/25 bg-primary/5 px-2.5 py-1.5 text-[11px] ${
@@ -120,7 +127,7 @@ function ReplyPreview({ message, align = "left" }: { message: Message; align?: "
     >
       <CornerDownRight className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
       <div className="min-w-0">
-        <span className="block font-semibold text-primary">{author?.name || "Unknown"}</span>
+        <span className="block font-semibold text-primary">{author.name}</span>
         <span className="line-clamp-2 text-muted-foreground">
           {message.text || (message.attachment ? `📎 ${message.attachment.name}` : "(message)")}
         </span>
@@ -257,6 +264,15 @@ export function MessageList({ channelId }: { channelId: string }) {
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  function findMessageLocal(id: string): Message | undefined {
+    const fromStore = findMessage(id);
+    if (fromStore) return fromStore;
+    if (channelId === GUEST_LOBBY_CHANNEL_ID) {
+      return guestFeed.messages.find((m) => m.id === id);
+    }
+    return undefined;
+  }
+
   useEffect(() => {
     scrollRef.current?.scrollTo({
       top: scrollRef.current.scrollHeight,
@@ -324,29 +340,47 @@ export function MessageList({ channelId }: { channelId: string }) {
                       .bg-primary/90. Light + purple sets --primary-foreground to
                       near-white, so missing fill = invisible text until selected. */}
                   <div className={`flex flex-col gap-1 ${isOwnGuest ? "items-end" : ""}`}>
-                    {g.map((m) => (
-                      <div key={m.id} className={`flex flex-col ${isOwnGuest ? "items-end" : ""}`}>
-                        <div
-                          data-message-role={isOwnGuest ? "me" : undefined}
-                          className={bubblePendingClass(
-                            m,
-                            isOwnGuest
-                              ? `msg-mine ${BUBBLE_SHELL} rounded-2xl rounded-tr-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground shadow-lg shadow-primary/20 chat-bubble-in`
-                              : `${BUBBLE_SHELL} rounded-2xl rounded-tl-md border border-border bg-muted/40 px-3 py-2 text-xs leading-snug text-foreground/90`,
+                    {g.map((m) => {
+                      const replied = m.replyToId ? findMessageLocal(m.replyToId) : null;
+                      const isReplyTarget = replyingTo?.id === m.id;
+                      const bubbleClass = bubblePendingClass(
+                        m,
+                        isOwnGuest
+                          ? `msg-mine ${BUBBLE_SHELL} rounded-2xl rounded-tr-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground shadow-lg shadow-primary/20 chat-bubble-in ${isReplyTarget ? "ring-2 ring-primary-foreground/40" : ""}`
+                          : `${BUBBLE_SHELL} rounded-2xl rounded-tl-md border border-border bg-muted/40 px-3 py-2 text-xs leading-snug text-foreground/90 ${isReplyTarget ? "ring-2 ring-primary/40" : ""}`,
+                      );
+                      return (
+                        <div key={m.id} className={`flex w-fit max-w-full flex-col ${isOwnGuest ? "items-end" : ""}`}>
+                          {replied && (
+                            <ReplyPreview message={replied} usersById={usersById} align={isOwnGuest ? "right" : "left"} />
                           )}
-                          style={
-                            isOwnGuest
-                              ? { backgroundColor: "var(--primary)", color: "var(--primary-foreground)" }
-                              : undefined
-                          }
-                        >
-                          <div className={`${BUBBLE_TEXT} [color:inherit]`}>{renderText(m.text)}</div>
+                          <div className={MSG_ACTION_ROW}>
+                            {isOwnGuest ? (
+                              <>
+                                <ReplyButton onClick={() => setReplyingTo(m)} />
+                                <div
+                                  data-message-role="me"
+                                  className={bubbleClass}
+                                  style={{ backgroundColor: "var(--primary)", color: "var(--primary-foreground)" }}
+                                >
+                                  <div className={`${BUBBLE_TEXT} [color:inherit]`}>{renderText(m.text)}</div>
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <div className={bubbleClass}>
+                                  <div className={`${BUBBLE_TEXT} [color:inherit]`}>{renderText(m.text)}</div>
+                                </div>
+                                <ReplyButton onClick={() => setReplyingTo(m)} />
+                              </>
+                            )}
+                          </div>
+                          {isOwnGuest && (
+                            <SendStatusBits m={m} onRetry={() => void retryGuestMessage(m)} />
+                          )}
                         </div>
-                        {isOwnGuest && (
-                          <SendStatusBits m={m} onRetry={() => void retryGuestMessage(m)} />
-                        )}
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -372,11 +406,11 @@ export function MessageList({ channelId }: { channelId: string }) {
                   </div>
                   <div className="flex max-w-[80%] flex-col items-end gap-1">
                     {g.map(m => {
-                      const replied = m.replyToId ? findMessage(m.replyToId) : null;
+                      const replied = m.replyToId ? findMessageLocal(m.replyToId) : null;
                       const isReplyTarget = replyingTo?.id === m.id;
                       return (
                         <div key={m.id} className="flex w-fit max-w-full flex-col items-end">
-                          {replied && <ReplyPreview message={replied} align="right" />}
+                          {replied && <ReplyPreview message={replied} usersById={usersById} align="right" />}
                           <div className={MSG_ACTION_ROW}>
                             <ReplyButton onClick={() => setReplyingTo(m)} />
                             <div
@@ -429,11 +463,11 @@ export function MessageList({ channelId }: { channelId: string }) {
                 </div>
                 <div className="flex flex-col gap-1">
                   {g.map(m => {
-                    const replied = m.replyToId ? findMessage(m.replyToId) : null;
+                    const replied = m.replyToId ? findMessageLocal(m.replyToId) : null;
                     const isReplyTarget = replyingTo?.id === m.id;
                     return (
                       <div key={m.id} className="flex flex-col">
-                        {replied && <ReplyPreview message={replied} />}
+                        {replied && <ReplyPreview message={replied} usersById={usersById} />}
                         <div className={MSG_ACTION_ROW}>
                           <div
                             className={

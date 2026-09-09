@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, type KeyboardEvent, type ChangeEvent } from "react";
+import { useState, useRef, useEffect, useMemo, type KeyboardEvent, type ChangeEvent } from "react";
 import { Send, Smile, Sparkles, Paperclip, X, Reply, Sticker, Youtube, ImagePlay, Mic, Plus } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
@@ -15,7 +15,9 @@ import {
   appendGuestOptimistic,
   confirmGuestOptimistic,
   failGuestOptimistic,
+  useGuestLobbyFeed,
 } from "@/lib/use-guest-lobby-feed";
+import { resolveMessageAuthor } from "@/lib/message-list-model";
 import { useTyping } from "@/lib/use-typing";
 import { EmojiPicker } from "./EmojiPicker";
 import { AnimatedEmojiPicker, stickerUrl } from "./AnimatedEmojiPicker";
@@ -61,6 +63,7 @@ export function MessageInput({
   const { user } = useAuth();
   const { requireAuth } = useAuthGate();
   const guestChat = useGuestChat();
+  const guestFeed = useGuestLobbyFeed(channelId === GUEST_LOBBY_CHANNEL_ID);
   const sendGuest = useServerFn(sendGuestLobbyMessage);
   const me = user && !user.isGuest ? { id: user.id, name: user.username } : null;
   const { typers, sendTyping, stopTyping } = useTyping(channelId, me, !!me);
@@ -525,7 +528,11 @@ export function MessageInput({
     }
   }
 
-  const replyAuthor = replyForThis ? state.users[replyForThis.authorId] : null;
+  const replyUsersById = useMemo(
+    () => ({ ...state.users, ...guestFeed.users }),
+    [state.users, guestFeed.users],
+  );
+  const replyAuthor = replyForThis ? resolveMessageAuthor(replyUsersById, replyForThis.authorId) : null;
 
   const muteUntil = state.moderation?.[channelId]?.me?.mutedUntil;
   const isChannelMuted = !!(muteUntil && muteUntil > Date.now());
@@ -552,7 +559,7 @@ export function MessageInput({
         <div className="mb-2 flex min-h-11 items-center gap-2 rounded-2xl border border-primary/30 bg-primary/10 px-3 py-2 text-xs">
           <Reply className="h-4 w-4 shrink-0 text-primary" />
           <div className="min-w-0 flex-1">
-            <div className="font-semibold text-primary">Replying to {replyAuthor?.name || "user"}</div>
+            <div className="font-semibold text-primary">Replying to {replyAuthor?.name ?? "user"}</div>
             <div className="line-clamp-2 text-muted-foreground">
               {replyForThis.text || (replyForThis.attachment ? `📎 ${replyForThis.attachment.name}` : "(message)")}
             </div>

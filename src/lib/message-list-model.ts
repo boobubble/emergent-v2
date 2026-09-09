@@ -36,3 +36,14 @@ export function resolveMessageAuthor(
 export function safeMessageText(text: unknown): string {
   return typeof text === "string" ? text : "";
 }
+
+/** Guest lobby rows use `guestmsg:` ids — not valid `messages.reply_to_id` FK targets. */
+export function isGuestMessageId(id: string): boolean {
+  return id.startsWith("guestmsg:");
+}
+
+/** Keep reply threading in local UI; omit guest targets from remote inserts. */
+export function sanitizeRemoteReplyToId(replyToId: string | undefined | null): string | null {
+  if (!replyToId || isGuestMessageId(replyToId)) return null;
+  return replyToId;
+}
