@@ -129,8 +129,10 @@ function ReplyPreview({ message, align = "left" }: { message: Message; align?: "
   );
 }
 
-const BUBBLE_SHELL = "w-fit max-w-[min(80%,20rem)] shrink-0";
-const BUBBLE_TEXT = "whitespace-pre-wrap break-normal [overflow-wrap:anywhere]";
+/** w-max keeps short lines on one row; max-w caps long messages. Avoid overflow-wrap:anywhere here — it shrinks min-content and forces w-fit/w-max bubbles to wrap early. */
+const BUBBLE_SHELL = "w-max max-w-[min(80%,20rem)] shrink-0";
+const BUBBLE_TEXT = "whitespace-pre-wrap [overflow-wrap:break-word]";
+const MSG_ACTION_ROW = "group/msg flex max-w-full flex-wrap items-center gap-x-0.5 gap-y-0.5 sm:gap-1";
 
 function ReplyButton({ onClick }: { onClick: () => void }) {
   return (
@@ -375,7 +377,7 @@ export function MessageList({ channelId }: { channelId: string }) {
                       return (
                         <div key={m.id} className="flex w-fit max-w-full flex-col items-end">
                           {replied && <ReplyPreview message={replied} align="right" />}
-                          <div className="group/msg flex items-center gap-0.5 sm:gap-1">
+                          <div className={MSG_ACTION_ROW}>
                             <ReplyButton onClick={() => setReplyingTo(m)} />
                             <div
                               className={bubblePendingClass(
@@ -432,7 +434,7 @@ export function MessageList({ channelId }: { channelId: string }) {
                     return (
                       <div key={m.id} className="flex flex-col">
                         {replied && <ReplyPreview message={replied} />}
-                        <div className="group/msg flex items-center gap-0.5 sm:gap-1">
+                        <div className={MSG_ACTION_ROW}>
                           <div
                             className={
                               m.kind === "me"
