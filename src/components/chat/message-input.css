@@ -36,6 +36,14 @@
     flex-shrink: 0;
     border-radius: 999px;
     place-items: center;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 75ms ease-out, opacity 75ms ease-out;
+  }
+
+  [data-chat-composer] .chat-composer-send:active:not(:disabled) {
+    transform: scale(0.94);
+    opacity: 0.9;
   }
 
   [data-chat-composer] .chat-composer-input {

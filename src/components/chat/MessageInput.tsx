@@ -63,7 +63,7 @@ export function MessageInput({
   const guestChat = useGuestChat();
   const sendGuest = useServerFn(sendGuestLobbyMessage);
   const me = user && !user.isGuest ? { id: user.id, name: user.username } : null;
-  const { typers, sendTyping } = useTyping(channelId, me, !!me);
+  const { typers, sendTyping, stopTyping } = useTyping(channelId, me, !!me);
   const [text, setText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
   const [showStickers, setShowStickers] = useState(false);
@@ -81,8 +81,29 @@ export function MessageInput({
   const [mentionIdx, setMentionIdx] = useState(0);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const autosizeRafRef = useRef<number | null>(null);
+  const submitLockRef = useRef(false);
   /** Swallow the leftover click after a picker unmounts so the toolbar toggle cannot reopen it. */
   const ignorePickerToggleUntilRef = useRef(0);
+
+  function scheduleComposerAutosize() {
+    if (autosizeRafRef.current != null) cancelAnimationFrame(autosizeRafRef.current);
+    autosizeRafRef.current = requestAnimationFrame(() => {
+      autosizeRafRef.current = null;
+      const el = inputRef.current;
+      if (!el) return;
+      const empty = !el.value;
+      if (empty) {
+        el.style.height = "";
+        el.style.overflowY = "hidden";
+        return;
+      }
+      el.style.height = "auto";
+      const size = chatComposerAutoSize(el.value, el.scrollHeight, window.innerWidth);
+      el.style.height = size.heightPx == null ? "" : `${size.heightPx}px`;
+      el.style.overflowY = size.overflowY;
+    });
+  }
 
   function markPickerJustClosed() {
     ignorePickerToggleUntilRef.current = Date.now() + 400;
@@ -194,26 +215,13 @@ export function MessageInput({
   }
 
   useEffect(() => {
-    const el = inputRef.current;
-    if (!el) return;
-
-    const apply = () => {
-      const empty = !el.value;
-      if (empty) {
-        el.style.height = "";
-        el.style.overflowY = "hidden";
-        return;
-      }
-      el.style.height = "auto";
-      const size = chatComposerAutoSize(el.value, el.scrollHeight, window.innerWidth);
-      el.style.height = size.heightPx == null ? "" : `${size.heightPx}px`;
-      el.style.overflowY = size.overflowY;
+    const onResize = () => scheduleComposerAutosize();
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      if (autosizeRafRef.current != null) cancelAnimationFrame(autosizeRafRef.current);
     };
-
-    apply();
-    window.addEventListener("resize", apply);
-    return () => window.removeEventListener("resize", apply);
-  }, [text]);
+  }, []);
 
   useEffect(() => {
     if (replyingTo) inputRef.current?.focus();
@@ -356,6 +364,7 @@ export function MessageInput({
     setAttachment(null);
     setAttachError("");
     setReplyingTo(null);
+    scheduleComposerAutosize();
     try {
       const row = await sendGuest({
         data: {
@@ -394,43 +403,62 @@ export function MessageInput({
 
   function submit() {
     if (!text.trim() && !attachment) return;
+    if (submitLockRef.current) return;
+    submitLockRef.current = true;
+    const releaseSubmitLock = () => {
+      queueMicrotask(() => { submitLockRef.current = false; });
+    };
+
     const trimmed = text.trim();
 
     // Ephemeral guest Lobby path — never creates auth/profile.
     if (!user && guestChat.isGuestChatting) {
-      void submitGuestLobby(trimmed);
+      void submitGuestLobby(trimmed).finally(() => {
+        releaseSubmitLock();
+        requestAnimationFrame(() => inputRef.current?.focus());
+      });
       return;
     }
     if (!user && guestChat.enabled && channelId === GUEST_LOBBY_CHANNEL_ID && !attachment && !isBotCommandOrAction(trimmed)) {
       guestChat.openNicknameDialog();
+      releaseSubmitLock();
       return;
     }
 
-    requireAuth(() => {
+    const accepted = requireAuth(() => {
       if (/^\/clearcache\b/i.test(trimmed)) {
         setText(""); setAttachment(null); setAttachError("");
         void handleClearCache();
+        releaseSubmitLock();
         return;
       }
       if (/^\/(clear|delete)\b/i.test(trimmed)) {
         setText(""); setAttachment(null); setAttachError("");
         void handleClearChannel();
+        releaseSubmitLock();
         return;
       }
       const outgoing = autoMentionUsernames(text);
+      const snapAttachment = attachment;
+      const snapReplyId = replyForThis?.id;
       send(outgoing, {
-        attachment: attachment || undefined,
-        replyToId: replyForThis?.id,
+        attachment: snapAttachment || undefined,
+        replyToId: snapReplyId,
         ...(channelIdProp ? { channelId: channelIdProp } : {}),
       });
-      if (me) {
-        earnChat({ data: { channelId, isReply: !!replyForThis } }).catch(() => {});
-      }
+      stopTyping();
       setText("");
       setAttachment(null);
       setAttachError("");
+      scheduleComposerAutosize();
+      requestAnimationFrame(() => inputRef.current?.focus());
+      if (me) {
+        earnChat({ data: { channelId, isReply: !!snapReplyId } }).catch(() => {});
+      }
       onActivity?.();
+      releaseSubmitLock();
     });
+    if (!accepted) releaseSubmitLock();
   }
 
   function sendAsAuthed(
@@ -709,7 +737,32 @@ export function MessageInput({
           <Sparkles className="h-5 w-5" />
         </button>
         )}
-        <textarea data-composer-slot="input" ref={inputRef} value={text} onChange={e => { setText(e.target.value); setCaret(e.target.selectionStart ?? e.target.value.length); sendTyping(); onActivity?.(); }} onFocus={() => onActivity?.()} onKeyUp={e => setCaret(e.currentTarget.selectionStart ?? 0)} onClick={e => setCaret(e.currentTarget.selectionStart ?? 0)} onKeyDown={onKey} rows={1} placeholder={composerPlaceholder} className="chat-composer-input max-h-[140px] min-h-11 min-w-0 flex-1 resize-none bg-transparent py-2.5 text-base leading-6 text-foreground outline-none placeholder:truncate placeholder:whitespace-nowrap placeholder:text-muted-foreground/70 sm:py-1.5 sm:text-sm" />
+        <textarea
+          data-composer-slot="input"
+          ref={inputRef}
+          value={text}
+          onChange={(e) => {
+            const next = e.target.value;
+            const pos = e.target.selectionStart ?? next.length;
+            setText(next);
+            if (next.includes("@")) setCaret(pos);
+            else setCaret(next.length);
+            sendTyping();
+            scheduleComposerAutosize();
+            onActivity?.();
+          }}
+          onFocus={() => onActivity?.()}
+          onKeyUp={(e) => {
+            if (text.includes("@")) setCaret(e.currentTarget.selectionStart ?? 0);
+          }}
+          onClick={(e) => {
+            if (text.includes("@")) setCaret(e.currentTarget.selectionStart ?? 0);
+          }}
+          onKeyDown={onKey}
+          rows={1}
+          placeholder={composerPlaceholder}
+          className="chat-composer-input max-h-[140px] min-h-11 min-w-0 flex-1 resize-none bg-transparent py-2.5 text-base leading-6 text-foreground outline-none placeholder:truncate placeholder:whitespace-nowrap placeholder:text-muted-foreground/70 sm:py-1.5 sm:text-sm"
+        />
         <button data-composer-slot="sticker" onClick={onToggleStickers} className="chat-composer-btn mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-primary" title="Animated stickers" aria-label="Animated stickers">
           <Sticker className="h-5 w-5" />
         </button>
@@ -749,7 +802,15 @@ export function MessageInput({
         <button data-composer-slot="emoji" onClick={() => { setShowMore(false); onToggleEmoji(); }} className="chat-composer-btn mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-foreground" title="Emoji" aria-label="Emoji">
           <Smile className="h-5 w-5" />
         </button>
-        <button data-composer-slot="send" onClick={submit} disabled={!text.trim() && !attachment} className="chat-composer-send mb-1 grid h-11 w-11 shrink-0 place-items-center rounded-full text-primary-foreground shadow-lg transition-[transform,opacity] hover:scale-110 active:scale-90 disabled:opacity-40 disabled:hover:scale-100" style={{ background: "var(--gradient-primary)", boxShadow: "0 8px 24px -8px var(--primary-glow)" }} aria-label="Send message">
+        <button
+          type="button"
+          data-composer-slot="send"
+          onClick={submit}
+          disabled={!text.trim() && !attachment}
+          className="chat-composer-send mb-1 grid h-11 w-11 shrink-0 touch-manipulation place-items-center rounded-full text-primary-foreground shadow-lg transition-[transform,opacity] duration-75 ease-out hover:scale-105 active:scale-[0.94] active:opacity-90 disabled:opacity-40 disabled:pointer-events-none disabled:active:scale-100"
+          style={{ background: "var(--gradient-primary)", boxShadow: "0 8px 24px -8px var(--primary-glow)" }}
+          aria-label="Send message"
+        >
           <Send className="h-4 w-4" />
         </button>
       </div>
