@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import "@/styles/tw-animate.css";
 import { useAuth } from "@/lib/auth-store";
 import { useBrand } from "@/lib/branding";
@@ -128,21 +128,12 @@ function SignUpDialog({ open, onOpenChange, onSwitchSignin }: { open: boolean; o
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [gender, setGender] = useState<"male" | "female" | "other" | "">("");
-  const [birthday, setBirthday] = useState("");
-  const [hideYear, setHideYear] = useState(false);
-  const [country, setCountry] = useState("");
-  const [phone, setPhone] = useState("");
   const [avatarDataUrl, setAvatarDataUrl] = useState("");
   const [allowSocialFeature, setAllowSocialFeature] = useState(false);
   const [err, setErr] = useState("");
   const [info, setInfo] = useState("");
   const [busy, setBusy] = useState(false);
   const usernameStatus = useUsernameCheck(open ? username : "");
-
-  useEffect(() => {
-    if (!open || country) return;
-    void import("@/lib/country-flag").then((m) => setCountry(m.detectCountryCode()));
-  }, [open, country]);
 
   function onPickAvatar(file: File | null) {
     setErr("");
@@ -169,12 +160,7 @@ function SignUpDialog({ open, onOpenChange, onSwitchSignin }: { open: boolean; o
         sessionStorage.setItem(`pending-welcome:${k}`, "1");
         sessionStorage.setItem(`pending-social-feature:${k}`, allowSocialFeature ? "1" : "0");
       } catch { /* ignore */ }
-      await signup(email, password, username.trim(), gender, {
-        birthday: birthday || undefined,
-        hide_birth_year: hideYear,
-        country_code: country || undefined,
-        phone: phone.trim() || undefined,
-      });
+      await signup(email, password, username.trim(), gender);
       setInfo("Account created! You're being signed in…");
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Sign up failed");
@@ -223,29 +209,9 @@ function SignUpDialog({ open, onOpenChange, onSwitchSignin }: { open: boolean; o
               ))}
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Birthday</label>
-              <input type="date" value={birthday} onChange={e => setBirthday(e.target.value)} max={new Date().toISOString().slice(0,10)} className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" />
-              <label className="mt-1 flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                <input type="checkbox" checked={hideYear} onChange={(e) => setHideYear(e.target.checked)} className="h-3 w-3" />
-                Hide year publicly
-              </label>
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Country</label>
-              <input value={country} onChange={(e) => setCountry(e.target.value.toUpperCase().slice(0, 2))} maxLength={2} placeholder="US" className="w-full rounded-lg bg-input px-3 py-2 text-sm uppercase outline-none focus:ring-1 focus:ring-ring" />
-              <p className="mt-1 text-[10px] text-muted-foreground">2-letter ISO code, optional.</p>
-            </div>
-          </div>
           <div>
             <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Email</label>
             <input type="email" value={email} onChange={e => setEmail(e.target.value)} maxLength={255} required className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" placeholder="you@example.com" />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Mobile number (optional)</label>
-            <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} maxLength={20} className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" placeholder="+1 555 123 4567" />
-            <p className="mt-1 text-[10px] text-muted-foreground">Used only if you ever lose access. We never share it.</p>
           </div>
           <div>
             <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Password</label>
