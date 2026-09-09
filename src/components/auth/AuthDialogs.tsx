@@ -123,6 +123,7 @@ function SignInDialog({ open, onOpenChange, onForgot, onSwitchSignup }: { open: 
 function SignUpDialog({ open, onOpenChange, onSwitchSignin }: { open: boolean; onOpenChange: (v: boolean) => void; onSwitchSignin: () => void }) {
   const { signup } = useAuth();
   const brand = useBrand();
+  const guestChat = useGuestChat();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
@@ -269,6 +270,18 @@ function SignUpDialog({ open, onOpenChange, onSwitchSignin }: { open: boolean; o
             {busy ? "..." : "Create account"}
           </button>
         </form>
+
+        {guestChat.enabled && (
+          <div className="space-y-3 pt-1">
+            <div className="flex items-center gap-3">
+              <div className="h-px flex-1 bg-border" />
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">OR</span>
+              <div className="h-px flex-1 bg-border" />
+            </div>
+            <LoginAsGuestButton onBeforeOpen={() => onOpenChange(false)} />
+          </div>
+        )}
+
         <div className="text-center text-xs text-muted-foreground">
           Already have one?{" "}
           <button onClick={onSwitchSignin} className="font-semibold text-primary hover:underline">Sign in</button>
