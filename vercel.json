@@ -5,6 +5,6 @@
   "crons": [
     { "path": "/api/run-blog-publish", "schedule": "0 6 * * *" },
     { "path": "/api/run-static-publish", "schedule": "0 7 * * *" },
-    { "path": "/api/run-chat-image-cleanup", "schedule": "0 * * * *" }
+    { "path": "/api/run-chat-image-cleanup", "schedule": "0 2 * * *" }
   ]
 }
