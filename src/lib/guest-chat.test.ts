@@ -21,7 +21,13 @@ import {
   mergeGuestLobbyRows,
   type GuestLobbyRow,
 } from "./guest-lobby-feed";
-import { isGuestMessageId, sanitizeRemoteReplyToId } from "./message-list-model";
+import {
+  groupChatMessages,
+  isGuestMessageId,
+  isNearScrollBottom,
+  sanitizeRemoteReplyToId,
+} from "./message-list-model";
+import type { Message } from "./chat-types";
 
 const testDir = dirname(fileURLToPath(import.meta.url));
 const srcRoot = resolve(testDir, "..");
@@ -269,6 +275,18 @@ describe("no auth-guest regression", () => {
     expect(src).not.toMatch(/if \(!cancelled\) setRows\(\[\]\)/);
     expect(src).toMatch(/Keep whatever realtime/);
     expect(src).toMatch(/GUEST_LOBBY_ROW_EVENT/);
+    expect(src).toContain("loadBrowserSupabase");
+    expect(src).not.toMatch(/from "@\/integrations\/supabase\/client"/);
+    expect(src).toMatch(/GUEST_LOBBY_MESSAGES_CHANNEL/);
+    expect(src).toMatch(/realtimeSubscriberCount/);
+    expect(src).toMatch(/retainGuestMessagesRealtime/);
+    expect(src).toMatch(/openGuestMessagesChannel/);
+    expect(src).toMatch(/messagesChannelOpening/);
+    const onIdx = src.indexOf('.on(\n        "postgres_changes"');
+    const subIdx = src.indexOf("ch.subscribe(", onIdx);
+    expect(onIdx).toBeGreaterThan(-1);
+    expect(subIdx).toBeGreaterThan(onIdx);
+    expect(src).not.toMatch(/useEffect\(\(\) => \{[\s\S]*?\.channel\("guest-lobby-messages"\)[\s\S]*?\.subscribe\(\)/);
     const helpers = readFileSync(resolve(srcRoot, "lib/guest-lobby-feed.ts"), "utf8");
     expect(helpers).toMatch(/export function mergeGuestLobbyRows/);
     expect(helpers).toMatch(/yaarzo:guest-lobby-row/);
@@ -394,5 +412,45 @@ describe("guest lobby feed merge", () => {
     expect(sanitizeRemoteReplyToId("550e8400-e29b-41d4-a716-446655440000")).toBe(
       "550e8400-e29b-41d4-a716-446655440000",
     );
+  });
+
+  it("groups consecutive messages from the same author", () => {
+    const mk = (id: string, authorId: string, ts: number): Message => ({
+      id,
+      channelId: "lobby",
+      authorId,
+      text: id,
+      ts,
+      kind: "text",
+    });
+    const groups = groupChatMessages(
+      [mk("a", "u1", 1), mk("b", "u1", 2), mk("c", "u2", 3)],
+      () => false,
+    );
+    expect(groups.map((g) => g.map((m) => m.id))).toEqual([["a", "b"], ["c"]]);
+  });
+
+  it("MessageList uses instant scroll and lighter chat-msg-in animation", () => {
+    const src = readFileSync(resolve(srcRoot, "components/chat/MessageList.tsx"), "utf8");
+    expect(src).toMatch(/stickToBottomRef/);
+    expect(src).toMatch(/isNearScrollBottom/);
+    expect(src).toMatch(/scrollTop = el\.scrollHeight/);
+    expect(src).not.toMatch(/behavior:\s*"smooth"/);
+    expect(src).toMatch(/chat-msg-in/);
+    const css = readFileSync(resolve(srcRoot, "components/chat/message-list.css"), "utf8");
+    expect(css).toMatch(/chat-msg-in/);
+    expect(css).not.toMatch(/blur/);
+  });
+});
+
+describe("scroll bottom detection", () => {
+  it("isNearScrollBottom returns true when within threshold", () => {
+    const el = {
+      scrollHeight: 1000,
+      scrollTop: 880,
+      clientHeight: 100,
+    } as HTMLElement;
+    expect(isNearScrollBottom(el, 120)).toBe(true);
+    expect(isNearScrollBottom(el, 10)).toBe(false);
   });
 });

@@ -6,13 +6,18 @@
  * immediately while MessageList (a sibling) renders them.
  * History fetch must MERGE by id. Replacing the array drops rows that arrived
  * via realtime / post-send / optimistic insert while the snapshot was in flight.
+ *
+ * Realtime uses ONE module-level `guest-lobby-messages` channel: MessageList and
+ * MessageInput both call useGuestLobbyFeed in the Lobby, so per-hook channels
+ * would call `.on()` after the shared channel is already subscribed.
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { supabase } from "@/integrations/supabase/client";
+import { loadBrowserSupabase } from "@/integrations/supabase/load-browser";
 import { listGuestLobbyMessages } from "@/lib/guest-chat.functions";
 import { GUEST_LOBBY_CHANNEL_ID } from "@/lib/guest-chat-config";
+import { rtLog } from "@/lib/realtime-debug";
 import {
   GUEST_LOBBY_ROW_EVENT,
   mergeGuestLobbyRows,
@@ -36,12 +41,88 @@ export {
   publishGuestLobbyRow,
 } from "@/lib/guest-lobby-feed";
 
+export const GUEST_LOBBY_MESSAGES_CHANNEL = "guest-lobby-messages";
+
+type BrowserClient = Awaited<ReturnType<typeof loadBrowserSupabase>>;
+type MessagesChannel = ReturnType<BrowserClient["channel"]>;
+
 let sharedRows: GuestLobbyRow[] = [];
-const listeners = new Set<(rows: GuestLobbyRow[]) => void>();
+const rowListeners = new Set<(rows: GuestLobbyRow[]) => void>();
+
+let sb: BrowserClient | null = null;
+let messagesChannel: MessagesChannel | null = null;
+let messagesChannelOpening: Promise<MessagesChannel> | null = null;
+let realtimeSubscriberCount = 0;
 
 function emitGuestRows(next: GuestLobbyRow[]) {
   sharedRows = next;
-  for (const fn of listeners) fn(sharedRows);
+  for (const fn of rowListeners) fn(sharedRows);
+}
+
+function onGuestLobbyInsert(payload: { new: Record<string, unknown> }) {
+  const n = payload.new;
+  if (n.channel_id !== GUEST_LOBBY_CHANNEL_ID) return;
+  if (n.expires_at && new Date(String(n.expires_at)).getTime() <= Date.now()) return;
+  const row = payloadToGuestLobbyRow(n);
+  if (!row) return;
+  emitGuestRows(mergeGuestLobbyRows(sharedRows, [row]));
+}
+
+async function openGuestMessagesChannel(): Promise<MessagesChannel> {
+  if (messagesChannel) return messagesChannel;
+  if (messagesChannelOpening) return messagesChannelOpening;
+
+  messagesChannelOpening = (async () => {
+    const client = await loadBrowserSupabase();
+    sb = client;
+    const ch = client
+      .channel(GUEST_LOBBY_MESSAGES_CHANNEL)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "guest_chat_messages" },
+        onGuestLobbyInsert,
+      );
+
+    await new Promise<void>((resolve) => {
+      ch.subscribe((status) => {
+        rtLog("ws", status, GUEST_LOBBY_MESSAGES_CHANNEL);
+        if (
+          status === "SUBSCRIBED"
+          || status === "CHANNEL_ERROR"
+          || status === "TIMED_OUT"
+          || status === "CLOSED"
+        ) {
+          resolve();
+        }
+      });
+    });
+
+    messagesChannel = ch;
+    messagesChannelOpening = null;
+    return ch;
+  })();
+
+  return messagesChannelOpening;
+}
+
+async function closeGuestMessagesChannelIfIdle() {
+  if (realtimeSubscriberCount > 0) return;
+  if (messagesChannel && sb) {
+    await sb.removeChannel(messagesChannel);
+    messagesChannel = null;
+  }
+  messagesChannelOpening = null;
+}
+
+function retainGuestMessagesRealtime(): () => void {
+  realtimeSubscriberCount += 1;
+  void openGuestMessagesChannel().catch((err) => {
+    if (import.meta.env.DEV) console.warn("[guest-lobby-feed] realtime subscribe failed", err);
+  });
+  return () => {
+    realtimeSubscriberCount = Math.max(0, realtimeSubscriberCount - 1);
+    void closeGuestMessagesChannelIfIdle();
+  };
 }
 
 export function appendGuestOptimistic(row: GuestLobbyRow) {
@@ -72,9 +153,9 @@ export function useGuestLobbyFeed(enabled: boolean) {
       return;
     }
     const fn = (next: GuestLobbyRow[]) => setRows(next);
-    listeners.add(fn);
+    rowListeners.add(fn);
     setRows(sharedRows);
-    return () => { listeners.delete(fn); };
+    return () => { rowListeners.delete(fn); };
   }, [enabled]);
 
   useEffect(() => {
@@ -108,24 +189,7 @@ export function useGuestLobbyFeed(enabled: boolean) {
 
   useEffect(() => {
     if (!enabled) return;
-    const channel = supabase
-      .channel("guest-lobby-messages")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "guest_chat_messages" },
-        (payload) => {
-          const n = payload.new as Record<string, unknown>;
-          if (n.channel_id !== GUEST_LOBBY_CHANNEL_ID) return;
-          if (n.expires_at && new Date(String(n.expires_at)).getTime() <= Date.now()) return;
-          const row = payloadToGuestLobbyRow(n);
-          if (!row) return;
-          emitGuestRows(mergeGuestLobbyRows(sharedRows, [row]));
-        },
-      )
-      .subscribe();
-    return () => {
-      void supabase.removeChannel(channel);
-    };
+    return retainGuestMessagesRealtime();
   }, [enabled]);
 
   const messages = useMemo(() => rows.map(rowToGuestLobbyMessage), [rows]);
