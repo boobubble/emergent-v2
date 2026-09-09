@@ -47,3 +47,36 @@ export function sanitizeRemoteReplyToId(replyToId: string | undefined | null): s
   if (!replyToId || isGuestMessageId(replyToId)) return null;
   return replyToId;
 }
+
+/** True when the user is already following the latest messages. */
+export function isNearScrollBottom(el: HTMLElement, threshold = 120): boolean {
+  return el.scrollHeight - el.scrollTop - el.clientHeight <= threshold;
+}
+
+/** Group consecutive messages from the same author (5 min window, no reply breaks). */
+export function groupChatMessages(
+  msgs: Message[],
+  isPresenceLine: (m: Message) => boolean,
+): Message[][] {
+  const groups: Message[][] = [];
+  msgs.forEach((m) => {
+    if (isPresenceLine(m)) {
+      groups.push([m]);
+      return;
+    }
+    const last = groups[groups.length - 1];
+    if (
+      last &&
+      !isPresenceLine(last[0]) &&
+      last[0].authorId === m.authorId &&
+      !m.replyToId &&
+      !last[last.length - 1].replyToId &&
+      m.ts - last[last.length - 1].ts < 5 * 60_000
+    ) {
+      last.push(m);
+    } else {
+      groups.push([m]);
+    }
+  });
+  return groups;
+}

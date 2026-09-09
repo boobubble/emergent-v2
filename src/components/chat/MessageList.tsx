@@ -23,9 +23,12 @@ import { isPresenceSystemMessage as isRoomPresenceLine } from "@/lib/presence-ui
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
 import {
   filterChatMessages,
+  groupChatMessages,
+  isNearScrollBottom,
   resolveMessageAuthor,
   safeMessageText,
 } from "@/lib/message-list-model";
+import "./message-list.css";
 
 function PresenceSystemLine({ text }: { text: string }) {
   return (
@@ -263,6 +266,7 @@ export function MessageList({ channelId }: { channelId: string }) {
   }
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  const stickToBottomRef = useRef(true);
 
   function findMessageLocal(id: string): Message | undefined {
     const fromStore = findMessage(id);
@@ -274,34 +278,42 @@ export function MessageList({ channelId }: { channelId: string }) {
   }
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({
-      top: scrollRef.current.scrollHeight,
-      behavior: "smooth",
-    });
-  }, [msgs.length, channelId]);
+    stickToBottomRef.current = true;
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [channelId]);
 
-  const groups: Message[][] = [];
-  msgs.forEach(m => {
-    if (isPresenceSystemMessage(m)) {
-      groups.push([m]);
-      return;
-    }
-    const last = groups[groups.length - 1];
-    if (
-      last &&
-      !isPresenceSystemMessage(last[0]) &&
-      last[0].authorId === m.authorId &&
-      !m.replyToId && !last[last.length - 1].replyToId &&
-      m.ts - last[last.length - 1].ts < 5 * 60_000
-    )
-      last.push(m);
-    else groups.push([m]);
-  });
+  const lastMsg = msgs[msgs.length - 1];
+  const lastMsgId = lastMsg?.id;
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || !lastMsgId) return;
+    const ownSend =
+      lastMsg.authorId === "me" ||
+      Boolean(isGuestChatting && session && lastMsg.authorId === session.visitorId);
+    if (!stickToBottomRef.current && !ownSend) return;
+    el.scrollTop = el.scrollHeight;
+    stickToBottomRef.current = true;
+  }, [lastMsgId, isGuestChatting, session?.visitorId, lastMsg?.authorId]);
+
+  const groups = useMemo(
+    () => groupChatMessages(msgs, isPresenceSystemMessage),
+    [msgs],
+  );
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
     <EmojiEffectLayer channelId={channelId} />
-    <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-3 text-xs sm:px-4 md:text-[15px]">
+    <div
+      ref={scrollRef}
+      className="flex-1 overflow-y-auto px-3 py-3 text-xs sm:px-4 md:text-[15px]"
+      onScroll={() => {
+        const el = scrollRef.current;
+        if (el) stickToBottomRef.current = isNearScrollBottom(el);
+      }}
+    >
       {groups.length === 0 && (
         <div className="grid h-full place-items-center text-center text-sm text-muted-foreground">
           <div>
@@ -346,7 +358,7 @@ export function MessageList({ channelId }: { channelId: string }) {
                       const bubbleClass = bubblePendingClass(
                         m,
                         isOwnGuest
-                          ? `msg-mine ${BUBBLE_SHELL} rounded-2xl rounded-tr-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground shadow-lg shadow-primary/20 chat-bubble-in ${isReplyTarget ? "ring-2 ring-primary-foreground/40" : ""}`
+                          ? `msg-mine ${BUBBLE_SHELL} rounded-2xl rounded-tr-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground shadow-lg shadow-primary/20 chat-msg-in ${isReplyTarget ? "ring-2 ring-primary-foreground/40" : ""}`
                           : `${BUBBLE_SHELL} rounded-2xl rounded-tl-md border border-border bg-muted/40 px-3 py-2 text-xs leading-snug text-foreground/90 ${isReplyTarget ? "ring-2 ring-primary/40" : ""}`,
                       );
                       return (
@@ -417,8 +429,8 @@ export function MessageList({ channelId }: { channelId: string }) {
                               className={bubblePendingClass(
                                 m,
                                 m.kind === "me"
-                                  ? `${BUBBLE_SHELL} rounded-2xl bg-white/5 px-3 py-2 text-xs italic text-primary chat-bubble-in ${isReplyTarget ? "ring-2 ring-primary/50" : ""}`
-                                  : `${BUBBLE_SHELL} rounded-2xl rounded-tr-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground shadow-lg shadow-primary/20 chat-bubble-in ${isReplyTarget ? "ring-2 ring-primary-foreground/40" : ""}`,
+                                  ? `${BUBBLE_SHELL} rounded-2xl bg-white/5 px-3 py-2 text-xs italic text-primary chat-msg-in ${isReplyTarget ? "ring-2 ring-primary/50" : ""}`
+                                  : `${BUBBLE_SHELL} rounded-2xl rounded-tr-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground shadow-lg shadow-primary/20 chat-msg-in ${isReplyTarget ? "ring-2 ring-primary-foreground/40" : ""}`,
                               )}
                             >
                               <div className={BUBBLE_TEXT}>{renderText(applyMask(m.authorId, m.text))}</div>
@@ -444,12 +456,20 @@ export function MessageList({ channelId }: { channelId: string }) {
 
           return (
             <div key={gi} className="group flex gap-2.5">
-              <FrameAvatar user={author} size={28} />
+              {author.isBot ? (
+                <Avatar user={author} size={28} />
+              ) : (
+                <FrameAvatar user={author} size={28} />
+              )}
               <div className="min-w-0 flex-1">
                 <div className="mb-1 flex items-center gap-1.5">
                   <UserMenu userId={author.id} username={author.name}>
                     <span className="inline-flex items-center gap-1 text-xs font-bold text-foreground">
-                      <CosmeticName userId={author.id} name={author.name} />
+                      {author.isBot ? (
+                        author.name
+                      ) : (
+                        <CosmeticName userId={author.id} name={author.name} />
+                      )}
                       <NameAdornments user={author} />
                     </span>
                   </UserMenu>
@@ -472,8 +492,8 @@ export function MessageList({ channelId }: { channelId: string }) {
                           <div
                             className={
                               m.kind === "me"
-                                ? `${BUBBLE_SHELL} rounded-2xl bg-white/5 px-3 py-2 text-xs italic text-primary chat-bubble-in ${isReplyTarget ? "ring-2 ring-primary/50" : ""}`
-                                : `${BUBBLE_SHELL} rounded-2xl rounded-tl-md border border-border bg-card/70 px-3 py-2 text-xs leading-snug text-foreground/90 shadow-sm backdrop-blur-sm chat-bubble-in ${isReplyTarget ? "ring-2 ring-primary/40" : ""}`
+                                ? `${BUBBLE_SHELL} rounded-2xl bg-white/5 px-3 py-2 text-xs italic text-primary chat-msg-in ${isReplyTarget ? "ring-2 ring-primary/50" : ""}`
+                                : `${BUBBLE_SHELL} rounded-2xl rounded-tl-md border border-border bg-card/70 px-3 py-2 text-xs leading-snug text-foreground/90 shadow-sm backdrop-blur-sm chat-msg-in ${isReplyTarget ? "ring-2 ring-primary/40" : ""}`
                             }
                           >
                             <div className={BUBBLE_TEXT}>{renderText(applyMask(m.authorId, m.text))}</div>

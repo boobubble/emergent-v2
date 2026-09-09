@@ -179,26 +179,28 @@ export function MessageInput({
     ? COMMANDS.filter(c => c.startsWith(text.split(" ")[0])).slice(0, 5)
     : [];
 
-  const mentionMatch = (() => {
+  const mentionMatch = useMemo(() => {
+    if (!text.includes("@")) return null;
     const before = text.slice(0, caret);
     const m = before.match(/(?:^|\s)@([\w-]*)$/);
     if (!m) return null;
     return { query: m[1].toLowerCase(), start: caret - m[1].length - 1 };
-  })();
-  const mentionSuggestions = mentionMatch
-    ? Object.values(state.users)
-        .filter(u => u.id !== "me" && u.name.toLowerCase().includes(mentionMatch.query))
-        .sort((a, b) => {
-          const aStarts = a.name.toLowerCase().startsWith(mentionMatch.query) ? 0 : 1;
-          const bStarts = b.name.toLowerCase().startsWith(mentionMatch.query) ? 0 : 1;
-          if (aStarts !== bStarts) return aStarts - bStarts;
-          const aOn = a.status === "online" ? 0 : 1;
-          const bOn = b.status === "online" ? 0 : 1;
-          if (aOn !== bOn) return aOn - bOn;
-          return a.name.localeCompare(b.name);
-        })
-        .slice(0, 6)
-    : [];
+  }, [text, caret]);
+  const mentionSuggestions = useMemo(() => {
+    if (!mentionMatch) return [];
+    return Object.values(state.users)
+      .filter(u => u.id !== "me" && u.name.toLowerCase().includes(mentionMatch.query))
+      .sort((a, b) => {
+        const aStarts = a.name.toLowerCase().startsWith(mentionMatch.query) ? 0 : 1;
+        const bStarts = b.name.toLowerCase().startsWith(mentionMatch.query) ? 0 : 1;
+        if (aStarts !== bStarts) return aStarts - bStarts;
+        const aOn = a.status === "online" ? 0 : 1;
+        const bOn = b.status === "online" ? 0 : 1;
+        if (aOn !== bOn) return aOn - bOn;
+        return a.name.localeCompare(b.name);
+      })
+      .slice(0, 6);
+  }, [mentionMatch, state.users]);
 
   useEffect(() => { setMentionIdx(0); }, [mentionMatch?.query]);
 
@@ -529,8 +531,8 @@ export function MessageInput({
   }
 
   const replyUsersById = useMemo(
-    () => ({ ...state.users, ...guestFeed.users }),
-    [state.users, guestFeed.users],
+    () => (replyForThis ? { ...state.users, ...guestFeed.users } : state.users),
+    [replyForThis, state.users, guestFeed.users],
   );
   const replyAuthor = replyForThis ? resolveMessageAuthor(replyUsersById, replyForThis.authorId) : null;
 
@@ -753,9 +755,8 @@ export function MessageInput({
             const pos = e.target.selectionStart ?? next.length;
             setText(next);
             if (next.includes("@")) setCaret(pos);
-            else setCaret(next.length);
-            sendTyping();
             scheduleComposerAutosize();
+            if (me) requestAnimationFrame(() => sendTyping());
             onActivity?.();
           }}
           onFocus={() => onActivity?.()}

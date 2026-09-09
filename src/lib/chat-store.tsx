@@ -809,6 +809,8 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
   const seenRemoteMsgIds = useRef<Set<string>>(new Set());
   const ircSentMsgIds = useRef<Set<string>>(new Set());
   const fetchErrorsShown = useRef<Set<string>>(new Set());
+  const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingPersistRef = useRef<State | null>(null);
   // dmReads[channelId][userId] = epoch ms of last read
   const [dmReads, setDmReads] = useState<Record<string, Record<string, number>>>({});
   // Latest message timestamp per DM channel (for unread badges across reloads)
@@ -904,9 +906,10 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     }
   }, [storageReady, username]);
 
-  useEffect(() => {
+  const flushPersist = useCallback(() => {
     if (!storageReady) return;
-    const toPersist = authUserId ? sanitizeChatState(state, authUserId) : state;
+    const toPersist = pendingPersistRef.current;
+    if (!toPersist) return;
     const persistReady = {
       ...toPersist,
       messages: persistSendStatus(toPersist.messages || {}),
@@ -921,7 +924,30 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       return;
     }
     syncRef.current?.postMessage({ type: "state", state: toPersist });
-  }, [state, storageReady, username, authUserId]);
+  }, [storageReady, username]);
+
+  useEffect(() => {
+    if (!storageReady) return;
+    pendingPersistRef.current = authUserId ? sanitizeChatState(state, authUserId) : state;
+    if (persistTimerRef.current) clearTimeout(persistTimerRef.current);
+    persistTimerRef.current = setTimeout(() => {
+      persistTimerRef.current = null;
+      flushPersist();
+    }, 200);
+    return () => {
+      if (persistTimerRef.current) {
+        clearTimeout(persistTimerRef.current);
+        persistTimerRef.current = null;
+      }
+    };
+  }, [state, storageReady, username, authUserId, flushPersist]);
+
+  useEffect(() => {
+    if (!storageReady) return;
+    const onHide = () => flushPersist();
+    window.addEventListener("pagehide", onHide);
+    return () => window.removeEventListener("pagehide", onHide);
+  }, [storageReady, flushPersist]);
 
   // Ambient bot chatter (disabled — bots only respond to user commands now)
 
