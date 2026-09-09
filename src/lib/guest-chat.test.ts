@@ -441,7 +441,7 @@ describe("guest lobby feed merge", () => {
     const src = readFileSync(resolve(srcRoot, "components/chat/MessageList.tsx"), "utf8");
     expect(src).toMatch(/stickToBottomRef/);
     expect(src).toMatch(/isNearScrollBottom/);
-    expect(src).toMatch(/scrollTop = el\.scrollHeight/);
+    expect(src).toMatch(/scrollMessageListToBottom/);
     expect(src).not.toMatch(/behavior:\s*"smooth"/);
     expect(src).toMatch(/chat-msg-in/);
     const css = readFileSync(resolve(srcRoot, "components/chat/message-list.css"), "utf8");

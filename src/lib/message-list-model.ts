@@ -53,6 +53,11 @@ export function isNearScrollBottom(el: HTMLElement, threshold = 120): boolean {
   return el.scrollHeight - el.scrollTop - el.clientHeight <= threshold;
 }
 
+/** Scroll a message list container to the latest message. */
+export function scrollMessageListToBottom(el: HTMLElement): void {
+  el.scrollTop = el.scrollHeight;
+}
+
 /** Group consecutive messages from the same author (5 min window, no reply breaks). */
 export function groupChatMessages(
   msgs: Message[],

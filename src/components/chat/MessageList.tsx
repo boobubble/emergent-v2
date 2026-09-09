@@ -13,6 +13,8 @@ import { HighlightButton } from "./HighlightButton";
 import { useIgnore } from "@/lib/ignore-store";
 import { linkify } from "@/lib/linkify";
 import { MediaEmbed } from "./MediaEmbed";
+import { InlineImageAttachment } from "./InlineImageAttachment";
+import { stripEmbeddableUrlFromText } from "@/lib/media-embed-text";
 import { VoiceNoteBubble } from "./VoiceNoteBubble";
 import { useDmUrlMask } from "@/lib/dm-url-mask";
 import { useGuestLobbyFeed, confirmGuestOptimistic, failGuestOptimistic, markGuestOptimisticSending } from "@/lib/use-guest-lobby-feed";
@@ -30,6 +32,7 @@ import {
   isNearScrollBottom,
   resolveMessageAuthor,
   safeMessageText,
+  scrollMessageListToBottom,
 } from "@/lib/message-list-model";
 import "./message-list.css";
 
@@ -53,22 +56,8 @@ function AttachmentView({ a }: { a: Attachment }) {
   if (a.mime?.startsWith("audio/")) {
     return <VoiceNoteBubble a={a} />;
   }
-  if (a.kind === "image") {
-    const isSticker = a.mime === "image/gif" || /\.gif$/i.test(a.name || "");
-    if (isSticker) {
-      return (
-        <img
-          src={a.dataUrl}
-          alt={a.name}
-          className="mt-1 block h-16 w-16 object-contain"
-        />
-      );
-    }
-    return (
-      <a href={a.dataUrl} download={a.name} className="mt-1 block max-w-[280px] overflow-hidden rounded-xl border border-border">
-        <img src={a.dataUrl} alt={a.name} className="block max-h-72 w-full object-contain bg-black/30" />
-      </a>
-    );
+  if (a.kind === "image" || a.mime?.startsWith("image/")) {
+    return <InlineImageAttachment a={a} />;
   }
   return (
     <a href={a.dataUrl} download={a.name} className="mt-1 flex max-w-[280px] items-center gap-2 rounded-xl border border-border bg-white/5 px-3 py-2 text-xs hover:bg-white/10">
@@ -79,6 +68,10 @@ function AttachmentView({ a }: { a: Attachment }) {
       </div>
     </a>
   );
+}
+
+function mediaStrippedText(text: string): string {
+  return stripEmbeddableUrlFromText(safeMessageText(text));
 }
 
 function formatTime(ts: number) {
@@ -306,6 +299,8 @@ export function MessageList({ channelId }: { channelId: string }) {
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const stickToBottomRef = useRef(true);
+  const pendingInitialScrollRef = useRef(true);
+  const authUserId = authUser?.id ?? null;
 
   function findMessageLocal(id: string): Message | undefined {
     const fromStore = findMessage(id);
@@ -320,14 +315,23 @@ export function MessageList({ channelId }: { channelId: string }) {
   }
 
   useEffect(() => {
+    pendingInitialScrollRef.current = true;
     stickToBottomRef.current = true;
-    const el = scrollRef.current;
-    if (!el) return;
-    el.scrollTop = el.scrollHeight;
-  }, [channelId]);
+  }, [channelId, authUserId]);
 
   const lastMsg = msgs[msgs.length - 1];
   const lastMsgId = lastMsg?.id;
+
+  useEffect(() => {
+    if (!pendingInitialScrollRef.current) return;
+    const el = scrollRef.current;
+    if (!el || msgs.length === 0) return;
+    pendingInitialScrollRef.current = false;
+    requestAnimationFrame(() => {
+      scrollMessageListToBottom(el);
+      stickToBottomRef.current = true;
+    });
+  }, [channelId, authUserId, msgs.length, lastMsgId]);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -336,7 +340,7 @@ export function MessageList({ channelId }: { channelId: string }) {
       lastMsg.authorId === "me" ||
       Boolean(isGuestChatting && session && lastMsg.authorId === session.visitorId);
     if (!stickToBottomRef.current && !ownSend) return;
-    el.scrollTop = el.scrollHeight;
+    scrollMessageListToBottom(el);
     stickToBottomRef.current = true;
   }, [lastMsgId, isGuestChatting, session?.visitorId, lastMsg?.authorId]);
 
@@ -418,13 +422,21 @@ export function MessageList({ channelId }: { channelId: string }) {
                                   className={bubbleClass}
                                   style={{ backgroundColor: "var(--primary)", color: "var(--primary-foreground)" }}
                                 >
-                                  <div className={`${BUBBLE_TEXT} [color:inherit]`}>{renderText(m.text, msgBodyClass)}</div>
+                                  {mediaStrippedText(m.text) && (
+                                    <div className={`${BUBBLE_TEXT} [color:inherit]`}>{renderText(mediaStrippedText(m.text), msgBodyClass)}</div>
+                                  )}
+                                  {m.text && <MediaEmbed text={m.text} />}
+                                  {m.attachment && <AttachmentView a={m.attachment} />}
                                 </div>
                               </>
                             ) : (
                               <>
                                 <div className={bubbleClass}>
-                                  <div className={`${BUBBLE_TEXT} [color:inherit]`}>{renderText(m.text, msgBodyClass)}</div>
+                                  {mediaStrippedText(m.text) && (
+                                    <div className={`${BUBBLE_TEXT} [color:inherit]`}>{renderText(mediaStrippedText(m.text), msgBodyClass)}</div>
+                                  )}
+                                  {m.text && <MediaEmbed text={m.text} />}
+                                  {m.attachment && <AttachmentView a={m.attachment} />}
                                 </div>
                                 <ReplyButton onClick={() => setReplyingTo(m)} />
                                 <StaffActionsMenu
@@ -483,7 +495,9 @@ export function MessageList({ channelId }: { channelId: string }) {
                                   : `${BUBBLE_SHELL} rounded-2xl rounded-tr-md bg-primary px-3 py-2 ${msgBodyClass} font-medium text-primary-foreground shadow-lg shadow-primary/20 chat-msg-in ${isReplyTarget ? "ring-2 ring-primary-foreground/40" : ""}`,
                               )}
                             >
-                              <div className={BUBBLE_TEXT}>{renderText(applyMask(m.authorId, m.text), msgBodyClass)}</div>
+                              {mediaStrippedText(m.text) && (
+                                <div className={BUBBLE_TEXT}>{renderText(applyMask(m.authorId, mediaStrippedText(m.text)), msgBodyClass)}</div>
+                              )}
                               {m.text && <MediaEmbed text={m.text} />}
                               {m.attachment && <AttachmentView a={m.attachment} />}
                             </div>
@@ -546,7 +560,9 @@ export function MessageList({ channelId }: { channelId: string }) {
                                 : `${BUBBLE_SHELL} rounded-2xl rounded-tl-md border border-border bg-card/70 px-3 py-2 ${msgBodyClass} leading-snug text-foreground/90 shadow-sm backdrop-blur-sm chat-msg-in ${isReplyTarget ? "ring-2 ring-primary/40" : ""}`
                             }
                           >
-                            <div className={BUBBLE_TEXT}>{renderText(applyMask(m.authorId, m.text), msgBodyClass)}</div>
+                            {mediaStrippedText(m.text) && (
+                              <div className={BUBBLE_TEXT}>{renderText(applyMask(m.authorId, mediaStrippedText(m.text)), msgBodyClass)}</div>
+                            )}
                             {m.text && <MediaEmbed text={m.text} />}
                             {m.attachment && <AttachmentView a={m.attachment} />}
                           </div>

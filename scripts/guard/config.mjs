@@ -278,6 +278,8 @@ export const MODULES = {
       "src/lib/mini-dm.ts",
       "src/lib/mini-dm-messages.test.tsx",
       "src/lib/message-list-model.ts",
+      "src/lib/media-embed-text.ts",
+      "src/lib/media-embed.test.ts",
       "src/lib/global-unread.ts",
       "src/lib/global-unread.test.ts",
       "src/lib/use-channel-moderation.ts",
@@ -313,6 +315,7 @@ export const MODULES = {
       "src/lib/sound-prefs.test.ts",
       "src/lib/global-unread.test.ts",
       "src/lib/guest-dm.test.ts",
+      "src/lib/media-embed.test.ts",
     ],
   },
   communities: {
