@@ -95,6 +95,17 @@ export function buildChatImageStoragePath(
   return `${scope}/${safeChannel}/${assetId}/${safeName}`;
 }
 
+/** True when ephemeral image registry/storage is not provisioned yet. */
+export function isChatImageRegistryUnavailableError(message: string): boolean {
+  const m = message.toLowerCase();
+  return (
+    m.includes("chat_image_assets")
+    || m.includes("bucket not found")
+    || (m.includes("relation") && m.includes("does not exist"))
+    || m.includes("invalid_chat_image")
+  );
+}
+
 export function sanitizeEphemeralAttachmentForClient(
   attachment: Attachment,
 ): Attachment {

@@ -48,8 +48,10 @@ import {
   isGuestDmComposeChannel,
   parseGuestDmComposeRecipient,
 } from "@/lib/guest-dm-utils";
+import { GUEST_LINK_BLOCKED, GUEST_LINK_BLOCKED_MESSAGE } from "@/lib/guest-nickname";
 import type { Attachment } from "@/lib/chat-types";
 import { uploadChatImage } from "@/lib/chat-image.functions";
+import { isChatImageRegistryUnavailableError } from "@/lib/chat-image-retention";
 import { supabase } from "@/integrations/supabase/client";
 import { VoiceRecorder } from "./VoiceRecorder";
 import { TypingIndicator } from "./TypingIndicator";
@@ -582,8 +584,12 @@ export function MessageInput({
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Failed to send";
       failGuestOptimistic(optId, msg);
-      if (msg === "GUEST_BOT_BLOCKED" || /sign up|sign in|login/i.test(msg)) {
+      if (msg === "GUEST_BOT_BLOCKED") {
         requireAuth();
+        return;
+      }
+      if (msg === GUEST_LINK_BLOCKED) {
+        toast.error(GUEST_LINK_BLOCKED_MESSAGE);
         return;
       }
       if (/disabled/i.test(msg)) {
@@ -672,10 +678,18 @@ export function MessageInput({
           snapAttachment = uploaded;
         } catch (e: unknown) {
           const msg = e instanceof Error ? e.message : "Image upload failed";
-          setAttachError(msg);
-          toast.error(msg);
-          releaseSubmitLock();
-          return;
+          if (isChatImageRegistryUnavailableError(msg)) {
+            // Registry/bucket not provisioned — fall back to legacy inline dataUrl persistence.
+            snapAttachment = {
+              ...snapAttachment,
+              assetId: undefined,
+            };
+          } else {
+            setAttachError(msg);
+            toast.error(msg);
+            releaseSubmitLock();
+            return;
+          }
         }
       }
 

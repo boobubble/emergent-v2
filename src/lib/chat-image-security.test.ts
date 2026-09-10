@@ -140,13 +140,21 @@ describe("resolve authorization via messages RLS", () => {
     })).toBe(false);
   });
 
-  it("denies access when asset is not linked to a message", async () => {
-    const ok = await authorizeChatImageAssetAccess(
-      mockMessagesSupabase(true),
-      ME,
-      assetFor("lobby", null),
+  it("allows uploader to resolve orphan asset before message link", async () => {
+    const orphan = assetFor("lobby", null);
+    const uploaderOk = await authorizeChatImageAssetAccess(
+      mockMessagesSupabase(false),
+      OTHER,
+      { ...orphan, uploader_id: OTHER },
     );
-    expect(ok).toBe(false);
+    expect(uploaderOk).toBe(true);
+
+    const strangerDenied = await authorizeChatImageAssetAccess(
+      mockMessagesSupabase(false),
+      STRANGER,
+      orphan,
+    );
+    expect(strangerDenied).toBe(false);
   });
 
   it("storagePath alone cannot authorize access", () => {

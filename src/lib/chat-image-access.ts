@@ -106,7 +106,11 @@ export async function authorizeChatImageAssetAccess(
   asset: ChatImageAssetRecord,
 ): Promise<boolean> {
   if (!isUuid(userId)) return false;
-  if (!asset.message_id) return false;
+
+  // Orphan preview: uploader may resolve before message insert links the asset.
+  if (!asset.message_id) {
+    return asset.uploader_id === userId;
+  }
 
   try {
     const { data, error } = await supabase

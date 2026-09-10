@@ -4,6 +4,14 @@
  */
 
 import { GUEST_LOBBY_CHANNEL_ID } from "@/lib/guest-chat-config";
+import { trimUrlTrailingPunctuation } from "@/lib/media-embed-text";
+import { parseYoutubeId } from "@/lib/media-providers-config";
+
+/** Stable client error code when guest sends a disallowed non-YouTube link. */
+export const GUEST_LINK_BLOCKED = "GUEST_LINK_BLOCKED";
+
+export const GUEST_LINK_BLOCKED_MESSAGE =
+  "Links are not allowed for guests. Sign up to share links.";
 
 export type GuestNicknameResult =
   | { ok: true; nickname: string }
@@ -71,6 +79,46 @@ export function isBotCommandOrAction(text: string): boolean {
 
 export function looksLikeHtmlOrScript(text: string): boolean {
   return /<\s*script\b|javascript:|on\w+\s*=|<\s*iframe\b|<\s*img\b/i.test(text);
+}
+
+/** Extract http(s) and www. URL tokens from guest message text. */
+export function extractGuestMessageUrls(text: string): string[] {
+  const urls: string[] = [];
+  const seen = new Set<string>();
+  const add = (raw: string) => {
+    const token = trimUrlTrailingPunctuation(raw);
+    const key = token.toLowerCase();
+    if (!seen.has(key)) {
+      seen.add(key);
+      urls.push(token);
+    }
+  };
+  for (const m of text.matchAll(/\bhttps?:\/\/\S+/gi)) add(m[0]);
+  const withoutHttp = text.replace(/\bhttps?:\/\/\S+/gi, " ");
+  for (const m of withoutHttp.matchAll(/\bwww\.\S+/gi)) add(m[0]);
+  return urls;
+}
+
+function normalizeGuestUrlToken(url: string): string {
+  return /^www\./i.test(url) ? `https://${url}` : url;
+}
+
+/**
+ * Guest lobby may contain no URLs, or only supported YouTube URLs.
+ * Every detected URL must pass parseYoutubeId().
+ */
+export function assertGuestLobbyUrlsAllowed(
+  text: string,
+): { ok: true } | { ok: false; code: string; message: string } {
+  const urls = extractGuestMessageUrls(text);
+  if (urls.length === 0) return { ok: true };
+  for (const token of urls) {
+    const normalized = normalizeGuestUrlToken(token);
+    if (!parseYoutubeId(token) && !parseYoutubeId(normalized)) {
+      return { ok: false, code: "LINK", message: GUEST_LINK_BLOCKED };
+    }
+  }
+  return { ok: true };
 }
 
 /** Pure server/client guard used by RPC path and unit tests. */

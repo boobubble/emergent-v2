@@ -9,11 +9,14 @@ import {
   mergeGuestChatConfig,
 } from "./guest-chat-config";
 import {
+  assertGuestLobbyPlainText,
+  assertGuestLobbyUrlsAllowed,
+  extractGuestMessageUrls,
+  GUEST_LINK_BLOCKED,
   isBotCommandOrAction,
   looksLikeHtmlOrScript,
   validateGuestNickname,
 } from "./guest-nickname";
-import { assertGuestLobbyPlainText } from "./guest-nickname";
 import { newVisitorId } from "./visitor-session";
 import {
   GUEST_LOBBY_ROW_EVENT,
@@ -126,6 +129,81 @@ describe("guest lobby server guards", () => {
       maxLen: 280,
     });
     expect(r.ok).toBe(false);
+  });
+});
+
+const YT_WATCH = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+const YT_SHORT = "https://youtu.be/dQw4w9WgXcQ";
+const YT_SHORTS = "https://www.youtube.com/shorts/dQw4w9WgXcQ";
+
+describe("guest lobby URL policy", () => {
+  it("allows plain text without URLs", () => {
+    expect(assertGuestLobbyUrlsAllowed("hello lobby").ok).toBe(true);
+    expect(extractGuestMessageUrls("hello lobby")).toEqual([]);
+  });
+
+  it("allows valid YouTube watch, youtu.be, and Shorts URLs", () => {
+    expect(assertGuestLobbyUrlsAllowed(YT_WATCH).ok).toBe(true);
+    expect(assertGuestLobbyUrlsAllowed(YT_SHORT).ok).toBe(true);
+    expect(assertGuestLobbyUrlsAllowed(YT_SHORTS).ok).toBe(true);
+  });
+
+  it("allows text plus a valid YouTube URL", () => {
+    const text = `Check this out ${YT_WATCH}`;
+    expect(assertGuestLobbyUrlsAllowed(text).ok).toBe(true);
+    expect(extractGuestMessageUrls(text)).toEqual([YT_WATCH]);
+  });
+
+  it("blocks generic http(s) and www URLs", () => {
+    for (const text of [
+      "see https://example.com/page",
+      "http://example.com",
+      "visit www.example.com today",
+    ]) {
+      const r = assertGuestLobbyUrlsAllowed(text);
+      expect(r.ok).toBe(false);
+      if (!r.ok) {
+        expect(r.code).toBe("LINK");
+        expect(r.message).toBe(GUEST_LINK_BLOCKED);
+      }
+    }
+  });
+
+  it("blocks YouTube URL mixed with an external URL", () => {
+    const r = assertGuestLobbyUrlsAllowed(`Cool ${YT_SHORT} and https://evil.com/x`);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.message).toBe(GUEST_LINK_BLOCKED);
+  });
+
+  it("blocks malformed YouTube URLs", () => {
+    const r = assertGuestLobbyUrlsAllowed("https://youtu.be/not-valid-id");
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.message).toBe(GUEST_LINK_BLOCKED);
+  });
+
+  it("sendGuestLobbyMessage uses assertGuestLobbyUrlsAllowed", () => {
+    const src = readFileSync(resolve(srcRoot, "lib/guest-chat.functions.ts"), "utf8");
+    expect(src).toMatch(/assertGuestLobbyUrlsAllowed/);
+    expect(src).toMatch(/throw new Error\(urlGuard\.message\)/);
+    expect(src).not.toMatch(/Links are not allowed for guests\. Sign up to share links\./);
+  });
+});
+
+describe("MessageInput guest link UX", () => {
+  it("handles GUEST_LINK_BLOCKED without opening sign-in modal", () => {
+    const src = readFileSync(resolve(srcRoot, "components/chat/MessageInput.tsx"), "utf8");
+    expect(src).toMatch(/msg === GUEST_LINK_BLOCKED/);
+    expect(src).toMatch(/toast\.error\(GUEST_LINK_BLOCKED_MESSAGE\)/);
+    expect(src).not.toMatch(/GUEST_BOT_BLOCKED.*sign up\|sign in\|login/);
+    const guestLobbyCatch = src.slice(src.indexOf("async function submitGuestLobby"));
+    const catchBlock = guestLobbyCatch.slice(guestLobbyCatch.indexOf("} catch"), guestLobbyCatch.indexOf("function submit()"));
+    expect(catchBlock).not.toMatch(/sign up\|sign in\|login/i);
+  });
+
+  it("still gates attach file behind requireAuth for guests", () => {
+    const src = readFileSync(resolve(srcRoot, "components/chat/MessageInput.tsx"), "utf8");
+    expect(src).toMatch(/function onAttachFile\(\)[\s\S]*requireAuth\(\(\) => fileRef/);
+    expect(src).toMatch(/GUEST_BOT_BLOCKED[\s\S]*requireAuth\(\)/);
   });
 });
 

@@ -42,7 +42,8 @@ function LazyYoutubeEmbed({
       src={`${host}/embed/${videoId}?autoplay=1`}
       title="YouTube video"
       loading="lazy"
-      allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
       allowFullScreen
       className="absolute inset-0 h-full w-full"
     />
@@ -62,11 +63,22 @@ export function MediaEmbed({ text }: { text: string }) {
     const host = media.youtube.defaultPrivacy === "unlisted"
       ? "https://www.youtube-nocookie.com"
       : "https://www.youtube.com";
+    const watchUrl = `https://www.youtube.com/watch?v=${ytId}`;
     return (
-      <div className="mt-1 max-w-[320px] overflow-hidden rounded-xl border border-border bg-black">
-        <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
-          <LazyYoutubeEmbed videoId={ytId} host={host} />
+      <div className="mt-1 max-w-[320px]">
+        <div className="overflow-hidden rounded-xl border border-border bg-black">
+          <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
+            <LazyYoutubeEmbed videoId={ytId} host={host} />
+          </div>
         </div>
+        <a
+          href={watchUrl}
+          target="_blank"
+          rel="noreferrer noopener"
+          className="mt-1 block truncate text-[10px] text-primary hover:underline"
+        >
+          {resolved.url}
+        </a>
       </div>
     );
   }

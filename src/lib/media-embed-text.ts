@@ -5,10 +5,15 @@ import {
   type MediaConfig,
 } from "./media-providers-config";
 
+/** Strip trailing punctuation often glued to pasted URLs. */
+export function trimUrlTrailingPunctuation(url: string): string {
+  return url.replace(/[)\]},.!?:;]+$/, "");
+}
+
 /** First http(s) URL token in message text. */
 export function firstUrlInText(text: string): string | null {
   const m = (text || "").match(/https?:\/\/\S+/);
-  return m ? m[0] : null;
+  return m ? trimUrlTrailingPunctuation(m[0]) : null;
 }
 
 /** First URL that could be embedded (YouTube or Giphy), regardless of provider settings. */
@@ -35,8 +40,9 @@ export function resolveActiveMediaEmbed(text: string, mediaInput?: unknown): Act
   const url = firstUrlInText(text);
   if (!url) return { url: null, kind: null, willRender: false };
 
+  // YouTube paste-to-embed is always on; admin "enabled" only gates the search picker/API key.
   const ytId = parseYoutubeId(url);
-  if (ytId && media.youtube.enabled) {
+  if (ytId) {
     return { url, kind: "youtube", willRender: true };
   }
 

@@ -38,24 +38,27 @@ describe("media embed text helpers", () => {
     expect(firstEmbeddableMediaUrl(text)).toBe(YT_SHORT);
   });
 
-  it("strips embeddable URL only when YouTube embedding is enabled", () => {
+  it("strips YouTube URL when embed will render (independent of admin picker toggle)", () => {
     expect(stripEmbeddableUrlFromText(YT, mediaYoutubeOn)).toBe("");
-    expect(stripEmbeddableUrlFromText(YT, mediaAllOff)).toBe(YT);
+    expect(stripEmbeddableUrlFromText(YT, mediaAllOff)).toBe("");
     expect(stripEmbeddableUrlFromText(`Cool vid ${YT} !`, mediaYoutubeOn)).toBe("Cool vid !");
-  });
-
-  it("keeps text when embed cannot render", () => {
-    expect(messageDisplayText(YT, mediaAllOff)).toBe(YT);
-    expect(messageDisplayText(`Check this video ${YT}`, mediaAllOff)).toBe(`Check this video ${YT}`);
+    expect(stripEmbeddableUrlFromText(`Cool vid ${YT} !`, mediaAllOff)).toBe("Cool vid !");
   });
 
   it("keeps prefix text when YouTube embed is active", () => {
     expect(messageDisplayText(`Check this video ${YT}`, mediaYoutubeOn)).toBe("Check this video");
+    expect(messageDisplayText(`Check this video ${YT}`, mediaAllOff)).toBe("Check this video");
   });
 
-  it("YouTube-only message never becomes empty when embed is disabled", () => {
-    expect(messageDisplayText(YT, mediaAllOff)).toBe(YT);
-    expect(resolveActiveMediaEmbed(YT, mediaAllOff).willRender).toBe(false);
+  it("YouTube-only message becomes empty when embed renders", () => {
+    expect(messageDisplayText(YT, mediaAllOff)).toBe("");
+    expect(resolveActiveMediaEmbed(YT, mediaAllOff).willRender).toBe(true);
+  });
+
+  it("trims trailing punctuation from pasted URLs", () => {
+    const punctuated = `Watch ${YT_SHORT}.`;
+    expect(firstUrlInText(punctuated)).toBe(YT_SHORT);
+    expect(parseYoutubeId(firstUrlInText(punctuated)!)).toBe("dQw4w9WgXcQ");
   });
 
   it("leaves normal URLs in text", () => {
@@ -76,19 +79,22 @@ describe("MediaEmbed lazy player wiring", () => {
   const messageList = readFileSync(resolve(process.cwd(), "src/components/chat/MessageList.tsx"), "utf8");
   const inlineImage = readFileSync(resolve(process.cwd(), "src/components/chat/InlineImageAttachment.tsx"), "utf8");
 
-  it("lazy-loads YouTube iframe on play", () => {
+  it("lazy-loads YouTube iframe on play with sandbox and fallback link", () => {
     expect(mediaEmbed).toMatch(/LazyYoutubeEmbed/);
     expect(mediaEmbed).toMatch(/hqdefault\.jpg/);
     expect(mediaEmbed).toMatch(/autoplay=1/);
+    expect(mediaEmbed).toMatch(/sandbox=/);
+    expect(mediaEmbed).toMatch(/youtube\.com\/watch\?v=/);
     expect(mediaEmbed).not.toMatch(/<iframe[\s\S]*src=\{`\$\{host\}\/embed\/\$\{ytId\}`/);
   });
 
-  it("renders inline images with lightbox and native img", () => {
+  it("renders inline images with lightbox, scroll lock, and native img", () => {
     expect(messageList).toMatch(/InlineImageAttachment/);
     expect(inlineImage).toMatch(/loading="lazy"/);
     expect(inlineImage).toMatch(/Escape/);
-    expect(inlineImage).not.toMatch(/<button[\s\S]*<img/);
-    expect(inlineImage).toMatch(/onClick=\{\(\) => setLightbox\(true\)\}/);
+    expect(inlineImage).toMatch(/document\.body\.style\.overflow/);
+    expect(inlineImage).toMatch(/createPortal/);
+    expect(inlineImage).toMatch(/setLightbox\(true\)/);
     expect(inlineImage).toMatch(/assetId/);
   });
 

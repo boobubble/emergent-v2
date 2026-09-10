@@ -18,6 +18,7 @@ import {
 } from "./guest-chat-config";
 import {
   assertGuestLobbyPlainText,
+  assertGuestLobbyUrlsAllowed,
   validateGuestNickname,
 } from "./guest-nickname";
 
@@ -156,8 +157,9 @@ export const sendGuestLobbyMessage = createServerFn({ method: "POST" })
 
     const textRaw = data.text.trim();
     if (!textRaw) throw new Error("Message cannot be empty.");
-    if (/\bhttps?:\/\//i.test(textRaw) || /\bwww\./i.test(textRaw)) {
-      throw new Error("Links are not allowed for guests. Sign up to share links.");
+    const urlGuard = assertGuestLobbyUrlsAllowed(textRaw);
+    if (!urlGuard.ok) {
+      throw new Error(urlGuard.message);
     }
 
     const sb = guestDb(await admin());

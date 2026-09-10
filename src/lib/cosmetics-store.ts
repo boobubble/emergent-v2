@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { isUuid } from "@/lib/dm-utils";
 import { SHOP_BY_ID, type ShopItem } from "./shop-catalog";
 
 export interface UserCosmetics {
@@ -20,9 +21,21 @@ function emit() {
   for (const l of listeners) l();
 }
 
+/** Only auth user UUIDs may query user_inventory.user_id. */
+export function filterCosmeticsUserIds(ids: Iterable<string>): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const id of ids) {
+    if (!id || !isUuid(id) || seen.has(id)) continue;
+    seen.add(id);
+    out.push(id);
+  }
+  return out;
+}
+
 async function flush() {
   flushTimer = null;
-  const ids = Array.from(pending);
+  const ids = filterCosmeticsUserIds(pending);
   pending.clear();
   if (ids.length === 0) return;
   // Mark each as loading by setting empty object so we don't refetch.
@@ -47,7 +60,7 @@ async function flush() {
 }
 
 function schedule(id: string) {
-  if (cache.has(id)) return;
+  if (!id || !isUuid(id) || cache.has(id)) return;
   pending.add(id);
   if (flushTimer == null) flushTimer = setTimeout(flush, 40);
 }
