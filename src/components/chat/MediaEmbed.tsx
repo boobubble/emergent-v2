@@ -1,52 +1,67 @@
-import { useState } from "react";
 import { Play } from "lucide-react";
 import { useAppSettings } from "@/lib/app-settings";
 import { mergeMediaFromSettings, resolveActiveMediaEmbed } from "@/lib/media-embed-text";
 import { parseYoutubeId, parseGiphyUrl } from "@/lib/media-providers-config";
+import { youtubeThumbnailUrl, youtubeWatchUrl } from "./youtube-embed-url";
+import { useOptionalYouTubePlayer } from "./youtube-player-context";
 
-function LazyYoutubeEmbed({
+function YoutubePreviewCard({
   videoId,
-  host,
+  watchUrl,
+  sourceUrl,
 }: {
   videoId: string;
-  host: string;
+  watchUrl: string;
+  sourceUrl: string;
 }) {
-  const [playing, setPlaying] = useState(false);
-  const thumb = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
-
-  if (!playing) {
-    return (
-      <button
-        type="button"
-        onClick={() => setPlaying(true)}
-        className="absolute inset-0 h-full w-full"
-        aria-label="Play YouTube video"
-      >
-        <img
-          src={thumb}
-          alt=""
-          loading="lazy"
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-        <span className="absolute inset-0 grid place-items-center bg-black/35">
-          <span className="grid h-12 w-12 place-items-center rounded-full bg-red-600 text-white shadow-lg">
-            <Play className="ml-0.5 h-6 w-6 fill-current" />
-          </span>
-        </span>
-      </button>
-    );
-  }
+  const player = useOptionalYouTubePlayer();
+  const thumb = youtubeThumbnailUrl(videoId);
 
   return (
-    <iframe
-      src={`${host}/embed/${videoId}?autoplay=1`}
-      title="YouTube video"
-      loading="lazy"
-      sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-      allowFullScreen
-      className="absolute inset-0 h-full w-full"
-    />
+    <div className="mt-1 max-w-[320px]">
+      <div className="overflow-hidden rounded-xl border border-border bg-black">
+        <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
+          <button
+            type="button"
+            onClick={() => {
+              player?.openPlayer({
+                videoId,
+                url: watchUrl,
+                title: "YouTube video",
+              });
+            }}
+            className="absolute inset-0 h-full w-full"
+            aria-label="Play video"
+            disabled={!player}
+          >
+            {thumb && (
+              <img
+                src={thumb}
+                alt=""
+                loading="lazy"
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            )}
+            <span className="absolute inset-0 grid place-items-center bg-black/35">
+              <span className="grid h-12 w-12 place-items-center rounded-full bg-red-600 text-white shadow-lg">
+                <Play className="ml-0.5 h-6 w-6 fill-current" />
+              </span>
+            </span>
+          </button>
+        </div>
+        <div className="border-t border-border/60 bg-card/80 px-2 py-1.5">
+          <p className="truncate text-[11px] font-medium text-foreground">YouTube video</p>
+        </div>
+      </div>
+      <a
+        href={watchUrl}
+        target="_blank"
+        rel="noreferrer noopener"
+        className="mt-1 block truncate text-[10px] text-primary hover:underline"
+      >
+        {sourceUrl}
+      </a>
+    </div>
   );
 }
 
@@ -60,26 +75,10 @@ export function MediaEmbed({ text }: { text: string }) {
   if (resolved.kind === "youtube") {
     const ytId = parseYoutubeId(resolved.url);
     if (!ytId) return null;
-    const host = media.youtube.defaultPrivacy === "unlisted"
-      ? "https://www.youtube-nocookie.com"
-      : "https://www.youtube.com";
-    const watchUrl = `https://www.youtube.com/watch?v=${ytId}`;
+    const watchUrl = youtubeWatchUrl(ytId);
+    if (!watchUrl) return null;
     return (
-      <div className="mt-1 max-w-[320px]">
-        <div className="overflow-hidden rounded-xl border border-border bg-black">
-          <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
-            <LazyYoutubeEmbed videoId={ytId} host={host} />
-          </div>
-        </div>
-        <a
-          href={watchUrl}
-          target="_blank"
-          rel="noreferrer noopener"
-          className="mt-1 block truncate text-[10px] text-primary hover:underline"
-        >
-          {resolved.url}
-        </a>
-      </div>
+      <YoutubePreviewCard videoId={ytId} watchUrl={watchUrl} sourceUrl={resolved.url} />
     );
   }
 

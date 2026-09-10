@@ -35,6 +35,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ProfileModal, LeaderboardModal, AchievementsModal } from "@/components/chat/Modals";
 import { ScheduledAnnouncementsRunner } from "@/components/chat/ScheduledAnnouncements";
 import { ProfilePopupProvider } from "@/lib/profile-popup-context";
+import { YouTubePlayerProvider } from "@/components/chat/youtube-player-context";
 import { ChatProfilePopupHost } from "@/components/chat/ChatProfilePopupHost";
 import { BADGE_MAP } from "@/lib/achievements";
 import { chatVariantFor } from "@/lib/theme-variants";
@@ -388,6 +389,7 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
 
   return (
     <ProfilePopupProvider>
+    <YouTubePlayerProvider>
     <>
       <div
         ref={rootRef}
@@ -573,6 +575,7 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
         </>
       )}
     </>
+    </YouTubePlayerProvider>
     </ProfilePopupProvider>
   );
 }

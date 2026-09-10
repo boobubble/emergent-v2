@@ -74,18 +74,18 @@ describe("media embed text helpers", () => {
   });
 });
 
-describe("MediaEmbed lazy player wiring", () => {
+describe("MediaEmbed floating player wiring", () => {
   const mediaEmbed = readFileSync(resolve(process.cwd(), "src/components/chat/MediaEmbed.tsx"), "utf8");
   const messageList = readFileSync(resolve(process.cwd(), "src/components/chat/MessageList.tsx"), "utf8");
   const inlineImage = readFileSync(resolve(process.cwd(), "src/components/chat/InlineImageAttachment.tsx"), "utf8");
 
-  it("lazy-loads YouTube iframe on play with sandbox and fallback link", () => {
-    expect(mediaEmbed).toMatch(/LazyYoutubeEmbed/);
-    expect(mediaEmbed).toMatch(/hqdefault\.jpg/);
-    expect(mediaEmbed).toMatch(/autoplay=1/);
-    expect(mediaEmbed).toMatch(/sandbox=/);
-    expect(mediaEmbed).toMatch(/youtube\.com\/watch\?v=/);
-    expect(mediaEmbed).not.toMatch(/<iframe[\s\S]*src=\{`\$\{host\}\/embed\/\$\{ytId\}`/);
+  it("shows YouTube preview card and opens floating player on Play", () => {
+    expect(mediaEmbed).toMatch(/YoutubePreviewCard/);
+    expect(mediaEmbed).toMatch(/youtubeThumbnailUrl/);
+    expect(mediaEmbed).toMatch(/openPlayer/);
+    expect(mediaEmbed).toMatch(/youtubeWatchUrl/);
+    expect(mediaEmbed).not.toMatch(/<iframe/);
+    expect(mediaEmbed).not.toMatch(/LazyYoutubeEmbed/);
   });
 
   it("renders inline images with lightbox, scroll lock, and native img", () => {
