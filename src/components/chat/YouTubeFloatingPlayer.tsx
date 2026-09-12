@@ -1,15 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import {
-  ChevronDown,
-  Maximize2,
-  Minimize2,
-  Pause,
-  Play,
-  Volume2,
-  VolumeX,
-  X,
-} from "lucide-react";
+import { ChevronDown, Maximize2, Minimize2, Pause, Play, Volume2, VolumeX, X } from "lucide-react";
 import { useAppSettings } from "@/lib/app-settings";
 import { mergeMediaFromSettings } from "@/lib/media-embed-text";
 import { cn } from "@/lib/utils";
@@ -42,6 +33,8 @@ export function YouTubeFloatingPlayer() {
     setMuted,
     setTimeline,
     playerControlRef,
+    canControlPlayback,
+    reportLocalPlaybackAction,
   } = useYouTubePlayer();
 
   const { raw } = useAppSettings();
@@ -103,6 +96,7 @@ export function YouTubeFloatingPlayer() {
     play: () => {
       try {
         playerRef.current?.playVideo();
+        reportLocalPlaybackAction({ type: "play" });
       } catch {
         /* ignore */
       }
@@ -110,6 +104,7 @@ export function YouTubeFloatingPlayer() {
     pause: () => {
       try {
         playerRef.current?.pauseVideo();
+        reportLocalPlaybackAction({ type: "pause" });
       } catch {
         /* ignore */
       }
@@ -120,8 +115,10 @@ export function YouTubeFloatingPlayer() {
       const state = player.getPlayerState();
       if (state === YT_PLAYER_STATE.PLAYING || state === YT_PLAYER_STATE.BUFFERING) {
         player.pauseVideo();
+        reportLocalPlaybackAction({ type: "pause" });
       } else {
         player.playVideo();
+        reportLocalPlaybackAction({ type: "play" });
       }
     },
     mute: () => {
@@ -164,6 +161,7 @@ export function YouTubeFloatingPlayer() {
       try {
         playerRef.current?.seekTo(seconds, true);
         setTimeline(seconds, playerRef.current?.getDuration() ?? duration);
+        reportLocalPlaybackAction({ type: "seek", seconds });
       } catch {
         /* ignore */
       }
@@ -236,8 +234,7 @@ export function YouTubeFloatingPlayer() {
             onStateChange: (event) => {
               if (cancelled) return;
               const playing =
-                event.data === YT_PLAYER_STATE.PLAYING ||
-                event.data === YT_PLAYER_STATE.BUFFERING;
+                event.data === YT_PLAYER_STATE.PLAYING || event.data === YT_PLAYER_STATE.BUFFERING;
               setPlaying(playing);
               if (event.data === YT_PLAYER_STATE.PLAYING) startTick();
               if (event.data === YT_PLAYER_STATE.PAUSED || event.data === YT_PLAYER_STATE.ENDED) {
@@ -361,11 +358,21 @@ export function YouTubeFloatingPlayer() {
               onClick={controls.togglePlay}
               className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-red-600 text-white"
               aria-label={isPlaying ? "Pause video" : "Play video"}
+              disabled={!canControlPlayback}
             >
-              {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="ml-0.5 h-4 w-4 fill-current" />}
+              {isPlaying ? (
+                <Pause className="h-4 w-4" />
+              ) : (
+                <Play className="ml-0.5 h-4 w-4 fill-current" />
+              )}
             </button>
             {thumb && (
-              <img src={thumb} alt="" className="h-10 w-14 shrink-0 rounded-md object-cover" loading="lazy" />
+              <img
+                src={thumb}
+                alt=""
+                className="h-10 w-14 shrink-0 rounded-md object-cover"
+                loading="lazy"
+              />
             )}
             <div className="min-w-0 flex-1 truncate text-xs font-medium" title={title ?? undefined}>
               {title ?? "YouTube video"}
@@ -403,9 +410,13 @@ export function YouTubeFloatingPlayer() {
                 onClick={controls.togglePlay}
                 className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-red-600 text-white"
                 aria-label={isPlaying ? "Pause video" : "Play video"}
-                disabled={!ready}
+                disabled={!ready || !canControlPlayback}
               >
-                {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="ml-0.5 h-4 w-4 fill-current" />}
+                {isPlaying ? (
+                  <Pause className="h-4 w-4" />
+                ) : (
+                  <Play className="ml-0.5 h-4 w-4 fill-current" />
+                )}
               </button>
               <button
                 type="button"
@@ -444,7 +455,7 @@ export function YouTubeFloatingPlayer() {
                 value={Math.min(currentTime, duration > 0 ? duration : currentTime)}
                 onChange={(e) => controls.seek(Number(e.target.value))}
                 className="h-1.5 w-full accent-red-600"
-                disabled={!ready || duration <= 0}
+                disabled={!ready || duration <= 0 || !canControlPlayback}
                 aria-label="Seek timeline"
                 style={{
                   background: `linear-gradient(to right, #dc2626 ${progress}%, rgb(0 0 0 / 0.12) ${progress}%)`,

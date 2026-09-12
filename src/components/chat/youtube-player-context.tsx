@@ -21,6 +21,14 @@ import {
 } from "./youtube-player-state";
 import { YouTubeFloatingPlayer } from "./YouTubeFloatingPlayer";
 
+export type YouTubePlaybackAction =
+  { type: "play" } | { type: "pause" } | { type: "seek"; seconds: number };
+
+export type YouTubePlayerControlPolicy = {
+  canControlPlayback: boolean;
+  onLocalPlaybackAction?: (action: YouTubePlaybackAction) => void;
+};
+
 export type YouTubePlayerContextValue = YouTubePlayerSnapshot & {
   isOpen: boolean;
   openPlayer: (input: OpenYouTubePlayerInput) => void;
@@ -31,6 +39,9 @@ export type YouTubePlayerContextValue = YouTubePlayerSnapshot & {
   setMuted: (muted: boolean) => void;
   setTimeline: (currentTime: number, duration: number) => void;
   playerControlRef: React.MutableRefObject<YouTubePlayerControls | null>;
+  setPlaybackControlPolicy: (policy: YouTubePlayerControlPolicy | null) => void;
+  canControlPlayback: boolean;
+  reportLocalPlaybackAction: (action: YouTubePlaybackAction) => void;
 };
 
 export type YouTubePlayerControls = {
@@ -51,6 +62,9 @@ const YouTubePlayerContext = createContext<YouTubePlayerContextValue | null>(nul
 export function YouTubePlayerProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<YouTubePlayerSnapshot>(YOUTUBE_PLAYER_INITIAL);
   const playerControlRef = useRef<YouTubePlayerControls | null>(null);
+  const playbackControlPolicyRef = useRef<YouTubePlayerControlPolicy | null>(null);
+  const [playbackControlPolicy, setPlaybackControlPolicyState] =
+    useState<YouTubePlayerControlPolicy | null>(null);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const prevPathRef = useRef(pathname);
 
@@ -74,6 +88,15 @@ export function YouTubePlayerProvider({ children }: { children: ReactNode }) {
     setState((prev) => restoreYouTubePlayerState(prev));
   }, []);
 
+  const setPlaybackControlPolicy = useCallback((policy: YouTubePlayerControlPolicy | null) => {
+    playbackControlPolicyRef.current = policy;
+    setPlaybackControlPolicyState(policy);
+  }, []);
+
+  const reportLocalPlaybackAction = useCallback((action: YouTubePlaybackAction) => {
+    playbackControlPolicyRef.current?.onLocalPlaybackAction?.(action);
+  }, []);
+
   const setPlaying = useCallback((playing: boolean) => {
     setState((prev) => (prev.activeVideoId ? { ...prev, isPlaying: playing } : prev));
   }, []);
@@ -83,9 +106,7 @@ export function YouTubePlayerProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setTimeline = useCallback((currentTime: number, duration: number) => {
-    setState((prev) =>
-      prev.activeVideoId ? { ...prev, currentTime, duration } : prev,
-    );
+    setState((prev) => (prev.activeVideoId ? { ...prev, currentTime, duration } : prev));
   }, []);
 
   useEffect(() => {
@@ -109,6 +130,9 @@ export function YouTubePlayerProvider({ children }: { children: ReactNode }) {
       setMuted,
       setTimeline,
       playerControlRef,
+      setPlaybackControlPolicy,
+      canControlPlayback: playbackControlPolicy?.canControlPlayback ?? true,
+      reportLocalPlaybackAction,
     }),
     [
       state,
@@ -119,6 +143,9 @@ export function YouTubePlayerProvider({ children }: { children: ReactNode }) {
       setPlaying,
       setMuted,
       setTimeline,
+      setPlaybackControlPolicy,
+      playbackControlPolicy,
+      reportLocalPlaybackAction,
     ],
   );
 

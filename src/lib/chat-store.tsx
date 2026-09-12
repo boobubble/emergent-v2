@@ -2094,11 +2094,23 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     });
     if (outgoingRemotes.length && authUserId) {
       const safeRemotes = outgoingRemotes.filter((out) => isRemoteChannel(out.channelId, authUserId));
+      const ircConfirmedIds = new Set<string>();
+
       for (const out of safeRemotes) {
         rtLog(out.channelId.startsWith("dm:") ? "dm" : "msg", "out", `${out.channelId} · ${out.text.slice(0, 30)}`);
+        const wasAlreadyIrcSent = ircSentMsgIds.current.has(out.id);
         maybeSendLobbyIrc(out, ircSentMsgIds.current);
+        if (!wasAlreadyIrcSent && ircSentMsgIds.current.has(out.id)) {
+          ircConfirmedIds.add(out.id);
+        }
       }
       if (safeRemotes.length) {
+      if (ircConfirmedIds.size) {
+        const ircTsById: Record<string, number> = {};
+        for (const id of ircConfirmedIds) ircTsById[id] = Date.now();
+        setState((s) => ({ ...s, messages: confirmMessages(s.messages, [...ircConfirmedIds], ircTsById) }));
+        releaseIrcSentIds(ircSentMsgIds.current, ircConfirmedIds);
+      }
       const ids = safeRemotes.map((out) => out.id);
       void settleRemoteOutgoing(safeRemotes, authUserId).then((outcome) => {
         if (outcome.action === "fail") {
@@ -2106,7 +2118,11 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
           rtLog("error", "send-failed", outcome.error);
           setState((s) => ({
             ...s,
-            messages: failMessages(s.messages, ids, outcome.error),
+            messages: failMessages(
+              s.messages,
+              ids.filter((id) => !ircConfirmedIds.has(id)),
+              outcome.error,
+            ),
           }));
           return;
         }

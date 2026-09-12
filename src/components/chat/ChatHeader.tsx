@@ -13,6 +13,7 @@ import { LoyaltyChip } from "./LoyaltyChip";
 import { BrandMark } from "@/components/BrandMark";
 import { CommunityEventsTicker } from "./CommunityEventsTicker";
 import { DMWallpaperSheet } from "./DMWallpaperSheet";
+import { WatchTogetherControls } from "./WatchTogetherControls";
 
 
 interface ChatHeaderProps {
@@ -22,6 +23,7 @@ interface ChatHeaderProps {
   desktopShell?: boolean;
   /** Client lg+ mount: hide the members icon that lg:hidden would hide. */
   largeDesktop?: boolean;
+  authUserId?: string | null;
   /** Desktop chatroom left sidebar open state. */
   sidebarOpen?: boolean;
   onToggleSidebar?: () => void;
@@ -32,6 +34,7 @@ export function ChatHeader({
   largeDesktop = false,
   sidebarOpen = true,
   onToggleSidebar,
+  authUserId = null,
 }: ChatHeaderProps = {}) {
   const { state, isDM, dmUser, channelLabel, closeDM, setActive } = useChat();
   const { ignoreAllBots, setIgnoreAllBots } = useIgnore();
@@ -89,6 +92,7 @@ export function ChatHeader({
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1">
+          <WatchTogetherControls channelId={id} authUserId={authUserId} peerId={peerId} peerName={u?.name} />
           <button
             type="button"
             onClick={() => setWallpaperOpen(true)}

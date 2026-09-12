@@ -133,14 +133,15 @@ export class LobbyIrcTransport {
     this.emitStatus("closed");
   }
 
-  send(messageId: string, text: string): boolean {
+  send(messageId: string, text: string, room = GATEWAY_ROOM): boolean {
     if (!isValidUuid(messageId)) return false;
     const trimmed = text.trim();
-    if (!trimmed || !this.connected || !this.ws) return false;
+    const normalizedRoom = room.trim();
+    if (!trimmed || !normalizedRoom || !this.connected || !this.ws) return false;
 
     const frame: GatewayOutgoingSend = {
       type: "message.send",
-      room: GATEWAY_ROOM,
+      room: normalizedRoom,
       messageId: messageId.trim(),
       text: trimmed,
     };

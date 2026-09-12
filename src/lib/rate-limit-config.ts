@@ -1,4 +1,4 @@
-// Client-safe default rate-limit map — imported by both admin UI and server helper.
+// Client-safe default rate-limit map â€” imported by both admin UI and server helper.
 export interface RateLimitDef { limit: number; window: number }
 
 export const DEFAULT_LIMITS: Record<string, RateLimitDef> = {
@@ -26,4 +26,6 @@ export const DEFAULT_LIMITS: Record<string, RateLimitDef> = {
   "guest_chat.message":   { limit: 20,  window: 60 },
   "guest_chat.session":   { limit: 8,   window: 300 },
   "guest_dm.message":     { limit: 20,  window: 60 },
+  "watch.session":        { limit: 5,   window: 300 },
+  "watch.playback":       { limit: 120, window: 60 },
 };
