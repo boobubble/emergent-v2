@@ -129,6 +129,7 @@ function CommunityChatroomView() {
     if (registeredIdRef.current === openRoom.id) return;
     registeredIdRef.current = openRoom.id;
     chat.registerCommunityRoom(registerRoomInput(openRoom));
+    chat.setActive(openRoom.id);
     return () => {
       registeredIdRef.current = null;
       chat.leaveCommunityRoom(openRoom.id);
