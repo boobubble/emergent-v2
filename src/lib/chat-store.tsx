@@ -376,9 +376,11 @@ function isHelpQuery(t: string): boolean {
     || /\?\s*$/.test(t) && /\b(you|u)\b/i.test(t);
 }
 
+const MAIN_IRC_ROOM_ID = "ea987b0c-3ad3-4728-91a0-e563cb829fa2";
+
 const SEED_ROOMS: Room[] = [
   {
-    id: "lobby",
+    id: MAIN_IRC_ROOM_ID,
     name: "Lobby",
     topic: "Main hangout — chat, meet people, and hang out.",
     members: ["me", ...LOBBY_BOT_IDS],
@@ -430,8 +432,8 @@ function seed(name = "user0000"): State {
   const rooms: Record<string, Room> = {};
   SEED_ROOMS.forEach(r => (rooms[r.id] = r));
   const messages: Record<string, Message[]> = {};
-  rooms.lobby && (messages.lobby = [
-    { id: "seed-welcome-echo", channelId: "lobby", authorId: "bot-echo", text: `hey @${name} 👋 welcome in!`, ts: SEED_TIME - 40000 },
+  rooms[MAIN_IRC_ROOM_ID] && (messages[MAIN_IRC_ROOM_ID] = [
+    { id: "seed-welcome-echo", channelId: MAIN_IRC_ROOM_ID, authorId: "bot-echo", text: `hey @${name} 👋 welcome in!`, ts: SEED_TIME - 40000 },
   ]);
   rooms.games && (messages.games = [
     { id: "seed-games-intro", channelId: "games", authorId: "bot-gamebot", text: `🎮 **Welcome to the Games room!**\nThis is the place to play with everyone online. Try:\n• **!ludo** — start a 1v1 Ludo race (opponent types **!join**, roll with **!lr**)\n• **!trivia**, **!hangman**, **!roll**, **!fish**, **!dig**\nType **!help** for the full list.`, ts: SEED_TIME - 50000 },
@@ -447,7 +449,7 @@ function seed(name = "user0000"): State {
     dmOrder: ["bot-gamebot", "bot-nova"],
     messages,
     games: {},
-    activeChannel: "lobby",
+    activeChannel: MAIN_IRC_ROOM_ID,
   };
 }
 
@@ -460,7 +462,7 @@ function ensureWelcome(state: State, name: string): State {
   const hasDmWelcome = dmMsgs.some(m => m.id === "seed-dm-welcome");
   if (hasLobbyWelcome && hasDmWelcome) return state;
   const welcomeLobby: Message[] = hasLobbyWelcome ? [] : [
-    { id: "seed-welcome-echo", channelId: "lobby", authorId: "bot-echo", text: `hey @${name} 👋 welcome in!`, ts: SEED_TIME - 40000 },
+    { id: "seed-welcome-echo", channelId: MAIN_IRC_ROOM_ID, authorId: "bot-echo", text: `hey @${name} 👋 welcome in!`, ts: SEED_TIME - 40000 },
   ];
   const welcomeDm: Message[] = hasDmWelcome ? [] : [
     { id: "seed-dm-welcome", channelId: "dm:bot-gamebot", authorId: "bot-gamebot", text: `Hi @${name}! 👋 I'm GameBot. Here's a quick start:\n• Head to **#games** for commands like !trivia, !hangman, and !ludo\n• Earn XP, coins, and badges as you chat\n• Add friends from any user's profile\nHave fun! 🎮`, ts: SEED_TIME - 10000 },
@@ -2742,5 +2744,14 @@ export function useChat() {
 export function useOptionalChat() {
   return useContext(ChatCtx);
 }
+
+
+
+
+
+
+
+
+
 
 
