@@ -233,7 +233,7 @@ function settleRemoteOutgoing(outs: AuthenticatedOutgoing[], authorId: string) {
 }
 
 function maybeSendIrc(out: AuthenticatedOutgoing, ircSentIds: Set<string>): void {
-  console.log("[IRC CHANNEL]", out.channelId);`r`n  if (
+  if (
     !usesIrcLive(out.channelId) ||
     (out.kind !== "text" && out.kind !== "me")
   ) {
