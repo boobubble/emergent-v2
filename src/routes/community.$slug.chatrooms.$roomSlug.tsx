@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ChatApp } from "@/components/chat/ChatApp";
 import { ChatroomPasswordDialog } from "@/components/chat/ChatroomPasswordDialog";
 import { useChat } from "@/lib/chat-store";
+import { lobbyIrcTransport } from "@/lib/lobby-irc-transport";
 import { useCommunity } from "@/lib/community-context";
 import { useAuth } from "@/lib/auth-store";
 import { supabase } from "@/integrations/supabase/client";
@@ -129,6 +130,7 @@ function CommunityChatroomView() {
     if (registeredIdRef.current === openRoom.id) return;
     registeredIdRef.current = openRoom.id;
     chat.registerCommunityRoom(registerRoomInput(openRoom));
+    lobbyIrcTransport.join(openRoom.id);
     chat.setActive(openRoom.id);
     return () => {
       registeredIdRef.current = null;
@@ -268,3 +270,6 @@ function StatePanel({
     </div>
   );
 }
+
+
+

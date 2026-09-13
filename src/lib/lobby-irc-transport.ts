@@ -200,6 +200,16 @@ export class LobbyIrcTransport {
    * - lobby
    * - public chatroom UUID
    */
+  join(room: string): boolean {
+    const normalizedRoom = room.trim();
+    if (!normalizedRoom || !this.connected || !this.ws || !usesIrcLive(normalizedRoom)) return false;
+    try {
+      this.ws.send(JSON.stringify({ type: "room.join", room: normalizedRoom }));
+      return true;
+    } catch {
+      return false;
+    }
+  }
   send(
     messageId: string,
     text: string,
