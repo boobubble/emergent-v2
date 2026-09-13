@@ -4,7 +4,8 @@ const GATEWAY_ROOM = "global";
 const INITIAL_BACKOFF_MS = 500;
 const MAX_BACKOFF_MS = 10_000;
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function isValidUuid(value: unknown): boolean {
   return typeof value === "string" && UUID_RE.test(value.trim());
@@ -12,24 +13,63 @@ function isValidUuid(value: unknown): boolean {
 
 export const LOBBY_IRC_CHANNEL = "lobby";
 
+/**
+ * Legacy lobby-only check.
+ * Kept for existing callers while the transport is expanded to public rooms.
+ */
 export function usesLobbyIrcLive(channelId: string): boolean {
   return channelId === LOBBY_IRC_CHANNEL;
 }
 
+/**
+ * Returns true when the channel is eligible for live IRC transport.
+ *
+ * Supported live IRC channels:
+ * - lobby
+ * - UUID-based public/community chatrooms
+ *
+ * DMs and special channels are intentionally excluded here.
+ */
+export function usesIrcLive(channelId: string): boolean {
+  const value = channelId.trim();
+
+  if (!value) return false;
+  if (value === LOBBY_IRC_CHANNEL) return true;
+
+  return isValidUuid(value);
+}
+
 export type LobbyIrcIncomingMessage = {
-  room: typeof LOBBY_IRC_CHANNEL;
+  room: string;
   messageId: string;
   nick: string;
   userId: string;
   text: string;
 };
 
-export type LobbyIrcStatus = "connecting" | "open" | "authenticated" | "closed" | "error";
+export type LobbyIrcStatus =
+  | "connecting"
+  | "open"
+  | "authenticated"
+  | "closed"
+  | "error";
 
-export type LobbyIrcStatusHandler = (status: LobbyIrcStatus, detail?: string) => void;
+export type LobbyIrcStatusHandler = (
+  status: LobbyIrcStatus,
+  detail?: string,
+) => void;
 
-type GatewayOutgoingAuth = { type: "auth"; token: string };
-type GatewayOutgoingSend = { type: "message.send"; room: string; messageId: string; text: string };
+type GatewayOutgoingAuth = {
+  type: "auth";
+  token: string;
+};
+
+type GatewayOutgoingSend = {
+  type: "message.send";
+  room: string;
+  messageId: string;
+  text: string;
+};
 
 type GatewayFrame = {
   type?: string;
@@ -50,7 +90,9 @@ function isBrowser(): boolean {
 function safeJsonParse(raw: string): GatewayFrame | null {
   try {
     const parsed = JSON.parse(raw) as unknown;
-    return parsed && typeof parsed === "object" ? (parsed as GatewayFrame) : null;
+    return parsed && typeof parsed === "object"
+      ? (parsed as GatewayFrame)
+      : null;
   } catch {
     return null;
   }
@@ -61,14 +103,19 @@ function asNonEmptyString(value: unknown): string {
 }
 
 /**
- * Browser-safe WebSocket client for the Yaarzo lobby IRC gateway.
+ * Browser-safe WebSocket client for the Yaarzo IRC gateway.
+ *
  * Singleton export avoids duplicate sockets across React remounts.
  */
 export class LobbyIrcTransport {
   private ws: WebSocket | null = null;
   private wsUrl: string | null = null;
   private token: string | null = null;
-  private onMessage: ((message: LobbyIrcIncomingMessage) => void) | null = null;
+
+  private onMessage:
+    | ((message: LobbyIrcIncomingMessage) => void)
+    | null = null;
+
   private onStatus: LobbyIrcStatusHandler | null = null;
 
   private authenticated = false;
@@ -82,7 +129,7 @@ export class LobbyIrcTransport {
     return this.ws?.readyState === WebSocket.OPEN;
   }
 
-  /** Gateway accepted auth — safe to send lobby messages. */
+  /** Gateway accepted auth — safe to send messages. */
   get connected(): boolean {
     return this.open && this.authenticated;
   }
@@ -94,11 +141,18 @@ export class LobbyIrcTransport {
     onStatus?: LobbyIrcStatusHandler,
   ): void {
     if (!url.startsWith("wss://")) {
-      this.emitStatus("error", "Lobby IRC transport requires a wss:// URL");
+      this.emitStatus(
+        "error",
+        "IRC transport requires a wss:// URL",
+      );
       return;
     }
+
     if (!token) {
-      this.emitStatus("error", "Lobby IRC transport requires an auth token");
+      this.emitStatus(
+        "error",
+        "IRC transport requires an auth token",
+      );
       return;
     }
 
@@ -112,12 +166,18 @@ export class LobbyIrcTransport {
 
     if (this.ws) {
       const state = this.ws.readyState;
-      if (state === WebSocket.CONNECTING || state === WebSocket.OPEN) {
+
+      if (
+        state === WebSocket.CONNECTING ||
+        state === WebSocket.OPEN
+      ) {
         if (state === WebSocket.OPEN && !this.authenticated) {
           this.sendAuth();
         }
+
         return;
       }
+
       this.clearSocket();
     }
 
@@ -133,11 +193,35 @@ export class LobbyIrcTransport {
     this.emitStatus("closed");
   }
 
-  send(messageId: string, text: string, room = GATEWAY_ROOM): boolean {
+  /**
+   * Send a message through the IRC gateway.
+   *
+   * The caller supplies the application channel ID:
+   * - lobby
+   * - public chatroom UUID
+   */
+  send(
+    messageId: string,
+    text: string,
+    room = GATEWAY_ROOM,
+  ): boolean {
     if (!isValidUuid(messageId)) return false;
+
     const trimmed = text.trim();
     const normalizedRoom = room.trim();
-    if (!trimmed || !normalizedRoom || !this.connected || !this.ws) return false;
+
+    if (
+      !trimmed ||
+      !normalizedRoom ||
+      !this.connected ||
+      !this.ws
+    ) {
+      return false;
+    }
+
+    if (!usesIrcLive(normalizedRoom)) {
+      return false;
+    }
 
     const frame: GatewayOutgoingSend = {
       type: "message.send",
@@ -145,19 +229,33 @@ export class LobbyIrcTransport {
       messageId: messageId.trim(),
       text: trimmed,
     };
+
     try {
       this.ws.send(JSON.stringify(frame));
       return true;
     } catch {
-      this.emitStatus("error", "Failed to send lobby message");
+      this.emitStatus(
+        "error",
+        "Failed to send IRC message",
+      );
       return false;
     }
   }
 
   private openSocket(): void {
-    if (!this.wsUrl || !this.token || this.manualDisconnect) return;
+    if (
+      !this.wsUrl ||
+      !this.token ||
+      this.manualDisconnect
+    ) {
+      return;
+    }
+
     if (typeof WebSocket === "undefined") {
-      this.emitStatus("error", "WebSocket is not available in this environment");
+      this.emitStatus(
+        "error",
+        "WebSocket is not available in this environment",
+      );
       return;
     }
 
@@ -168,7 +266,10 @@ export class LobbyIrcTransport {
     try {
       this.ws = new WebSocket(this.wsUrl);
     } catch {
-      this.emitStatus("error", "Failed to open lobby WebSocket");
+      this.emitStatus(
+        "error",
+        "Failed to open IRC WebSocket",
+      );
       this.scheduleReconnect();
       return;
     }
@@ -184,11 +285,21 @@ export class LobbyIrcTransport {
     this.sendAuth();
   };
 
-  private readonly handleMessage = (event: MessageEvent<string>): void => {
-    const frame = safeJsonParse(typeof event.data === "string" ? event.data : String(event.data));
+  private readonly handleMessage = (
+    event: MessageEvent<string>,
+  ): void => {
+    const frame = safeJsonParse(
+      typeof event.data === "string"
+        ? event.data
+        : String(event.data),
+    );
+
     if (!frame?.type) return;
 
-    if (frame.type === "gateway" && frame.event === "authenticated") {
+    if (
+      frame.type === "gateway" &&
+      frame.event === "authenticated"
+    ) {
       this.authenticated = true;
       this.reconnectAttempt = 0;
       this.emitStatus("authenticated");
@@ -196,25 +307,48 @@ export class LobbyIrcTransport {
     }
 
     if (frame.type === "message") {
-      if (frame.room !== GATEWAY_ROOM) return;
-      const messageId = typeof frame.messageId === "string" ? frame.messageId.trim() : "";
-      if (!isValidUuid(messageId)) {
-        this.emitStatus("error", "Ignored lobby message with invalid messageId");
+      const room = asNonEmptyString(frame.room);
+
+      if (!room || !usesIrcLive(room)) {
         return;
       }
+
+      const messageId =
+        typeof frame.messageId === "string"
+          ? frame.messageId.trim()
+          : "";
+
+      if (!isValidUuid(messageId)) {
+        this.emitStatus(
+          "error",
+          "Ignored IRC message with invalid messageId",
+        );
+        return;
+      }
+
       const nick = asNonEmptyString(frame.nick);
       const userId = asNonEmptyString(frame.userId);
-      if (typeof frame.text !== "string" || !nick || !userId) return;
+
+      if (
+        typeof frame.text !== "string" ||
+        !nick ||
+        !userId
+      ) {
+        return;
+      }
+
       const text = frame.text.trim();
+
       if (!text) return;
 
       this.onMessage?.({
-        room: LOBBY_IRC_CHANNEL,
+        room,
         messageId,
         nick,
         userId,
         text,
       });
+
       return;
     }
 
@@ -223,104 +357,200 @@ export class LobbyIrcTransport {
     }
 
     if (frame.type === "error") {
-      const detail = asNonEmptyString(frame.message) || asNonEmptyString(frame.error) || "Gateway error";
+      const detail =
+        asNonEmptyString(frame.message) ||
+        asNonEmptyString(frame.error) ||
+        "Gateway error";
+
       this.emitStatus("error", detail);
     }
   };
 
   private readonly handleClose = (): void => {
     const wasManual = this.manualDisconnect;
+
     this.authenticated = false;
     this.clearSocket();
+
     if (wasManual) {
       this.emitStatus("closed");
       return;
     }
+
     this.emitStatus("closed");
     this.scheduleReconnect();
   };
 
   private readonly handleError = (): void => {
-    this.emitStatus("error", "Lobby WebSocket error");
+    this.emitStatus(
+      "error",
+      "IRC WebSocket error",
+    );
   };
 
   private sendAuth(): void {
-    if (!this.ws || this.ws.readyState !== WebSocket.OPEN || !this.token) return;
-    const frame: GatewayOutgoingAuth = { type: "auth", token: this.token };
+    if (
+      !this.ws ||
+      this.ws.readyState !== WebSocket.OPEN ||
+      !this.token
+    ) {
+      return;
+    }
+
+    const frame: GatewayOutgoingAuth = {
+      type: "auth",
+      token: this.token,
+    };
+
     try {
       this.ws.send(JSON.stringify(frame));
     } catch {
-      this.emitStatus("error", "Failed to authenticate lobby connection");
+      this.emitStatus(
+        "error",
+        "Failed to authenticate IRC connection",
+      );
     }
   }
 
   private scheduleReconnect(): void {
-    if (this.manualDisconnect || !this.wsUrl || !this.token) return;
+    if (
+      this.manualDisconnect ||
+      !this.wsUrl ||
+      !this.token
+    ) {
+      return;
+    }
+
     if (this.reconnectTimer) return;
 
-    const delay = Math.min(MAX_BACKOFF_MS, INITIAL_BACKOFF_MS * 2 ** this.reconnectAttempt);
+    const delay = Math.min(
+      MAX_BACKOFF_MS,
+      INITIAL_BACKOFF_MS *
+        2 ** this.reconnectAttempt,
+    );
+
     this.reconnectAttempt += 1;
+
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null;
+
       if (this.manualDisconnect) return;
+
       this.openSocket();
     }, delay);
   }
 
   private clearReconnectTimer(): void {
     if (!this.reconnectTimer) return;
+
     clearTimeout(this.reconnectTimer);
     this.reconnectTimer = null;
   }
 
   private clearSocket(): void {
     const socket = this.ws;
+
     if (!socket) return;
-    socket.removeEventListener("open", this.handleOpen);
-    socket.removeEventListener("message", this.handleMessage);
-    socket.removeEventListener("close", this.handleClose);
-    socket.removeEventListener("error", this.handleError);
-    if (socket.readyState === WebSocket.CONNECTING || socket.readyState === WebSocket.OPEN) {
+
+    socket.removeEventListener(
+      "open",
+      this.handleOpen,
+    );
+
+    socket.removeEventListener(
+      "message",
+      this.handleMessage,
+    );
+
+    socket.removeEventListener(
+      "close",
+      this.handleClose,
+    );
+
+    socket.removeEventListener(
+      "error",
+      this.handleError,
+    );
+
+    if (
+      socket.readyState === WebSocket.CONNECTING ||
+      socket.readyState === WebSocket.OPEN
+    ) {
       try {
         socket.close();
       } catch {
         /* ignore close errors */
       }
     }
+
     this.ws = null;
     this.authenticated = false;
   }
 
   private bindLifecycleListeners(): void {
     if (!isBrowser() || this.lifecycleBound) return;
-    window.addEventListener("online", this.handleOnline);
-    document.addEventListener("visibilitychange", this.handleVisibility);
+
+    window.addEventListener(
+      "online",
+      this.handleOnline,
+    );
+
+    document.addEventListener(
+      "visibilitychange",
+      this.handleVisibility,
+    );
+
     this.lifecycleBound = true;
   }
 
   private unbindLifecycleListeners(): void {
     if (!isBrowser() || !this.lifecycleBound) return;
-    window.removeEventListener("online", this.handleOnline);
-    document.removeEventListener("visibilitychange", this.handleVisibility);
+
+    window.removeEventListener(
+      "online",
+      this.handleOnline,
+    );
+
+    document.removeEventListener(
+      "visibilitychange",
+      this.handleVisibility,
+    );
+
     this.lifecycleBound = false;
   }
 
   private readonly handleOnline = (): void => {
-    if (this.manualDisconnect || !this.wsUrl || !this.token) return;
+    if (
+      this.manualDisconnect ||
+      !this.wsUrl ||
+      !this.token
+    ) {
+      return;
+    }
+
     if (this.connected) return;
+
     this.clearReconnectTimer();
     this.reconnectAttempt = 0;
-    if (!this.ws || this.ws.readyState === WebSocket.CLOSED) {
+
+    if (
+      !this.ws ||
+      this.ws.readyState === WebSocket.CLOSED
+    ) {
       this.openSocket();
     }
   };
 
   private readonly handleVisibility = (): void => {
     if (document.visibilityState !== "visible") return;
+
     this.handleOnline();
   };
 
-  private emitStatus(status: LobbyIrcStatus, detail?: string): void {
+  private emitStatus(
+    status: LobbyIrcStatus,
+    detail?: string,
+  ): void {
     try {
       this.onStatus?.(status, detail);
     } catch {
@@ -329,4 +559,5 @@ export class LobbyIrcTransport {
   }
 }
 
-export const lobbyIrcTransport = new LobbyIrcTransport();
+export const lobbyIrcTransport =
+  new LobbyIrcTransport();

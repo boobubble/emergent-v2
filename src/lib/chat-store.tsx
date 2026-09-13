@@ -144,7 +144,7 @@ import {
 } from "./chat-optimistic";
 import {
   lobbyIrcTransport,
-  usesLobbyIrcLive,
+  usesIrcLive,
   type LobbyIrcIncomingMessage,
 } from "./lobby-irc-transport";
 
@@ -232,16 +232,16 @@ function settleRemoteOutgoing(outs: AuthenticatedOutgoing[], authorId: string) {
   });
 }
 
-function maybeSendLobbyIrc(out: AuthenticatedOutgoing, ircSentIds: Set<string>): void {
-  if (
-    !usesLobbyIrcLive(out.channelId) ||
+function maybeSendIrc(out: AuthenticatedOutgoing, ircSentIds: Set<string>): void {
+  console.log("[IRC CHANNEL]", out.channelId);`r`n  if (
+    !usesIrcLive(out.channelId) ||
     (out.kind !== "text" && out.kind !== "me")
   ) {
     return;
   }
   if (ircSentIds.has(out.id)) return;
   if (!lobbyIrcTransport.connected) return;
-  if (!lobbyIrcTransport.send(out.id, out.text)) return;
+  if (!lobbyIrcTransport.send(out.id, out.text, out.channelId)) return;
   ircSentIds.add(out.id);
 }
 
@@ -1690,7 +1690,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
   }, [authUserId, username]);
 
   useEffect(() => {
-    if (isGuest || !authUserId || !usesLobbyIrcLive(state.activeChannel)) {
+    if (isGuest || !authUserId || !usesIrcLive(state.activeChannel)) {
       lobbyIrcTransport.disconnect();
       return;
     }
@@ -2099,7 +2099,8 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       for (const out of safeRemotes) {
         rtLog(out.channelId.startsWith("dm:") ? "dm" : "msg", "out", `${out.channelId} · ${out.text.slice(0, 30)}`);
         const wasAlreadyIrcSent = ircSentMsgIds.current.has(out.id);
-        maybeSendLobbyIrc(out, ircSentMsgIds.current);
+        console.log("[IRC DEBUG] channelId:", out.channelId, "text:", out.text);
+        maybeSendIrc(out, ircSentMsgIds.current);
         if (!wasAlreadyIrcSent && ircSentMsgIds.current.has(out.id)) {
           ircConfirmedIds.add(out.id);
         }
@@ -2182,7 +2183,8 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     };
     setState((s) => ({ ...s, messages: markMessagesSending(s.messages, [messageId]) }));
     rtLog(out.channelId.startsWith("dm:") ? "dm" : "msg", "retry", `${out.channelId} · ${out.text.slice(0, 30)}`);
-    maybeSendLobbyIrc(out, ircSentMsgIds.current);
+    console.log("[IRC DEBUG] channelId:", out.channelId, "text:", out.text);
+        maybeSendIrc(out, ircSentMsgIds.current);
     void settleRemoteOutgoing([out], authUserId).then((outcome) => {
       if (outcome.action === "fail") {
         console.error("retry send failed", outcome.error);
