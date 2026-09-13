@@ -1690,7 +1690,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
   }, [authUserId, username]);
 
   useEffect(() => {
-    if (isGuest || !authUserId || !usesIrcLive(state.activeChannel)) {
+    if (isGuest || !authUserId) {
       lobbyIrcTransport.disconnect();
       return;
     }
@@ -1714,7 +1714,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       cancelled = true;
       lobbyIrcTransport.disconnect();
     };
-  }, [authUserId, isGuest, state.activeChannel]);
+  }, [authUserId, isGuest]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
