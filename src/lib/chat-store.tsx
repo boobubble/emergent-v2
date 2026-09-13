@@ -179,7 +179,7 @@ function filterVisibleMessages(channelId: string, msgs: Message[]): Message[] {
 }
 
 function isRemoteChannel(channelId: string, meId: string | null): boolean {
-  if (channelId === "lobby" || channelId === "games") return true;
+  if (channelId === "lobby" || channelId === "games" || isValidUuid(channelId)) return true;
   if (dbBackedRemoteChannels.has(channelId)) return true;
   return isRemoteDmChannel(channelId, meId);
 }
@@ -2740,3 +2740,4 @@ export function useChat() {
 export function useOptionalChat() {
   return useContext(ChatCtx);
 }
+
