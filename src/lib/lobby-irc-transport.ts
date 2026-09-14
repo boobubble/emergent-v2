@@ -34,7 +34,7 @@ export function usesIrcLive(channelId: string): boolean {
   const value = channelId.trim();
 
   if (!value) return false;
-  if (value === LOBBY_IRC_CHANNEL) return true;
+  if (value === LOBBY_IRC_CHANNEL || value === "yaarzo-global") return true;
 
   return isValidUuid(value);
 }

@@ -1630,7 +1630,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
   useEffect(() => {
     handleLobbyIrcMessageRef.current = (incoming) => {
       if (!authUserId || incoming.userId === authUserId) return;
-      const channelId = LOBBY_CHANNEL_ID;
+      const channelId = incoming.room;
 
       const msg: Message = {
         id: incoming.messageId,
