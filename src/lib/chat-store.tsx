@@ -181,7 +181,7 @@ function filterVisibleMessages(channelId: string, msgs: Message[]): Message[] {
 function isValidUuid(value: string): boolean { return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value); }
 
 function isRemoteChannel(channelId: string, meId: string | null): boolean {
-  if (channelId === "lobby" || channelId === "games" || isValidUuid(channelId)) return true;
+  if (channelId === "lobby" || channelId === "games" || channelId === "yaarzo-global" || isValidUuid(channelId)) return true;
   if (dbBackedRemoteChannels.has(channelId)) return true;
   return isRemoteDmChannel(channelId, meId);
 }
@@ -1644,8 +1644,30 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       setState((s) => {
         const existing = s.messages[channelId] || [];
         if (existing.some((m) => m.id === incoming.messageId)) return s;
+        const authorKey = incoming.userId;
+        const knownAuthor = s.users[authorKey];
+        const users =
+          knownAuthor || isValidUuid(authorKey)
+            ? s.users
+            : {
+                ...s.users,
+                [authorKey]: {
+                  id: authorKey,
+                  name: incoming.nick,
+                  avatarColor:
+                    AVATAR_COLORS[
+                      Math.abs(
+                        authorKey.split("").reduce((acc, ch) => acc + ch.charCodeAt(0), 0),
+                      ) % AVATAR_COLORS.length
+                    ],
+                  status: "online" as const,
+                  xp: 0,
+                  level: 1,
+                },
+              };
         return {
           ...s,
+          users,
           messages: {
             ...s.messages,
             [channelId]: [...existing, msg].sort((a, b) => a.ts - b.ts),
@@ -2095,7 +2117,6 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       for (const out of safeRemotes) {
         rtLog(out.channelId.startsWith("dm:") ? "dm" : "msg", "out", `${out.channelId} · ${out.text.slice(0, 30)}`);
         const wasAlreadyIrcSent = ircSentMsgIds.current.has(out.id);
-        console.log("[IRC DEBUG] channelId:", out.channelId, "text:", out.text);
         maybeSendIrc(out, ircSentMsgIds.current);
         if (!wasAlreadyIrcSent && ircSentMsgIds.current.has(out.id)) {
           ircConfirmedIds.add(out.id);
@@ -2179,8 +2200,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     };
     setState((s) => ({ ...s, messages: markMessagesSending(s.messages, [messageId]) }));
     rtLog(out.channelId.startsWith("dm:") ? "dm" : "msg", "retry", `${out.channelId} · ${out.text.slice(0, 30)}`);
-    console.log("[IRC DEBUG] channelId:", out.channelId, "text:", out.text);
-        maybeSendIrc(out, ircSentMsgIds.current);
+    maybeSendIrc(out, ircSentMsgIds.current);
     void settleRemoteOutgoing([out], authUserId).then((outcome) => {
       if (outcome.action === "fail") {
         console.error("retry send failed", outcome.error);
