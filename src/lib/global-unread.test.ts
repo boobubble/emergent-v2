@@ -135,6 +135,7 @@ describe("global unread wiring", () => {
     const store = readFileSync(resolve(testDir, "chat-store.tsx"), "utf8");
     expect(store).toContain("openDmTab");
     expect(store).toContain("closeDmTab");
+    expect(store).toContain("revealIncomingDmTab");
     const tabs = readFileSync(resolve(testDir, "../components/chat/ChatConversationTabs.tsx"), "utf8");
     expect(tabs).toContain("closeDmTab");
   });

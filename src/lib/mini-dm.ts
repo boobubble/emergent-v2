@@ -69,3 +69,16 @@ export function miniDmChannelForPeer(
 ): string | null {
   return dmChannelFor(authUserId ?? null, peerId);
 }
+
+/** Desktop lg+ conversation tab strip (matches Tailwind `lg:`). */
+export function isDesktopDmTabStrip(): boolean {
+  return typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches;
+}
+
+/** Passive tab pop: only when the inbound DM is not the active conversation. */
+export function shouldAutoOpenIncomingDmTab(
+  activeChannel: string,
+  messageChannelId: string,
+): boolean {
+  return activeChannel !== messageChannelId;
+}

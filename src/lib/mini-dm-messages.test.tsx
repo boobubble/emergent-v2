@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { extraRemoteDmChannelsToFetch, miniDmChannelForPeer, resolveMiniDmPeer } from "./mini-dm";
+import { extraRemoteDmChannelsToFetch, isDesktopDmTabStrip, miniDmChannelForPeer, resolveMiniDmPeer, shouldAutoOpenIncomingDmTab } from "./mini-dm";
 import { maxDurationForChannel, VOICE_NOTES_DEFAULTS } from "./voice-notes-config";
 import {
   filterChatMessages,
@@ -156,6 +156,18 @@ vi.mock("@/components/cosmetics/CosmeticBits", () => ({
   CosmeticName: ({ name }: { name: string }) => createElement("span", null, name),
   RankChip: () => null,
 }));
+
+describe("desktop DM tab auto-pop helpers", () => {
+  it("shouldAutoOpenIncomingDmTab skips when the inbound DM is already active", () => {
+    const ch = dmChannelFor(ME, PEER)!;
+    expect(shouldAutoOpenIncomingDmTab(ch, ch)).toBe(false);
+    expect(shouldAutoOpenIncomingDmTab("yaarzo-global", ch)).toBe(true);
+  });
+
+  it("isDesktopDmTabStrip is false under jsdom (no layout)", () => {
+    expect(isDesktopDmTabStrip()).toBe(false);
+  });
+});
 
 describe("MessageList render with remote-profile peer + fetched DM history", () => {
   it("shows loaded messages instead of the ChatErrorBoundary fallback", async () => {

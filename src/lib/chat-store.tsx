@@ -69,7 +69,11 @@ import {
   markGuestDmRead as markGuestDmReadFn,
 } from "./guest-dm.functions";
 import { getGuestDmSharedRows, type GuestDmThreadMeta } from "./use-guest-dm-feed";
-import { extraRemoteDmChannelsToFetch } from "./mini-dm";
+import {
+  extraRemoteDmChannelsToFetch,
+  isDesktopDmTabStrip,
+  shouldAutoOpenIncomingDmTab,
+} from "./mini-dm";
 import { useRemoteProfiles } from "./use-remote-profiles";
 import { playDmPing, playMentionPing, playPublicChatTick } from "./sounds";
 import {
@@ -889,6 +893,13 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
   const listGuestDmForGuestFn = useServerFn(listGuestDmConversationsForGuest);
   const markGuestDmReadServerFn = useServerFn(markGuestDmReadFn);
 
+  /** Desktop: show a passive DM tab on live inbound messages (no activeChannel switch). */
+  const revealIncomingDmTab = useCallback((peerId: string, channelId: string) => {
+    if (!authUserId || !peerId) return;
+    if (!isDesktopDmTabStrip()) return;
+    if (!shouldAutoOpenIncomingDmTab(stateRef.current.activeChannel, channelId)) return;
+    setOpenDmPeerIds((prev) => (prev.includes(peerId) ? prev : [...prev, peerId]));
+  }, [authUserId]);
 
 
   useEffect(() => {
@@ -1195,7 +1206,8 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
         messages: { ...s.messages, [ch]: [...existing, msg] },
       };
     });
-  }, [authUserId]);
+    revealIncomingDmTab(peerId, ch);
+  }, [authUserId, revealIncomingDmTab]);
 
   useGuestDmRecipientSync({
     authUserId,
@@ -1482,6 +1494,10 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
         }
 
         if (msg.authorId !== "me") {
+          if (msg.channelId.startsWith("dm:") && authUserId) {
+            const peerId = msg.channelId.slice(3).split(":").find((p) => p !== authUserId);
+            if (peerId) revealIncomingDmTab(peerId, msg.channelId);
+          }
           if (msg.channelId.startsWith("dm:")) {
             playDmPing();
           } else {
@@ -1543,7 +1559,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       })
       .subscribe(status => rtLog("ws", status, "messages"));
     return () => { supabase.removeChannel(channel); };
-  }, [authUserId]);
+  }, [authUserId, revealIncomingDmTab]);
 
   // ---- DM read receipts ----
   // Realtime subscribe to dm_reads changes (RLS scopes to my channels)
