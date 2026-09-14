@@ -376,7 +376,7 @@ function isHelpQuery(t: string): boolean {
     || /\?\s*$/.test(t) && /\b(you|u)\b/i.test(t);
 }
 
-const MAIN_IRC_ROOM_ID = "ea987b0c-3ad3-4728-91a0-e563cb829fa2";
+const MAIN_IRC_ROOM_ID = "yaarzo-global";
 
 const SEED_ROOMS: Room[] = [
   {
