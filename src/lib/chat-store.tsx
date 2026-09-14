@@ -39,9 +39,10 @@ import { evaluateBadges, todayKey, daysBetween } from "./achievements";
 import { supabase } from "@/integrations/supabase/client";
 import { rtLog } from "./realtime-debug";
 import { sanitizeRemoteReplyToId } from "./message-list-model";
-import { computeDmUnreadCount, isPeerDmUnread } from "./global-unread";
+import { computeDmUnreadCount, isPeerDmUnread, peerDmUnreadMessageCount } from "./global-unread";
 import {
   computeGuestDmUnreadCount,
+  guestDmPeerUnreadMessageCount,
   isGuestDmPeerUnread,
   resolveGuestDmReadCursor,
 } from "./guest-dm-unread";
@@ -669,6 +670,7 @@ interface Ctx {
   findMessage: (id: string) => Message | undefined;
   dmPeerReadAt: (channelId: string) => number;
   isDmUnread: (peerId: string) => boolean;
+  dmPeerUnreadCount: (peerId: string) => number;
   dmUnreadCount: number;
   markDmRead: (channelId: string) => Promise<void>;
   guestDmUnreadCount: number;
@@ -2761,6 +2763,32 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
         openDmPeerIds,
         dmLatestTs,
         dmReads,
+      );
+    },
+    dmPeerUnreadCount: (peerId: string) => {
+      if (isGuestDmPeer(peerId)) {
+        const ch = resolveGuestDmChannel(peerId, guestDmConvByPeer);
+        const msgs = ch ? state.messages[ch] || [] : [];
+        return guestDmPeerUnreadMessageCount(
+          peerId,
+          state.activeChannel,
+          openDmPeerIds,
+          guestDmLatestTs,
+          guestDmReads,
+          guestDmConvByPeer,
+          msgs,
+        );
+      }
+      const ch = dmChannelFor(authUserId, peerId);
+      const msgs = ch ? state.messages[ch] || [] : [];
+      return peerDmUnreadMessageCount(
+        peerId,
+        authUserId,
+        state.activeChannel,
+        openDmPeerIds,
+        dmLatestTs,
+        dmReads,
+        msgs,
       );
     },
     dmUnreadCount: computeDmUnreadCount(

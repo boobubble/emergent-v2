@@ -6,6 +6,7 @@ import { resolveMiniDmPeer } from "@/lib/mini-dm";
 import { isGuestDmPeer, formatGuestDmLabel } from "@/lib/guest-dm-utils";
 import { FrameAvatar } from "@/components/cosmetics/CosmeticBits";
 import { cn } from "@/lib/utils";
+import { formatDmUnreadBadge } from "@/lib/global-unread";
 import { isClientLargeDesktopShell, type ChatroomShellLayout } from "@/components/chat/chatroom-shell";
 
 type ChatConversationTabsProps = {
@@ -25,7 +26,7 @@ export function ChatConversationTabs({ shellLayout }: ChatConversationTabsProps)
     openDmTab,
     closeDmTab,
     roomTabChannel,
-    isDmUnread,
+    dmPeerUnreadCount,
     dmChannelFor,
     watchRemoteChannel,
     guestDmThreads,
@@ -93,7 +94,8 @@ export function ChatConversationTabs({ shellLayout }: ChatConversationTabsProps)
             user?.name ??
             (isGuestDmPeer(peerId) ? formatGuestDmLabel(guestLabel ?? "Guest") : "User");
           const tabActive = channelId != null && activeChannel === channelId;
-          const unread = isDmUnread(peerId);
+          const unreadCount = dmPeerUnreadCount(peerId);
+          const unreadBadge = formatDmUnreadBadge(unreadCount);
 
           return (
             <div
@@ -118,12 +120,12 @@ export function ChatConversationTabs({ shellLayout }: ChatConversationTabsProps)
                   <span className="h-[18px] w-[18px] shrink-0 rounded-full bg-muted" />
                 )}
                 <span className="truncate">{name}</span>
-                {unread && (
+                {unreadBadge !== 0 && (
                   <span
-                    className="unread-pop grid h-4 min-w-4 shrink-0 place-items-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground"
-                    aria-label="Unread messages"
+                    className="unread-pop grid h-4 min-w-4 shrink-0 place-items-center rounded-full bg-primary px-1 text-[9px] font-bold leading-none text-primary-foreground"
+                    aria-label={`${unreadCount} unread message${unreadCount === 1 ? "" : "s"}`}
                   >
-                    •
+                    {unreadBadge}
                   </span>
                 )}
               </button>

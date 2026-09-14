@@ -25,14 +25,61 @@ export function isPeerDmUnread(
   dmLatestTs: Record<string, number>,
   dmReads: Record<string, Record<string, number>>,
 ): boolean {
-  if (!authUserId || !isUuid(peerId)) return false;
+  return (
+    peerDmUnreadMessageCount(
+      peerId,
+      authUserId,
+      activeChannel,
+      openDmPeerIds,
+      dmLatestTs,
+      dmReads,
+      [],
+    ) > 0
+  );
+}
+
+type DmUnreadMsg = { authorId: string; ts: number };
+
+/** Matches sidebar/notification badge caps (9+). */
+export function formatDmUnreadBadge(count: number): number | string {
+  if (count <= 0) return 0;
+  return count > 9 ? "9+" : count;
+}
+
+export function countUnreadDmMessages(
+  messages: readonly DmUnreadMsg[],
+  readAt: number,
+  authUserId: string | null,
+): number {
+  let n = 0;
+  for (const m of messages) {
+    if (m.ts <= readAt) continue;
+    if (m.authorId === "me") continue;
+    if (authUserId && m.authorId === authUserId) continue;
+    n++;
+  }
+  return n;
+}
+
+/** Unread message count for one DM peer (0 when actively viewing that thread). */
+export function peerDmUnreadMessageCount(
+  peerId: string,
+  authUserId: string | null,
+  activeChannel: string,
+  openDmPeerIds: readonly string[],
+  dmLatestTs: Record<string, number>,
+  dmReads: Record<string, Record<string, number>>,
+  messages: readonly DmUnreadMsg[],
+): number {
+  if (!authUserId || !isUuid(peerId)) return 0;
   const ch = dmChannelFor(authUserId, peerId);
-  if (!ch || !isRemoteDmChannel(ch, authUserId)) return false;
-  if (isDmChannelViewed(ch, authUserId, activeChannel, openDmPeerIds)) return false;
+  if (!ch || !isRemoteDmChannel(ch, authUserId)) return 0;
+  if (isDmChannelViewed(ch, authUserId, activeChannel, openDmPeerIds)) return 0;
+  const readAt = dmReads[ch]?.[authUserId] ?? 0;
+  const counted = countUnreadDmMessages(messages, readAt, authUserId);
+  if (counted > 0) return counted;
   const latest = dmLatestTs[ch] ?? 0;
-  if (!latest) return false;
-  const myRead = dmReads[ch]?.[authUserId] ?? 0;
-  return latest > myRead;
+  return latest > readAt ? 1 : 0;
 }
 
 export function computeDmUnreadCount(

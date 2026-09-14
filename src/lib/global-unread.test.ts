@@ -5,8 +5,11 @@ import { fileURLToPath } from "node:url";
 import {
   computeDmUnreadCount,
   computeGlobalHasUnread,
+  countUnreadDmMessages,
+  formatDmUnreadBadge,
   isDmChannelViewed,
   isPeerDmUnread,
+  peerDmUnreadMessageCount,
 } from "./global-unread";
 
 const testDir = dirname(fileURLToPath(import.meta.url));
@@ -84,6 +87,29 @@ describe("global unread aggregation", () => {
     );
     expect(first).toBe(1);
     expect(second).toBe(1);
+  });
+
+  it("peerDmUnreadMessageCount counts messages after read cursor", () => {
+    const msgs = [
+      { authorId: ASSISTANT, ts: 500 },
+      { authorId: ASSISTANT, ts: 800 },
+      { authorId: "me", ts: 900 },
+      { authorId: ASSISTANT, ts: 1000 },
+    ];
+    expect(countUnreadDmMessages(msgs, 0, ME)).toBe(3);
+    expect(
+      peerDmUnreadMessageCount(
+        ASSISTANT,
+        ME,
+        "lobby",
+        [],
+        dmLatestTs,
+        { [DM_CH]: { [ME]: 800 } },
+        msgs,
+      ),
+    ).toBe(1);
+    expect(formatDmUnreadBadge(3)).toBe(3);
+    expect(formatDmUnreadBadge(12)).toBe("9+");
   });
 });
 

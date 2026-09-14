@@ -14,6 +14,8 @@ export function isGuestDmChannelViewed(
   return activeChannel === channelId;
 }
 
+type GuestUnreadMsg = { authorId: string; ts: number };
+
 export function isGuestDmPeerUnread(
   peerId: string,
   activeChannel: string,
@@ -22,15 +24,45 @@ export function isGuestDmPeerUnread(
   guestDmReads: Record<string, number>,
   convByPeer: Record<string, string>,
 ): boolean {
-  if (!isGuestDmPeer(peerId)) return false;
+  return (
+    guestDmPeerUnreadMessageCount(
+      peerId,
+      activeChannel,
+      openDmPeerIds,
+      guestDmLatestTs,
+      guestDmReads,
+      convByPeer,
+      [],
+    ) > 0
+  );
+}
+
+/** Unread message count for one guest DM peer (0 when actively viewing that thread). */
+export function guestDmPeerUnreadMessageCount(
+  peerId: string,
+  activeChannel: string,
+  openDmPeerIds: readonly string[],
+  guestDmLatestTs: Record<string, number>,
+  guestDmReads: Record<string, number>,
+  convByPeer: Record<string, string>,
+  messages: readonly GuestUnreadMsg[],
+  meAuthorId = "me",
+): number {
+  if (!isGuestDmPeer(peerId)) return 0;
   const conv = convByPeer[peerId];
-  if (!conv) return false;
+  if (!conv) return 0;
   const ch = guestDmChannelId(conv);
-  if (isGuestDmChannelViewed(ch, activeChannel, openDmPeerIds, convByPeer)) return false;
+  if (isGuestDmChannelViewed(ch, activeChannel, openDmPeerIds, convByPeer)) return 0;
+  const readAt = guestDmReads[peerId] ?? 0;
+  let counted = 0;
+  for (const m of messages) {
+    if (m.ts <= readAt) continue;
+    if (m.authorId === meAuthorId) continue;
+    counted++;
+  }
+  if (counted > 0) return counted;
   const latest = guestDmLatestTs[peerId] ?? 0;
-  if (!latest) return false;
-  const read = guestDmReads[peerId] ?? 0;
-  return latest > read;
+  return latest > readAt ? 1 : 0;
 }
 
 export function computeGuestDmUnreadCount(

@@ -482,7 +482,6 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
             }
             return (
               <>
-                <ChatConversationTabs shellLayout={shellLayout} />
                 {!(chatTheme === "gaming_arena" && !activeIsDM) && (
                   <ChatErrorBoundary label="chat-header">
                     <ChatHeader
@@ -496,6 +495,7 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
                     />
                   </ChatErrorBoundary>
                 )}
+                <ChatConversationTabs shellLayout={shellLayout} />
                 <div className="relative flex min-h-0 flex-1 flex-col">
                   {activeIsDM && (
                     <DMChatBackground
