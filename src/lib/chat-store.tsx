@@ -380,14 +380,6 @@ const MAIN_IRC_ROOM_ID = "ea987b0c-3ad3-4728-91a0-e563cb829fa2";
 
 const SEED_ROOMS: Room[] = [
   {
-    id: MAIN_IRC_ROOM_ID,
-    name: "Lobby",
-    topic: "Main hangout — chat, meet people, and hang out.",
-    members: ["me", ...LOBBY_BOT_IDS],
-    roles: { me: "member", "bot-spam": "mod" },
-    isPublic: true,
-  },
-  {
     id: "games",
     name: "Games",
     topic: "🎲 Game room — try !ludo for a 1v1 race, !trivia, !hangman and more.",
