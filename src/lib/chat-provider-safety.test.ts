@@ -103,31 +103,21 @@ function sliceBetween(src: string, startToken: string, endToken: string): string
 }
 
 describe("opening a DM must not trip the Chatrooms error boundary", () => {
-  const dock = readFileSync(resolve(testDir, "../components/chat/FloatingDMDock.tsx"), "utf8");
+  const tabs = readFileSync(resolve(testDir, "../components/chat/ChatConversationTabs.tsx"), "utf8");
   const chatApp = readFileSync(resolve(testDir, "../components/chat/ChatApp.tsx"), "utf8");
   const header = readFileSync(resolve(testDir, "../components/chat/ChatHeader.tsx"), "utf8");
   const chatroomRoute = readFileSync(resolve(testDir, "../routes/chatroom.tsx"), "utf8");
 
-  it("MiniDMWindow fetches the DM thread even when the peer comes from remote profiles", () => {
-    const mini = sliceBetween(dock, "function MiniDMWindow(", "function openMiniDM(");
-    const earlyReturn = mini.search(/if\s*\(\s*!channelId\s*\|\|\s*!u\s*\)\s*return\s+null/);
-    expect(earlyReturn).toBeGreaterThan(-1);
-    expect(mini).toContain("resolveMiniDmPeer(");
-    expect(mini).toContain("watchRemoteChannel(channelId)");
-    expect(mini.indexOf("watchRemoteChannel(channelId)")).toBeLessThan(earlyReturn);
-    expect(mini).toContain("useRemoteProfiles(");
-    expect(mini.indexOf("useServerFn(")).toBeGreaterThan(-1);
-    expect(mini.indexOf("useServerFn(")).toBeLessThan(earlyReturn);
-    expect(mini.indexOf("useState(")).toBeGreaterThan(-1);
-    expect(mini.indexOf("useState(")).toBeLessThan(earlyReturn);
-    expect(mini).toContain("<MessageInput");
-    expect(mini).toContain("channelId={channelId}");
-    expect(mini).not.toContain('setText(t => t + "😊")');
+  it("desktop DM tabs fetch threads via watchRemoteChannel and resolve remote profiles", () => {
+    expect(tabs).toContain("resolveMiniDmPeer(");
+    expect(tabs).toContain("watchRemoteChannel(ch)");
+    expect(tabs).toContain("useRemoteProfiles(");
+    expect(tabs).toContain("openDmTab(peerId)");
   });
 
-  it("desktop mini-DM and the main message pane are isolated so a DM throw cannot blank /chatroom", () => {
-    expect(chatApp).toMatch(/ChatErrorBoundary label="floating-dm"/);
-    expect(chatApp).toMatch(/<FloatingDMDock \/>/);
+  it("desktop DM tabs render in the main column beside the message pane", () => {
+    expect(chatApp).toMatch(/<ChatConversationTabs /);
+    expect(chatApp).toMatch(/<DesktopDmTabBridge \/>/);
     expect(chatApp).toMatch(/ChatErrorBoundary label="chat-messages"/);
     expect(chatApp).toMatch(/<ChatChannelBody /);
     expect(chatApp).toMatch(/ChatErrorBoundary label="chat-header"/);
@@ -178,8 +168,7 @@ describe("opening a DM must not trip the Chatrooms error boundary", () => {
     expect(input).not.toMatch(/if\s*\(\s*isDM\([^)]*\)\s*\)\s*return\s+null/);
     expect(chatApp).toContain("<MessageInput />");
     expect(feed).toContain("<MessageInput />");
-    expect(dock).toContain("<MessageInput");
-    expect(dock).toContain("channelId={channelId}");
+    expect(tabs).toContain("openDmTab");
   });
 });
 
@@ -192,9 +181,9 @@ describe("profile popup and composer pickers close after their action", () => {
       "<MessageCircle className=\"h-4 w-4 shrink-0\" /> Message",
     );
     expect(messageAction).toContain("startDM(userId)");
-    expect(messageAction).toContain("palrgo:openMiniDM");
+    expect(messageAction).toContain("openDmTab(userId)");
     expect(messageAction).toContain('closeNow("action")');
-    expect(messageAction.indexOf("palrgo:openMiniDM")).toBeLessThan(messageAction.indexOf('closeNow("action")'));
+    expect(messageAction.indexOf("openDmTab(userId)")).toBeLessThan(messageAction.indexOf('closeNow("action")'));
   });
 
   it("chatroom profile opens share one ProfilePopup host (member list, message names)", () => {

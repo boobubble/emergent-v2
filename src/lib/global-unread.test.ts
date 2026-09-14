@@ -35,11 +35,12 @@ describe("global unread aggregation", () => {
     ).toBe(0);
   });
 
-  it("open mini-DM peer clears unread even when lobby is active", () => {
-    expect(isDmChannelViewed(DM_CH, ME, "lobby", [ASSISTANT])).toBe(true);
+  it("open DM tab does not clear unread until that tab is active", () => {
+    expect(isDmChannelViewed(DM_CH, ME, "lobby", [ASSISTANT])).toBe(false);
     expect(
       isPeerDmUnread(ASSISTANT, ME, "lobby", [ASSISTANT], dmLatestTs, dmReadsUnread),
-    ).toBe(false);
+    ).toBe(true);
+    expect(isDmChannelViewed(DM_CH, ME, DM_CH, [ASSISTANT])).toBe(true);
   });
 
   it("read marker clears unread when not viewing", () => {
@@ -104,9 +105,11 @@ describe("global unread wiring", () => {
     expect(store).toContain("computeGuestDmUnreadCount");
   });
 
-  it("FloatingDMDock registers open peers with chat-store", () => {
-    const dock = readFileSync(resolve(testDir, "../components/chat/FloatingDMDock.tsx"), "utf8");
-    expect(dock).toContain("setOpenDmPeers(open)");
-    expect(dock).not.toContain("markDmRead(ch)");
+  it("desktop DM tabs use openDmTab and closeDmTab", () => {
+    const store = readFileSync(resolve(testDir, "chat-store.tsx"), "utf8");
+    expect(store).toContain("openDmTab");
+    expect(store).toContain("closeDmTab");
+    const tabs = readFileSync(resolve(testDir, "../components/chat/ChatConversationTabs.tsx"), "utf8");
+    expect(tabs).toContain("closeDmTab");
   });
 });

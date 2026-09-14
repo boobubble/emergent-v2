@@ -25,7 +25,8 @@ import { useAppSettings } from "@/lib/app-settings";
 
 import { useBotEventsNotifier } from "@/lib/use-bot-events-notifier";
 import { MembersPanel } from "@/components/chat/MembersPanel";
-import { FloatingDMDock } from "@/components/chat/FloatingDMDock";
+import { ChatConversationTabs } from "@/components/chat/ChatConversationTabs";
+import { DesktopDmTabBridge } from "@/components/chat/DesktopDmTabBridge";
 import { MobileDMMinimizedDock } from "@/components/chat/MobileDMMinimizedDock";
 import { TrioRoomsDock } from "@/components/chat/TrioRoomsDock";
 import { PresenceFeed } from "@/components/chat/PresenceFeed";
@@ -481,6 +482,7 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
             }
             return (
               <>
+                <ChatConversationTabs shellLayout={shellLayout} />
                 {!(chatTheme === "gaming_arena" && !activeIsDM) && (
                   <ChatErrorBoundary label="chat-header">
                     <ChatHeader
@@ -490,6 +492,7 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
                       largeDesktop={isClientLargeDesktopShell(shellLayout)}
                       sidebarOpen={sidebarOpen}
                       onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+                      authUserId={authUserId}
                     />
                   </ChatErrorBoundary>
                 )}
@@ -561,9 +564,7 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
             forceDesktopColumn={isClientLargeDesktopShell(shellLayout)}
           />
         )}
-        <ChatErrorBoundary label="floating-dm">
-          <FloatingDMDock />
-        </ChatErrorBoundary>
+        <DesktopDmTabBridge />
         <MobileDMMinimizedDock />
         <TrioRoomsDock />
         <ProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} />

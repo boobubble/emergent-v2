@@ -25,6 +25,7 @@ import { sendGuestLobbyMessage } from "@/lib/guest-chat.functions";
 import { isGuestDmChannel, isGuestDmComposeChannel } from "@/lib/guest-dm-utils";
 import { useGuestDmFeed } from "@/lib/use-guest-dm-feed";
 import { isPresenceSystemMessage as isRoomPresenceLine } from "@/lib/presence-ui";
+import { isIrcPresenceMessage } from "@/lib/irc-presence";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
 import { useAuthOptional } from "@/lib/auth-store";
 import {
@@ -49,8 +50,45 @@ function PresenceSystemLine({ text }: { text: string }) {
   );
 }
 
+function IrcPresenceLine({
+  text,
+  eventKind,
+  ts,
+}: {
+  text: string;
+  eventKind: "join" | "part" | "quit" | "kick";
+  ts: number;
+}) {
+  const isJoin = eventKind === "join";
+  const arrow = isJoin ? "→" : "←";
+  return (
+    <div className="flex items-center gap-2 px-1 py-0.5">
+      <span
+        className={`text-[11px] ${
+          isJoin ? "text-emerald-600/90 dark:text-emerald-400/90" : "text-muted-foreground/85"
+        }`}
+      >
+        <span className="mr-1 opacity-70" aria-hidden>{arrow}</span>
+        {text}
+      </span>
+      <Time ts={ts} />
+    </div>
+  );
+}
+
 function isPresenceSystemMessage(m: Message): boolean {
   return isRoomPresenceLine(m.authorId, m.kind);
+}
+
+function isIrcPresenceLine(m: Message): boolean {
+  return isIrcPresenceMessage(m.authorId, m.kind);
+}
+
+function ircPresenceEventKind(m: Message): "join" | "part" | "quit" | "kick" {
+  if (m.text.includes(" has joined")) return "join";
+  if (m.text.includes(" was kicked")) return "kick";
+  if (m.text.includes(" quit")) return "quit";
+  return "part";
 }
 
 function AttachmentView({ a }: { a: Attachment }) {
@@ -375,7 +413,7 @@ export function MessageList({ channelId }: { channelId: string }) {
   }, [lastMsgId, isGuestChatting, session?.visitorId, lastMsg?.authorId]);
 
   const groups = useMemo(
-    () => groupChatMessages(msgs, isPresenceSystemMessage),
+    () => groupChatMessages(msgs, (m) => isPresenceSystemMessage(m) || isIrcPresenceLine(m)),
     [msgs],
   );
 
@@ -405,6 +443,16 @@ export function MessageList({ channelId }: { channelId: string }) {
         {groups.map((g, gi) => {
           if (isPresenceSystemMessage(g[0])) {
             return <PresenceSystemLine key={g[0].id} text={g[0].text} />;
+          }
+          if (isIrcPresenceLine(g[0])) {
+            return (
+              <IrcPresenceLine
+                key={g[0].id}
+                text={g[0].text}
+                eventKind={ircPresenceEventKind(g[0])}
+                ts={g[0].ts}
+              />
+            );
           }
           const author = resolveMessageAuthor(usersById, g[0].authorId);
           const isEphemeralGuest = Boolean(author.isGuest || author.id.startsWith("visitor_"));

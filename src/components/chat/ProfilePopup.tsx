@@ -68,7 +68,7 @@ export function ProfilePopup({
     onClose(reason);
     pendingCloseReasonRef.current = "programmatic";
   };
-  const { state, startDM, startGuestDm, staffKick } = useChat();
+  const { state, startDM, openDmTab, startGuestDm, staffKick } = useChat();
   const guestChat = useGuestChat();
   const social = useSocialGraph();
   const { requireAuth } = useAuthGate();
@@ -328,7 +328,7 @@ export function ProfilePopup({
                 requireAuth(() => {
                   const isMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches;
                   if (isMobile) startDM(userId);
-                  else window.dispatchEvent(new CustomEvent("palrgo:openMiniDM", { detail: { peerId: userId } }));
+                  else openDmTab(userId);
                   closeNow("action");
                 });
               }}

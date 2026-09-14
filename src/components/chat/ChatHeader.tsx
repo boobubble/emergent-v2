@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { MessageCircle, X, Bot, BotOff, Users, Palette, Minus, Sparkles, Bell, BellOff, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { useAuthOptional } from "@/lib/auth-store";
 import { useChat } from "@/lib/chat-store";
+import { parseDmChannel } from "@/lib/dm-utils";
 import {
   CHAT_INAPP_ALERT_EVENT,
   requestChatNotificationPermission,
@@ -36,7 +38,9 @@ export function ChatHeader({
   onToggleSidebar,
   authUserId = null,
 }: ChatHeaderProps = {}) {
-  const { state, isDM, dmUser, channelLabel, closeDM, setActive } = useChat();
+  const { state, isDM, dmUser, channelLabel, closeDM, closeDmTab, setActive } = useChat();
+  const auth = useAuthOptional();
+  const resolvedAuthUserId = authUserId ?? auth?.user?.id ?? null;
   const { ignoreAllBots, setIgnoreAllBots } = useIgnore();
   const [wallpaperOpen, setWallpaperOpen] = useState(false);
   const notifPerm = useChatNotificationPermission();
@@ -61,7 +65,7 @@ export function ChatHeader({
 
   if (isDM(id)) {
     const u = dmUser(id);
-    const peerId = u?.id;
+    const peerId = u?.id || parseDmChannel(id, resolvedAuthUserId).peerId;
     const ONLINE_WINDOW_MS = 5 * 60 * 1000;
     const isOnline = u
       ? u.isBot
@@ -117,8 +121,10 @@ export function ChatHeader({
           </button>
           <button
             onClick={() => {
-              if (peerId) closeDM(peerId);
-              else leaveToRoom();
+              if (peerId) {
+                if (largeDesktop) closeDmTab(peerId);
+                else closeDM(peerId);
+              } else leaveToRoom();
             }}
             aria-label="Close DM"
             className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition hover:bg-destructive/15 hover:text-destructive"

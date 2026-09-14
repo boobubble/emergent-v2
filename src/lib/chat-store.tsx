@@ -146,7 +146,12 @@ import {
   lobbyIrcTransport,
   usesIrcLive,
   type LobbyIrcIncomingMessage,
+  type LobbyIrcPresenceEvent,
 } from "./lobby-irc-transport";
+import {
+  formatIrcPresenceText,
+  IRC_PRESENCE_AUTHOR,
+} from "./irc-presence";
 
 export { dmChannelFor } from "./dm-utils";
 
@@ -655,6 +660,10 @@ interface Ctx {
   watchRemoteChannel: (channelId: string | null | undefined) => void;
   /** Desktop mini-DM windows currently open (peer profile ids). */
   setOpenDmPeers: (peerIds: string[]) => void;
+  openDmPeerIds: string[];
+  openDmTab: (userId: string) => void;
+  closeDmTab: (userId: string) => void;
+  roomTabChannel: string;
   replyingTo: Message | null;
   setReplyingTo: (m: Message | null) => void;
   findMessage: (id: string) => Message | undefined;
@@ -862,6 +871,19 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
   const [guestDmReads, setGuestDmReads] = useState<Record<string, number>>({});
   const [guestDmThreads, setGuestDmThreads] = useState<Record<string, GuestDmThreadMeta>>({});
   const [openDmPeerIds, setOpenDmPeerIds] = useState<string[]>([]);
+  const [roomTabChannel, setRoomTabChannel] = useState<string>(() => {
+    const ch = state.activeChannel;
+    if (
+      typeof ch === "string" &&
+      !ch.startsWith("dm:") &&
+      !isGuestDmChannel(ch) &&
+      !isGuestDmComposeChannel(ch)
+    ) {
+      return ch;
+    }
+    return state.roomOrder?.[0] || MAIN_IRC_ROOM_ID;
+  });
+  const ircPresenceDedupRef = useRef<Map<string, number>>(new Map());
   const listGuestDmForGuestFn = useServerFn(listGuestDmConversationsForGuest);
   const markGuestDmReadServerFn = useServerFn(markGuestDmReadFn);
 
@@ -1592,20 +1614,6 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     void markDmRead(channelId);
   }, [authUserId, state.activeChannel, markDmRead, guestDmThreads, markGuestDmRead]);
 
-  // Mark read for every open desktop mini-DM window.
-  useEffect(() => {
-    if (!authUserId || openDmPeerIds.length === 0) return;
-    for (const peerId of openDmPeerIds) {
-      if (isGuestDmPeer(peerId)) {
-        const ch = resolveGuestDmChannel(peerId, guestDmConvByPeer);
-        if (ch) void markGuestDmRead(peerId, ch);
-        continue;
-      }
-      const ch = dmChannelFor(authUserId, peerId);
-      if (ch && isRemoteDmChannel(ch, authUserId)) void markDmRead(ch);
-    }
-  }, [authUserId, openDmPeerIds, state.messages, markDmRead, guestDmConvByPeer, markGuestDmRead]);
-
   // Upsert my read marker when I open a DM or new msgs arrive while viewing
   const [roomUnread, setRoomUnread] = useState<Record<string, number>>({});
   const lastMsgTsRef = useRef<Record<string, number>>({});
@@ -1707,6 +1715,39 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     };
   }, [authUserId, username]);
 
+  const handleLobbyIrcPresenceRef = useRef<(event: LobbyIrcPresenceEvent) => void>(() => {});
+  useEffect(() => {
+    handleLobbyIrcPresenceRef.current = (event) => {
+      let channelId = event.room;
+      if (!channelId || !usesIrcLive(channelId)) {
+        const active = stateRef.current.activeChannel;
+        if (usesIrcLive(active)) channelId = active;
+        else return;
+      }
+      if (!channelId || !usesIrcLive(channelId)) return;
+
+      const dedupKey = `${channelId}:${event.event}:${event.nick}`;
+      const now = Date.now();
+      const last = ircPresenceDedupRef.current.get(dedupKey) ?? 0;
+      if (now - last < 1500) return;
+      ircPresenceDedupRef.current.set(dedupKey, now);
+
+      const text = formatIrcPresenceText(event.event, event.nick, event.reason);
+      setState((s) => ({
+        ...s,
+        messages: appendChannelMessage(s.messages, channelId, {
+          id: `irc-presence-${uid()}`,
+          channelId,
+          authorId: IRC_PRESENCE_AUTHOR,
+          text,
+          ts: now,
+          kind: "irc-presence",
+        }),
+      }));
+      rtLog("msg", "irc-presence", `${channelId} · ${text}`);
+    };
+  }, []);
+
   useEffect(() => {
     if (isGuest || !authUserId) {
       lobbyIrcTransport.disconnect();
@@ -1725,6 +1766,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
         token,
         (incoming) => handleLobbyIrcMessageRef.current(incoming),
         (status, detail) => rtLog("ws", status, detail ? `lobby-irc · ${detail}` : "lobby-irc"),
+        (presence) => handleLobbyIrcPresenceRef.current(presence),
       );
     })();
 
@@ -1771,6 +1813,13 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
   
 
   const setActive = useCallback((channelId: string) => {
+    const isDmChannel =
+      channelId.startsWith("dm:") ||
+      isGuestDmChannel(channelId) ||
+      isGuestDmComposeChannel(channelId);
+    if (!isDmChannel) {
+      setRoomTabChannel(channelId);
+    }
     setState(s => ({ ...s, activeChannel: channelId }));
     setReplyingTo(null);
     setRoomUnread((prev) => {
@@ -2287,9 +2336,32 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     void markDmRead(channelId);
   }, [authUserId, isGuest, markDmRead, guestDmConvByPeer, markGuestDmRead]);
 
+  const openDmTab = useCallback((userId: string) => {
+    startDM(userId);
+    setOpenDmPeerIds((prev) => (prev.includes(userId) ? prev : [...prev, userId]));
+  }, [startDM]);
+
+  const closeDmTab = useCallback((userId: string) => {
+    let channelId: string | null = null;
+    if (isGuestDmPeer(userId)) {
+      channelId = resolveGuestDmChannel(userId, guestDmConvByPeer);
+    } else {
+      channelId = dmChannelFor(authUserId, userId);
+    }
+    setOpenDmPeerIds((prev) => prev.filter((id) => id !== userId));
+    if (channelId && stateRef.current.activeChannel === channelId) {
+      const fallback =
+        roomTabChannel ||
+        stateRef.current.roomOrder[0] ||
+        MAIN_IRC_ROOM_ID;
+      setActive(fallback);
+    }
+  }, [authUserId, guestDmConvByPeer, roomTabChannel, setActive]);
+
   const closeDM = useCallback((userId: string) => {
     const channelId = dmChannelFor(authUserId, userId);
     if (!channelId) return;
+    setOpenDmPeerIds((prev) => prev.filter((id) => id !== userId));
     setState(s => ({
       ...s,
       dmOrder: s.dmOrder.filter(id => id !== userId),
@@ -2717,11 +2789,15 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       recipientName?: string,
     ) => registerGuestDmThread(conversationId, visitorId, recipientId, guestDisplayName, recipientName).channelId,
     setOpenDmPeers,
+    openDmPeerIds,
+    openDmTab,
+    closeDmTab,
+    roomTabChannel,
     staffKick,
     staffLocalMute,
     markDmRead,
     roomUnread,
-  }), [state, setActive, send, retrySend, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser, reset, replyingTo, findMessage, authUserId, dmReads, dmLatestTs, guestDmConvByPeer, guestDmLatestTs, guestDmReads, guestDmThreads, openDmPeerIds, staffKick, staffLocalMute, pushSystem, pushPresenceEvent, wipeChannel, removeMessage, deleteRoom, syncAdminChannels, registerCommunityRoom, leaveCommunityRoom, markDmRead, markGuestDmRead, startGuestDm, roomUnread, watchRemoteChannel, setOpenDmPeers]);
+  }), [state, setActive, send, retrySend, startDM, closeDM, openDmTab, closeDmTab, roomTabChannel, joinRoom, createRoom, updateMe, adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser, reset, replyingTo, findMessage, authUserId, dmReads, dmLatestTs, guestDmConvByPeer, guestDmLatestTs, guestDmReads, guestDmThreads, openDmPeerIds, staffKick, staffLocalMute, pushSystem, pushPresenceEvent, wipeChannel, removeMessage, deleteRoom, syncAdminChannels, registerCommunityRoom, leaveCommunityRoom, markDmRead, markGuestDmRead, startGuestDm, roomUnread, watchRemoteChannel, setOpenDmPeers]);
 
 
   return <ChatCtx.Provider value={value}>{children}</ChatCtx.Provider>;

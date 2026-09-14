@@ -10,16 +10,11 @@ import { dmChannelFor, isRemoteDmChannel, isUuid } from "@/lib/dm-utils";
 /** True when the user is actively viewing this remote DM thread. */
 export function isDmChannelViewed(
   channelId: string,
-  authUserId: string,
+  _authUserId: string,
   activeChannel: string,
-  openDmPeerIds: readonly string[],
+  _openDmPeerIds: readonly string[],
 ): boolean {
-  if (activeChannel === channelId) return true;
-  for (const peerId of openDmPeerIds) {
-    const ch = dmChannelFor(authUserId, peerId);
-    if (ch === channelId) return true;
-  }
-  return false;
+  return activeChannel === channelId;
 }
 
 export function isPeerDmUnread(

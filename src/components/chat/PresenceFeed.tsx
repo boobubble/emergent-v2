@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useChat } from "@/lib/chat-store";
 import { useAppSettings } from "@/lib/app-settings";
 import { isRealPresenceUserId } from "@/lib/presence-ui";
+import { usesIrcLive } from "@/lib/lobby-irc-transport";
 
 /**
  * Room-scoped presence → compact system lines in the chat stream ONLY.
@@ -31,6 +32,7 @@ export function PresenceFeed({ channelId }: { channelId: string }) {
   useEffect(() => {
     if (!enabled) return;
     if (isDM(channelId)) return;
+    if (usesIrcLive(channelId)) return;
 
     let cancelled = false;
     let pendingJoin = new Map<string, ReturnType<typeof setTimeout>>();

@@ -1,3 +1,5 @@
+import { parseIrcPresenceLine } from "./irc-presence";
+
 /** Gateway room name (wire protocol). Normalized to {@link LOBBY_IRC_CHANNEL} for app consumers. */
 const GATEWAY_ROOM = "global";
 
@@ -47,6 +49,13 @@ export type LobbyIrcIncomingMessage = {
   text: string;
 };
 
+export type LobbyIrcPresenceEvent = {
+  room: string;
+  event: "join" | "part" | "quit" | "kick";
+  nick: string;
+  reason?: string;
+};
+
 export type LobbyIrcStatus =
   | "connecting"
   | "open"
@@ -81,6 +90,7 @@ type GatewayFrame = {
   text?: string;
   message?: string;
   error?: string;
+  line?: string;
 };
 
 function isBrowser(): boolean {
@@ -116,6 +126,10 @@ export class LobbyIrcTransport {
     | ((message: LobbyIrcIncomingMessage) => void)
     | null = null;
 
+  private onPresence:
+    | ((event: LobbyIrcPresenceEvent) => void)
+    | null = null;
+
   private onStatus: LobbyIrcStatusHandler | null = null;
 
   private authenticated = false;
@@ -139,6 +153,7 @@ export class LobbyIrcTransport {
     token: string,
     onMessage: (message: LobbyIrcIncomingMessage) => void,
     onStatus?: LobbyIrcStatusHandler,
+    onPresence?: (event: LobbyIrcPresenceEvent) => void,
   ): void {
     if (!url.startsWith("wss://")) {
       this.emitStatus(
@@ -160,6 +175,7 @@ export class LobbyIrcTransport {
     this.wsUrl = url;
     this.token = token;
     this.onMessage = onMessage;
+    this.onPresence = onPresence ?? null;
     this.onStatus = onStatus ?? null;
 
     this.bindLifecycleListeners();
@@ -363,6 +379,22 @@ export class LobbyIrcTransport {
     }
 
     if (frame.type === "message.sent") {
+      return;
+    }
+
+    if (frame.type === "irc" && typeof frame.line === "string") {
+      const parsed = parseIrcPresenceLine(frame.line);
+      if (!parsed) return;
+
+      const room = parsed.room ?? "";
+      if (room && !usesIrcLive(room)) return;
+
+      this.onPresence?.({
+        room,
+        event: parsed.event,
+        nick: parsed.nick,
+        reason: parsed.reason,
+      });
       return;
     }
 

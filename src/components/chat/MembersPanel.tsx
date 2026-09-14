@@ -136,7 +136,7 @@ export function MembersPanel({
   /** Client lg+ mount: show the column without waiting for lg:flex CSS. */
   forceDesktopColumn?: boolean;
 }) {
-  const { state, startDM, closeDM, dmChannelFor, isDmUnread, dmUnreadCount } = useChat();
+  const { state, startDM, openDmTab, closeDM, dmChannelFor, isDmUnread, dmUnreadCount } = useChat();
   const { user: authUser } = useAuth();
   const { requireAuth } = useAuthGate();
   const { profiles } = useRemoteProfiles();
@@ -156,8 +156,8 @@ export function MembersPanel({
     requireAuth(() => {
       if (isMobile) {
         startDM(id);
-      } else if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("palrgo:openMiniDM", { detail: { peerId: id } }));
+      } else {
+        openDmTab(id);
       }
     });
   };

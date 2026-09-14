@@ -8,16 +8,10 @@ import { isGuestDmPeer, parseGuestDmPeer, guestDmChannelId } from "./guest-dm-ut
 export function isGuestDmChannelViewed(
   channelId: string,
   activeChannel: string,
-  openDmPeerIds: readonly string[],
-  convByPeer: Record<string, string>,
+  _openDmPeerIds: readonly string[],
+  _convByPeer: Record<string, string>,
 ): boolean {
-  if (activeChannel === channelId) return true;
-  for (const peerId of openDmPeerIds) {
-    if (!isGuestDmPeer(peerId)) continue;
-    const conv = convByPeer[peerId];
-    if (conv && guestDmChannelId(conv) === channelId) return true;
-  }
-  return false;
+  return activeChannel === channelId;
 }
 
 export function isGuestDmPeerUnread(
