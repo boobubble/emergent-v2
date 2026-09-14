@@ -65,7 +65,23 @@ function getPositionSeconds(currentTime: number): number {
   return Math.max(0, currentTime || 0);
 }
 
-export function useWatchTogether(channelId: string | null, authUserId: string | null | undefined) {
+export type UseWatchTogetherArgs = {
+  channelId: string | null;
+  authUserId?: string | null;
+};
+
+export function useWatchTogether(
+  channelIdOrOpts: string | null | UseWatchTogetherArgs,
+  authUserIdArg?: string | null,
+) {
+  const channelId =
+    channelIdOrOpts && typeof channelIdOrOpts === "object"
+      ? channelIdOrOpts.channelId
+      : channelIdOrOpts;
+  const authUserId =
+    channelIdOrOpts && typeof channelIdOrOpts === "object"
+      ? channelIdOrOpts.authUserId ?? authUserIdArg
+      : authUserIdArg;
   const player = useYouTubePlayer();
   const {
     playerControlRef,

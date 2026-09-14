@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Eye, Loader2, Play, Square, Users } from "lucide-react";
+import { Eye, Loader2, Play, Square, Tv2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,7 +11,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { parseYoutubeId } from "@/lib/media-providers-config";
+import { isUuid, parseDmChannel } from "@/lib/dm-utils";
 import { useWatchTogether } from "@/lib/use-watch-together";
+import { useOptionalYouTubePlayer } from "@/components/chat/youtube-player-context";
 
 interface WatchTogetherControlsProps {
   channelId: string;
@@ -28,6 +30,7 @@ export function WatchTogetherControls({
 }: WatchTogetherControlsProps) {
   const [open, setOpen] = useState(false);
   const [videoInput, setVideoInput] = useState("");
+  const player = useOptionalYouTubePlayer();
 
   const {
     enabled,
@@ -44,13 +47,17 @@ export function WatchTogetherControls({
     authUserId,
   });
 
-  if (!enabled || !peerId) return null;
+  const resolvedPeerId =
+    (peerId && isUuid(peerId) ? peerId : null) ||
+    parseDmChannel(channelId, authUserId).peerId;
+
+  if (!enabled || !resolvedPeerId || !isUuid(resolvedPeerId)) return null;
 
   const handleStart = async () => {
     const videoId = parseYoutubeId(videoInput);
     if (!videoId) return;
 
-    const result = await startWatchTogether(peerId, videoId);
+    const result = await startWatchTogether(resolvedPeerId, videoId);
     if (result) {
       setVideoInput("");
       setOpen(false);
@@ -62,37 +69,76 @@ export function WatchTogetherControls({
     setOpen(true);
   };
 
+  const joinSession = () => {
+    if (!session || !player) return;
+    if (player.activeVideoId === session.provider_video_id && player.isMinimized) {
+      player.restorePlayer();
+      return;
+    }
+    player.openPlayer({
+      videoId: session.provider_video_id,
+      url: `https://youtu.be/${session.provider_video_id}`,
+      title: "Watch Together",
+    });
+  };
+
+  const leavePlayer = () => {
+    player?.closePlayer();
+  };
+
+  const hostLabel = isHost ? "You started this" : `${peerName} started this`;
+
   return (
     <>
       {session ? (
-        <div className="flex items-center gap-1">
-          <span
-            className="hidden items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary sm:flex"
-            title={
-              isHost ? "You are hosting Watch Together" : `${peerName} is hosting Watch Together`
-            }
+        <div className="flex items-center gap-0.5 sm:gap-1">
+          <button
+            type="button"
+            onClick={joinSession}
+            title={`${hostLabel}. Open Watch Together.`}
+            aria-label={`Watch Together active. ${hostLabel}`}
+            className="flex h-8 max-w-[9.5rem] items-center gap-1 rounded-full bg-primary/15 px-2 text-[11px] font-semibold text-primary transition hover:bg-primary/25 sm:max-w-none sm:px-2.5"
           >
-            <Users className="h-3.5 w-3.5" />
-            <span>{isHost ? "Watching together" : "Watch Together"}</span>
-          </span>
-
-          {isHost && (
+            <Tv2 className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">
+              <span className="sm:hidden">Watch</span>
+              <span className="hidden sm:inline">Watch Together</span>
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={joinSession}
+            className="hidden h-8 items-center rounded-full px-2 text-[11px] font-semibold text-muted-foreground transition hover:bg-white/10 hover:text-foreground sm:flex"
+          >
+            Join
+          </button>
+          {isHost ? (
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={() => void stopWatchTogether()}
               disabled={ending}
-              className="h-8 px-2.5 text-xs"
-              title="Stop Watch Together"
+              className="h-8 px-2 text-xs sm:px-2.5"
+              title="End Watch Together"
             >
               {ending ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
               ) : (
                 <Square className="h-3.5 w-3.5" />
               )}
-              <span className="ml-1.5 hidden sm:inline">Stop</span>
+              <span className="ml-1 hidden sm:inline">End</span>
             </Button>
+          ) : (
+            <button
+              type="button"
+              onClick={leavePlayer}
+              className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition hover:bg-white/10 hover:text-foreground"
+              aria-label="Leave Watch Together player"
+              title="Leave player"
+            >
+              <Square className="h-3.5 w-3.5" />
+            </button>
           )}
         </div>
       ) : (
@@ -100,11 +146,16 @@ export function WatchTogetherControls({
           type="button"
           onClick={handleOpen}
           disabled={loading}
-          aria-label="Start Watch Together"
+          aria-label="Watch Together"
           title="Watch Together"
-          className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition hover:bg-primary/10 hover:text-primary disabled:opacity-50"
+          className="flex h-8 items-center gap-1 rounded-full px-2 text-muted-foreground transition hover:bg-primary/10 hover:text-primary disabled:opacity-50 sm:px-2.5"
         >
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+          {loading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Tv2 className="h-4 w-4" />
+          )}
+          <span className="hidden text-xs font-semibold sm:inline">Watch Together</span>
         </button>
       )}
 
@@ -121,7 +172,7 @@ export function WatchTogetherControls({
             </div>
             <DialogTitle className="text-center">Watch Together</DialogTitle>
             <DialogDescription className="text-center">
-              Start a synced YouTube session with {peerName}.
+              Start a synced YouTube session with {peerName}. You will be the host.
             </DialogDescription>
           </DialogHeader>
 
@@ -141,7 +192,7 @@ export function WatchTogetherControls({
               }}
               disabled={starting}
               autoFocus
-              placeholder="https://youtu.be/� or YouTube video ID"
+              placeholder="https://youtu.be/… or YouTube video ID"
               className="min-h-11 text-base"
             />
             <p className="text-xs text-muted-foreground">
@@ -178,12 +229,12 @@ export function WatchTogetherControls({
               {starting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Starting�
+                  Starting…
                 </>
               ) : (
                 <>
                   <Play className="mr-2 h-4 w-4" />
-                  Start Watching
+                  Start watching
                 </>
               )}
             </Button>

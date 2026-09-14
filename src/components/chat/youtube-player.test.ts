@@ -123,6 +123,33 @@ describe("chat media context paths", () => {
   });
 });
 
+describe("watch together DM header wiring", () => {
+  const root = resolve(process.cwd(), "src/components/chat");
+  const header = readFileSync(resolve(root, "ChatHeader.tsx"), "utf8");
+  const controls = readFileSync(resolve(root, "WatchTogetherControls.tsx"), "utf8");
+  const chatApp = readFileSync(resolve(process.cwd(), "src/components/chat/ChatApp.tsx"), "utf8");
+  const hook = readFileSync(resolve(process.cwd(), "src/lib/use-watch-together.ts"), "utf8");
+
+  it("DM header mounts Watch Together and receives authUserId", () => {
+    expect(header).toContain("WatchTogetherControls");
+    expect(header).toContain("resolvedAuthUserId");
+    expect(chatApp).toMatch(/<ChatHeader[\s\S]*authUserId=\{authUserId\}/);
+  });
+
+  it("Watch Together button is visible for authenticated DMs and opens the start dialog", () => {
+    expect(controls).toContain('aria-label="Watch Together"');
+    expect(controls).toContain("Start watching");
+    expect(controls).toContain("useWatchTogether({");
+    expect(controls).toContain("startWatchTogether");
+    expect(controls).toContain("Join");
+  });
+
+  it("hook accepts the object args used by the DM header", () => {
+    expect(hook).toContain("UseWatchTogetherArgs");
+    expect(hook).toContain("channelIdOrOpts");
+  });
+});
+
 describe("floating youtube player wiring", () => {
   const root = resolve(process.cwd(), "src/components/chat");
   const mediaEmbed = readFileSync(resolve(root, "MediaEmbed.tsx"), "utf8");
