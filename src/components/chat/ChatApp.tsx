@@ -120,12 +120,44 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
   const chatRef = useRef(chat);
   chatRef.current = chat;
   useEffect(() => {
-    const c = chatRef.current;
-    if (!c) return;
-    const cfg = raw.chat_channels as { list?: { id: string; name: string; topic?: string }[] } | undefined;
-    const list = Array.isArray(cfg?.list) ? cfg!.list : [];
-    c.syncAdminChannels(list);
-  }, [raw.chat_channels]);
+    let cancelled = false;
+
+    const syncIrcRooms = async () => {
+      try {
+        const res = await fetch("https://ws.yaarzo.com/rooms");
+        if (!res.ok) throw new Error(`IRC rooms HTTP ${res.status}`);
+
+        const payload = await res.json() as {
+          rooms?: Array<{ room?: string; channel?: string; users?: number; topic?: string }>;
+        };
+
+        if (cancelled) return;
+
+        const list = Array.isArray(payload.rooms)
+          ? payload.rooms
+              .filter((r) => typeof r?.room === "string" && r.room.trim())
+              .map((r) => ({
+                id: r.room!.trim(),
+                name: r.room!.trim(),
+                topic: typeof r.topic === "string" ? r.topic : "",
+                memberCount: typeof r.users === "number" ? r.users : 0,
+              }))
+          : [];
+
+        chatRef.current?.syncAdminChannels(list);
+      } catch (err) {
+        console.error("Failed to sync IRC room list:", err);
+      }
+    };
+
+    void syncIrcRooms();
+    const timer = window.setInterval(syncIrcRooms, 30000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
