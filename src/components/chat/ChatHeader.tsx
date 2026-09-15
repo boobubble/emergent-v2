@@ -15,7 +15,6 @@ import { LoyaltyChip } from "./LoyaltyChip";
 import { BrandMark } from "@/components/BrandMark";
 import { CommunityEventsTicker } from "./CommunityEventsTicker";
 import { DMWallpaperSheet } from "./DMWallpaperSheet";
-import { WatchTogetherControls } from "./WatchTogetherControls";
 
 
 interface ChatHeaderProps {
@@ -96,7 +95,6 @@ export function ChatHeader({
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          <WatchTogetherControls channelId={id} authUserId={authUserId} peerId={peerId} peerName={u?.name} />
           <button
             type="button"
             onClick={() => setWallpaperOpen(true)}

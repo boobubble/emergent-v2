@@ -58,7 +58,7 @@ export interface Message {
   authorId: string;
   text: string;
   ts: number;
-  kind?: "text" | "system" | "game" | "me" | "irc-presence";
+  kind?: "text" | "system" | "game" | "me" | "irc-presence" | "watch-together-invite";
   attachment?: Attachment;
   replyToId?: string;         // threading: id of message being replied to
   /** Sender-local only. Other clients never see this — they get the Realtime row. */

@@ -325,6 +325,8 @@ export const MODULES = {
       "src/lib/guest-dm.test.ts",
       "src/lib/media-embed.test.ts",
       "src/components/chat/youtube-player.test.ts",
+      "src/lib/watch-together-sync.test.ts",
+      "src/lib/watch-together-actions.test.ts",
       "src/lib/chat-image-retention.test.ts",
       "src/lib/chat-image-security.test.ts",
     ],

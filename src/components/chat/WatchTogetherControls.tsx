@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { Eye, Loader2, Play, Square, Tv2 } from "lucide-react";
+import { createContext, useContext, useRef, useState, type ReactNode } from "react";
+import { Eye, Loader2, Play, Square, Tv2, Upload, Youtube } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,159 +13,153 @@ import {
 } from "@/components/ui/dialog";
 import { parseYoutubeId } from "@/lib/media-providers-config";
 import { isUuid, parseDmChannel } from "@/lib/dm-utils";
-import { useWatchTogether } from "@/lib/use-watch-together";
+import {
+  ALLOWED_WATCH_VIDEO_MIMES,
+  MAX_WATCH_UPLOAD_BYTES,
+  uploadWatchTogetherVideo,
+} from "@/lib/watch-together-upload.functions";
+import { useWatchTogether, type StartWatchTogetherInput } from "@/lib/use-watch-together";
 import { useOptionalYouTubePlayer } from "@/components/chat/youtube-player-context";
 
-interface WatchTogetherControlsProps {
-  channelId: string;
-  authUserId: string | null;
-  peerId: string | null;
-  peerName?: string;
+type WatchTogetherComposerContextValue = ReturnType<typeof useWatchTogether> & {
+  enabled: boolean;
+  peerName: string;
+  openStartDialog: () => void;
+  startDialogError: string | null;
+};
+
+const WatchTogetherComposerContext = createContext<WatchTogetherComposerContextValue | null>(null);
+
+function useWatchTogetherComposer() {
+  const ctx = useContext(WatchTogetherComposerContext);
+  if (!ctx) throw new Error("WatchTogetherComposerContext missing");
+  return ctx;
 }
 
-export function WatchTogetherControls({
+export function useOptionalWatchTogetherComposer() {
+  return useContext(WatchTogetherComposerContext);
+}
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? ""));
+    reader.onerror = () => reject(new Error("Could not read file."));
+    reader.readAsDataURL(file);
+  });
+}
+
+export function WatchTogetherComposerProvider({
   channelId,
   authUserId,
   peerId,
   peerName = "your friend",
-}: WatchTogetherControlsProps) {
-  const [open, setOpen] = useState(false);
+  children,
+}: {
+  channelId: string;
+  authUserId: string | null;
+  peerId: string | null;
+  peerName?: string;
+  children: ReactNode;
+}) {
+  const hook = useWatchTogether({ channelId, authUserId, peerName });
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [mode, setMode] = useState<"youtube" | "upload">("youtube");
   const [videoInput, setVideoInput] = useState("");
-  const player = useOptionalYouTubePlayer();
-
-  const {
-    enabled,
-    session,
-    isHost,
-    loading,
-    starting,
-    ending,
-    error,
-    startWatchTogether,
-    stopWatchTogether,
-  } = useWatchTogether({
-    channelId,
-    authUserId,
-  });
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadPreview, setUploadPreview] = useState<string | null>(null);
+  const [startDialogError, setStartDialogError] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const uploadFn = useServerFn(uploadWatchTogetherVideo);
 
   const resolvedPeerId =
     (peerId && isUuid(peerId) ? peerId : null) ||
-    parseDmChannel(channelId, authUserId).peerId;
+    (authUserId ? parseDmChannel(channelId, authUserId).peerId : null);
 
-  if (!enabled || !resolvedPeerId || !isUuid(resolvedPeerId)) return null;
+  const enabled = hook.enabled && Boolean(resolvedPeerId && isUuid(resolvedPeerId));
+
+  const resetForm = () => {
+    setVideoInput("");
+    setUploadFile(null);
+    setUploadPreview(null);
+    setMode("youtube");
+    setStartDialogError(null);
+  };
 
   const handleStart = async () => {
-    const videoId = parseYoutubeId(videoInput);
-    if (!videoId) return;
+    if (!resolvedPeerId) return;
+    setStartDialogError(null);
 
-    const result = await startWatchTogether(resolvedPeerId, videoId);
-    if (result) {
-      setVideoInput("");
-      setOpen(false);
+    try {
+      let input: StartWatchTogetherInput;
+
+      if (mode === "youtube") {
+        const videoId = parseYoutubeId(videoInput);
+        if (!videoId) {
+          setStartDialogError("Enter a valid YouTube URL or video ID.");
+          return;
+        }
+        input = { sourceType: "youtube", providerVideoId: videoId };
+      } else {
+        if (!uploadFile) {
+          setStartDialogError("Choose a video file first.");
+          return;
+        }
+        if (uploadFile.size > MAX_WATCH_UPLOAD_BYTES) {
+          setStartDialogError("Video too large (max 100 MB).");
+          return;
+        }
+        const mime = uploadFile.type || "video/mp4";
+        if (!ALLOWED_WATCH_VIDEO_MIMES.includes(mime as (typeof ALLOWED_WATCH_VIDEO_MIMES)[number])) {
+          setStartDialogError("Unsupported format. Use MP4, WebM, or MOV.");
+          return;
+        }
+        const dataBase64 = await fileToBase64(uploadFile);
+        const uploaded = await uploadFn({
+          data: {
+            channelId,
+            name: uploadFile.name,
+            mime,
+            size: uploadFile.size,
+            dataBase64,
+          },
+        });
+        input = {
+          sourceType: "upload",
+          uploadStoragePath: uploaded.storagePath,
+          uploadFilename: uploaded.filename,
+          uploadMime: uploaded.mime,
+          sourceTitle: uploaded.filename,
+        };
+      }
+
+      await hook.startWatchTogether(resolvedPeerId, input);
+      resetForm();
+      setDialogOpen(false);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unable to start Watch Together.";
+      setStartDialogError(message);
+      console.error("[watch-together] start dialog failed", err);
     }
   };
 
-  const handleOpen = () => {
-    setVideoInput("");
-    setOpen(true);
-  };
+  if (!enabled) return <>{children}</>;
 
-  const joinSession = () => {
-    if (!session || !player) return;
-    if (player.activeVideoId === session.provider_video_id && player.isMinimized) {
-      player.restorePlayer();
-      return;
-    }
-    player.openPlayer({
-      videoId: session.provider_video_id,
-      url: `https://youtu.be/${session.provider_video_id}`,
-      title: "Watch Together",
-    });
+  const value: WatchTogetherComposerContextValue = {
+    ...hook,
+    enabled,
+    peerName,
+    startDialogError,
+    openStartDialog: () => {
+      resetForm();
+      setDialogOpen(true);
+    },
   };
-
-  const leavePlayer = () => {
-    player?.closePlayer();
-  };
-
-  const hostLabel = isHost ? "You started this" : `${peerName} started this`;
 
   return (
-    <>
-      {session ? (
-        <div className="flex items-center gap-0.5 sm:gap-1">
-          <button
-            type="button"
-            onClick={joinSession}
-            title={`${hostLabel}. Open Watch Together.`}
-            aria-label={`Watch Together active. ${hostLabel}`}
-            className="flex h-8 max-w-[9.5rem] items-center gap-1 rounded-full bg-primary/15 px-2 text-[11px] font-semibold text-primary transition hover:bg-primary/25 sm:max-w-none sm:px-2.5"
-          >
-            <Tv2 className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">
-              <span className="sm:hidden">Watch</span>
-              <span className="hidden sm:inline">Watch Together</span>
-            </span>
-          </button>
-          <button
-            type="button"
-            onClick={joinSession}
-            className="hidden h-8 items-center rounded-full px-2 text-[11px] font-semibold text-muted-foreground transition hover:bg-white/10 hover:text-foreground sm:flex"
-          >
-            Join
-          </button>
-          {isHost ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => void stopWatchTogether()}
-              disabled={ending}
-              className="h-8 px-2 text-xs sm:px-2.5"
-              title="End Watch Together"
-            >
-              {ending ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Square className="h-3.5 w-3.5" />
-              )}
-              <span className="ml-1 hidden sm:inline">End</span>
-            </Button>
-          ) : (
-            <button
-              type="button"
-              onClick={leavePlayer}
-              className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition hover:bg-white/10 hover:text-foreground"
-              aria-label="Leave Watch Together player"
-              title="Leave player"
-            >
-              <Square className="h-3.5 w-3.5" />
-            </button>
-          )}
-        </div>
-      ) : (
-        <button
-          type="button"
-          onClick={handleOpen}
-          disabled={loading}
-          aria-label="Watch Together"
-          title="Watch Together"
-          className="flex h-8 items-center gap-1 rounded-full px-2 text-muted-foreground transition hover:bg-primary/10 hover:text-primary disabled:opacity-50 sm:px-2.5"
-        >
-          {loading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Tv2 className="h-4 w-4" />
-          )}
-          <span className="hidden text-xs font-semibold sm:inline">Watch Together</span>
-        </button>
-      )}
-
-      <Dialog
-        open={open}
-        onOpenChange={(next) => {
-          if (!starting) setOpen(next);
-        }}
-      >
+    <WatchTogetherComposerContext.Provider value={value}>
+      {children}
+      <Dialog open={dialogOpen} onOpenChange={(next) => !hook.starting && setDialogOpen(next)}>
         <DialogContent className="mx-4 w-[calc(100%-2rem)] max-w-md sm:mx-auto">
           <DialogHeader>
             <div className="mx-auto mb-1 grid h-12 w-12 place-items-center rounded-full bg-primary/10">
@@ -172,61 +167,75 @@ export function WatchTogetherControls({
             </div>
             <DialogTitle className="text-center">Watch Together</DialogTitle>
             <DialogDescription className="text-center">
-              Start a synced YouTube session with {peerName}. You will be the host.
+              Start a synced session with {peerName}. Playback begins after they join.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-2">
-            <label htmlFor="watch-together-youtube" className="text-sm font-medium">
-              YouTube video
-            </label>
-            <Input
-              id="watch-together-youtube"
-              value={videoInput}
-              onChange={(e) => setVideoInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  void handleStart();
-                }
-              }}
-              disabled={starting}
-              autoFocus
-              placeholder="https://youtu.be/… or YouTube video ID"
-              className="min-h-11 text-base"
-            />
-            <p className="text-xs text-muted-foreground">
-              Paste a YouTube watch link, Shorts link, youtu.be link, or 11-character video ID.
-            </p>
-
-            {videoInput.trim() && !parseYoutubeId(videoInput) && (
-              <p className="text-sm text-destructive" role="alert">
-                Enter a valid YouTube video URL or video ID.
-              </p>
-            )}
-
-            {error && (
-              <p className="text-sm text-destructive" role="alert">
-                {error}
-              </p>
-            )}
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setMode("youtube")}
+              className={`flex min-h-11 items-center justify-center gap-2 rounded-xl border px-3 text-sm font-medium ${mode === "youtube" ? "border-primary bg-primary/10 text-primary" : "border-border"}`}
+            >
+              <Youtube className="h-4 w-4" />
+              YouTube
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("upload")}
+              className={`flex min-h-11 items-center justify-center gap-2 rounded-xl border px-3 text-sm font-medium ${mode === "upload" ? "border-primary bg-primary/10 text-primary" : "border-border"}`}
+            >
+              <Upload className="h-4 w-4" />
+              Upload Video
+            </button>
           </div>
 
+          {mode === "youtube" ? (
+            <Input
+              value={videoInput}
+              onChange={(e) => setVideoInput(e.target.value)}
+              disabled={hook.starting}
+              autoFocus
+              placeholder="Paste YouTube link or video ID"
+              className="min-h-11"
+            />
+          ) : (
+            <div className="space-y-2">
+              <input
+                ref={fileRef}
+                type="file"
+                className="hidden"
+                accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] ?? null;
+                  setUploadFile(file);
+                  setUploadPreview(file ? `${file.name} · ${(file.size / (1024 * 1024)).toFixed(1)} MB` : null);
+                }}
+              />
+              <Button type="button" variant="outline" className="w-full" onClick={() => fileRef.current?.click()}>
+                Choose video from device
+              </Button>
+              {uploadPreview && <p className="text-xs text-muted-foreground">{uploadPreview}</p>}
+              <p className="text-xs text-muted-foreground">MP4, WebM, or MOV up to 100 MB.</p>
+            </div>
+          )}
+
+          {(startDialogError || hook.error) && (
+            <p className="text-sm text-destructive" role="alert">
+              {startDialogError || hook.error}
+            </p>
+          )}
+
           <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={starting}
-              onClick={() => setOpen(false)}
-            >
+            <Button type="button" variant="outline" disabled={hook.starting} onClick={() => setDialogOpen(false)}>
               Cancel
             </Button>
             <Button
               type="button"
-              disabled={starting || !parseYoutubeId(videoInput)}
+              disabled={hook.starting || (mode === "youtube" ? !parseYoutubeId(videoInput) : !uploadFile)}
               onClick={() => void handleStart()}
             >
-              {starting ? (
+              {hook.starting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Starting…
@@ -234,13 +243,120 @@ export function WatchTogetherControls({
               ) : (
                 <>
                   <Play className="mr-2 h-4 w-4" />
-                  Start watching
+                  Start Watch Together
                 </>
               )}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+    </WatchTogetherComposerContext.Provider>
+  );
+}
+
+export function WatchTogetherSessionBar() {
+  const {
+    session,
+    isHost,
+    ending,
+    phase,
+    statusMessage,
+    stopWatchTogether,
+    joinWatchTogether,
+    peerName,
+  } = useWatchTogetherComposer();
+  const player = useOptionalYouTubePlayer();
+  if (!session) return null;
+
+  const sessionTitle =
+    session.source_title || session.upload_filename || session.provider_video_id || "Watch Together";
+  const detail =
+    statusMessage ||
+    (isHost
+      ? phase === "waiting"
+        ? `Waiting for ${peerName} to join…`
+        : `${peerName} joined • Watching together`
+      : phase === "watching"
+        ? "Watching together"
+        : `${peerName} invited you`);
+
+  return (
+    <div className="mb-2 flex flex-wrap items-center gap-2 rounded-2xl border border-primary/20 bg-primary/5 px-3 py-2">
+      <Tv2 className="h-4 w-4 shrink-0 text-primary" />
+      <div className="min-w-0 flex-1 text-xs">
+        <div className="font-semibold text-primary">Watch Together</div>
+        <div className="truncate text-muted-foreground">{sessionTitle}</div>
+        <div className="truncate text-[11px] text-muted-foreground">{detail}</div>
+      </div>
+      {!isHost && phase !== "watching" && (
+        <Button type="button" size="sm" variant="secondary" className="h-8" onClick={() => void joinWatchTogether()}>
+          Join
+        </Button>
+      )}
+      {!isHost && phase === "watching" && (
+        <Button type="button" size="sm" variant="secondary" className="h-8" onClick={() => player?.restorePlayer()}>
+          {player?.isOpen ? "Restore" : "Open"}
+        </Button>
+      )}
+      {isHost ? (
+        <Button type="button" size="sm" variant="outline" className="h-8" disabled={ending} onClick={() => void stopWatchTogether()}>
+          {ending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "End"}
+        </Button>
+      ) : phase === "watching" ? (
+        <button
+          type="button"
+          onClick={() => player?.closePlayer()}
+          className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-white/10"
+          aria-label="Leave player"
+        >
+          <Square className="h-3.5 w-3.5" />
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
+export function WatchTogetherComposerButton() {
+  const { loading, session, isHost, phase, openStartDialog } = useWatchTogetherComposer();
+
+  return (
+    <button
+      type="button"
+      onClick={openStartDialog}
+      disabled={loading || Boolean(session && isHost && phase !== "ended")}
+      aria-label="Watch Together"
+      title="Watch Together"
+      className="chat-composer-btn mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-primary disabled:opacity-50"
+    >
+      {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Tv2 className="h-5 w-5" />}
+    </button>
+  );
+}
+
+/** Legacy export */
+export const WatchTogetherControls = WatchTogetherComposerButton;
+
+export function WatchTogetherComposerShell({
+  channelId,
+  authUserId,
+  peerId,
+  peerName,
+  children,
+}: {
+  channelId: string;
+  authUserId: string | null;
+  peerId: string | null;
+  peerName?: string;
+  children: ReactNode;
+}) {
+  return (
+    <WatchTogetherComposerProvider
+      channelId={channelId}
+      authUserId={authUserId}
+      peerId={peerId}
+      peerName={peerName}
+    >
+      {children}
+    </WatchTogetherComposerProvider>
   );
 }

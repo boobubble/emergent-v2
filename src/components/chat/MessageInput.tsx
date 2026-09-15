@@ -44,10 +44,15 @@ import {
   failGuestDmOptimistic,
   publishGuestDmRow,
 } from "@/lib/use-guest-dm-feed";
+import { isGuestDmComposeChannel, parseGuestDmComposeRecipient } from "@/lib/guest-dm-utils";
+import { isRemoteDmChannel, parseDmChannel } from "@/lib/dm-utils";
 import {
-  isGuestDmComposeChannel,
-  parseGuestDmComposeRecipient,
-} from "@/lib/guest-dm-utils";
+  WatchTogetherComposerButton,
+  WatchTogetherComposerShell,
+  WatchTogetherSessionBar,
+  useOptionalWatchTogetherComposer,
+} from "@/components/chat/WatchTogetherControls";
+import { useWatchTogetherCinematicActive } from "@/components/chat/WatchTogetherCinematicLayout";
 import { GUEST_LINK_BLOCKED, GUEST_LINK_BLOCKED_MESSAGE } from "@/lib/guest-nickname";
 import type { Attachment } from "@/lib/chat-types";
 import { uploadChatImage } from "@/lib/chat-image.functions";
@@ -798,12 +803,16 @@ export function MessageInput({
           : compact
             ? "Message…"
             : "Message — try !help or @mention");
+  const watchTogetherEligible =
+    Boolean(user?.id && !user.isGuest && isRemoteDmChannel(channelId, user.id));
+  const watchTogetherPeerId = watchTogetherEligible
+    ? parseDmChannel(channelId, user!.id).peerId
+    : null;
+  const watchTogetherComposer = useOptionalWatchTogetherComposer();
+  const watchTogetherCinematic = useWatchTogetherCinematicActive();
 
-  return (
-    <div
-      data-chat-composer={compact ? "dm" : "room"}
-      className={`chat-composer-root min-w-0 ${compact ? "overflow-x-auto px-1.5 py-1" : "overflow-x-auto px-2 py-1 sm:px-6 sm:py-0"}`}
-    >
+  const composerBody = (
+    <>
       {replyForThis && (
         <div className="mb-2 flex min-h-11 items-center gap-2 rounded-2xl border border-primary/30 bg-primary/10 px-3 py-2 text-xs">
           <Reply className="h-4 w-4 shrink-0 text-primary" />
@@ -927,6 +936,7 @@ export function MessageInput({
         </div>
       )}
       {attachError && <div className="mb-2 px-3 text-xs text-destructive">{attachError}</div>}
+      {watchTogetherEligible && !watchTogetherCinematic && <WatchTogetherSessionBar />}
       {typers.length > 0 && <TypingIndicator typers={typers} className="mb-1 px-1" />}
       {isChannelMuted ? (
         <div className="flex min-h-11 items-center gap-2 rounded-3xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
@@ -1054,6 +1064,7 @@ export function MessageInput({
             <Mic className="h-5 w-5" />
           </button>
         )}
+        {watchTogetherEligible && <WatchTogetherComposerButton />}
         <button data-composer-slot="emoji" onClick={() => { setShowMore(false); onToggleEmoji(); }} className="chat-composer-btn mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-foreground" title="Emoji" aria-label="Emoji">
           <Smile className="h-5 w-5" />
         </button>
@@ -1071,6 +1082,28 @@ export function MessageInput({
       </div>
       </>
       )}
+    </>
+  );
+
+  const root = (
+    <div
+      data-chat-composer={compact ? "dm" : "room"}
+      className={`chat-composer-root min-w-0 ${compact ? "overflow-x-auto px-1.5 py-1" : "overflow-x-auto px-2 py-1 sm:px-6 sm:py-0"}`}
+    >
+      {composerBody}
     </div>
+  );
+
+  if (!watchTogetherEligible || !user?.id || watchTogetherComposer) return root;
+
+  return (
+    <WatchTogetherComposerShell
+      channelId={channelId}
+      authUserId={user.id}
+      peerId={watchTogetherPeerId}
+      peerName={watchTogetherPeerId ? state.users[watchTogetherPeerId]?.name : undefined}
+    >
+      {root}
+    </WatchTogetherComposerShell>
   );
 }

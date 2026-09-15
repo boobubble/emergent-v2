@@ -74,6 +74,7 @@ import {
   isDesktopDmTabStrip,
   shouldAutoOpenIncomingDmTab,
 } from "./mini-dm";
+import { registerWatchTogetherDmOpener } from "./watch-together-dm";
 import { useRemoteProfiles } from "./use-remote-profiles";
 import { playDmPing, playMentionPing, playPublicChatTick } from "./sounds";
 import {
@@ -892,6 +893,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
   const ircPresenceDedupRef = useRef<Map<string, number>>(new Map());
   const listGuestDmForGuestFn = useServerFn(listGuestDmConversationsForGuest);
   const markGuestDmReadServerFn = useServerFn(markGuestDmReadFn);
+  const startDmForWatchInviteRef = useRef<(peerId: string) => void>(() => {});
 
   /** Desktop: show a passive DM tab on live inbound messages (no activeChannel switch). */
   const revealIncomingDmTab = useCallback((peerId: string, channelId: string) => {
@@ -1496,7 +1498,13 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
         if (msg.authorId !== "me") {
           if (msg.channelId.startsWith("dm:") && authUserId) {
             const peerId = msg.channelId.slice(3).split(":").find((p) => p !== authUserId);
-            if (peerId) revealIncomingDmTab(peerId, msg.channelId);
+            if (peerId) {
+              if (msg.kind === "watch-together-invite") {
+                startDmForWatchInviteRef.current(peerId);
+              } else {
+                revealIncomingDmTab(peerId, msg.channelId);
+              }
+            }
           }
           if (msg.channelId.startsWith("dm:")) {
             playDmPing();
@@ -2353,6 +2361,14 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     });
     void markDmRead(channelId);
   }, [authUserId, isGuest, markDmRead, guestDmConvByPeer, markGuestDmRead]);
+
+  useEffect(() => {
+    startDmForWatchInviteRef.current = startDM;
+  }, [startDM]);
+
+  useEffect(() => {
+    return registerWatchTogetherDmOpener(startDM);
+  }, [startDM]);
 
   const openDmTab = useCallback((userId: string) => {
     startDM(userId);

@@ -37,6 +37,15 @@ import { ProfileModal, LeaderboardModal, AchievementsModal } from "@/components/
 import { ScheduledAnnouncementsRunner } from "@/components/chat/ScheduledAnnouncements";
 import { ProfilePopupProvider } from "@/lib/profile-popup-context";
 import { YouTubePlayerProvider } from "@/components/chat/youtube-player-context";
+import {
+  useWatchTogetherCinematicActive,
+  WatchTogetherCinematicLayout,
+} from "@/components/chat/WatchTogetherCinematicLayout";
+import {
+  WatchTogetherComposerShell,
+  WatchTogetherSessionBar,
+} from "@/components/chat/WatchTogetherControls";
+import { isRemoteDmChannel, parseDmChannel } from "@/lib/dm-utils";
 import { ChatProfilePopupHost } from "@/components/chat/ChatProfilePopupHost";
 import { BADGE_MAP } from "@/lib/achievements";
 import { chatVariantFor } from "@/lib/theme-variants";
@@ -510,10 +519,29 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
                   {!activeIsDM && chatTheme === "gaming_arena" && (
                     <GamingArenaHero channelId={state.activeChannel} />
                   )}
-                  <ChatErrorBoundary label="chat-messages">
-                    <ChatChannelBody channelId={state.activeChannel} activeIsDM={activeIsDM} />
-                  </ChatErrorBoundary>
-                  <PresenceFeed channelId={state.activeChannel} />
+                  <DmWatchTogetherShell
+                    channelId={state.activeChannel}
+                    authUserId={authUserId}
+                    activeIsDM={activeIsDM}
+                    peerName={
+                      activeIsDM && authUserId
+                        ? (() => {
+                            const parsed = parseDmChannel(state.activeChannel, authUserId);
+                            return parsed.valid && parsed.peerId
+                              ? state.users[parsed.peerId]?.name
+                              : undefined;
+                          })()
+                        : undefined
+                    }
+                  >
+                    <ChatErrorBoundary label="chat-messages">
+                      <DmConversationBody
+                        channelId={state.activeChannel}
+                        activeIsDM={activeIsDM}
+                      />
+                    </ChatErrorBoundary>
+                    <PresenceFeed channelId={state.activeChannel} />
+                  </DmWatchTogetherShell>
 
                 </div>
 
@@ -548,12 +576,7 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
                   </div>
                 )}
 
-                <div
-                  className="chat-composer-footer shrink-0"
-                  style={{ position: "relative", bottom: "auto" }}
-                >
-                  <MessageInput />
-                </div>
+                <DmComposerFooter activeIsDM={activeIsDM} />
               </>
             );
           })()}
@@ -610,6 +633,81 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
     </>
     </YouTubePlayerProvider>
     </ProfilePopupProvider>
+  );
+}
+
+function DmWatchTogetherShell({
+  channelId,
+  authUserId,
+  activeIsDM,
+  peerName,
+  children,
+}: {
+  channelId: string;
+  authUserId: string | null;
+  activeIsDM: boolean;
+  peerName?: string;
+  children: ReactNode;
+}) {
+  const parsed =
+    activeIsDM && authUserId ? parseDmChannel(channelId, authUserId) : { valid: false, peerId: null };
+  const peerId = parsed.valid ? parsed.peerId : null;
+  const eligible = Boolean(activeIsDM && authUserId && peerId && isRemoteDmChannel(channelId, authUserId));
+
+  if (!eligible) return <>{children}</>;
+
+  return (
+    <WatchTogetherComposerShell
+      channelId={channelId}
+      authUserId={authUserId}
+      peerId={peerId}
+      peerName={peerName}
+    >
+      {children}
+    </WatchTogetherComposerShell>
+  );
+}
+
+function DmConversationBody({
+  channelId,
+  activeIsDM,
+}: {
+  channelId: string;
+  activeIsDM: boolean;
+}) {
+  const cinematic = useWatchTogetherCinematicActive();
+  const messages = <ChatChannelBody channelId={channelId} activeIsDM={activeIsDM} />;
+
+  if (activeIsDM && cinematic) {
+    return (
+      <WatchTogetherCinematicLayout
+        statusBar={<WatchTogetherSessionBar />}
+        messages={messages}
+        composer={<DmComposerFooter activeIsDM={activeIsDM} embedded />}
+      />
+    );
+  }
+
+  return messages;
+}
+
+function DmComposerFooter({
+  activeIsDM,
+  embedded = false,
+}: {
+  activeIsDM: boolean;
+  embedded?: boolean;
+}) {
+  const cinematic = useWatchTogetherCinematicActive();
+  if (activeIsDM && cinematic && !embedded) return null;
+
+  return (
+    <div
+      className="chat-composer-footer shrink-0"
+      style={{ position: "relative", bottom: "auto" }}
+    >
+      <MessageInput />
+    </div>
   );
 }
 

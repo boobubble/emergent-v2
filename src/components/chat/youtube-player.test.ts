@@ -45,15 +45,25 @@ describe("youtube embed url security", () => {
 });
 
 describe("youtube player state machine", () => {
-  it("opens with one active video and playing intent", () => {
+  it("opens paused by default for Watch Together waiting state", () => {
     const next = openYouTubePlayerState(YOUTUBE_PLAYER_INITIAL, {
       videoId: "dQw4w9WgXcQ",
       url: YT,
       title: "Never Gonna Give You Up",
     });
     expect(next.activeVideoId).toBe("dQw4w9WgXcQ");
+    expect(next.isPlaying).toBe(false);
+    expect(next.needsUserGesture).toBe(true);
+  });
+
+  it("can open with autoplay intent", () => {
+    const next = openYouTubePlayerState(YOUTUBE_PLAYER_INITIAL, {
+      videoId: "dQw4w9WgXcQ",
+      url: YT,
+      autoplay: true,
+    });
     expect(next.isPlaying).toBe(true);
-    expect(next.isMinimized).toBe(false);
+    expect(next.needsUserGesture).toBe(false);
   });
 
   it("switching video replaces the active session", () => {
@@ -75,6 +85,7 @@ describe("youtube player state machine", () => {
     const open = openYouTubePlayerState(YOUTUBE_PLAYER_INITIAL, {
       videoId: "dQw4w9WgXcQ",
       url: YT,
+      autoplay: true,
     });
     const minimized = minimizeYouTubePlayerState({ ...open, currentTime: 42, duration: 212 });
     expect(minimized.isMinimized).toBe(true);
@@ -123,30 +134,99 @@ describe("chat media context paths", () => {
   });
 });
 
-describe("watch together DM header wiring", () => {
+describe("watch together DM composer wiring", () => {
   const root = resolve(process.cwd(), "src/components/chat");
   const header = readFileSync(resolve(root, "ChatHeader.tsx"), "utf8");
   const controls = readFileSync(resolve(root, "WatchTogetherControls.tsx"), "utf8");
-  const chatApp = readFileSync(resolve(process.cwd(), "src/components/chat/ChatApp.tsx"), "utf8");
+  const input = readFileSync(resolve(root, "MessageInput.tsx"), "utf8");
+  const hook = readFileSync(resolve(process.cwd(), "src/lib/use-watch-together.ts"), "utf8");
+  const sync = readFileSync(resolve(process.cwd(), "src/lib/watch-together-sync.ts"), "utf8");
+
+  it("Watch Together is not mounted in ChatHeader", () => {
+    expect(header).not.toContain("WatchTogetherControls");
+    expect(header).not.toContain("WatchTogetherComposer");
+  });
+
+  it("registered DM composer mounts Watch Together shell and TV trigger", () => {
+    expect(input).toContain("WatchTogetherComposerShell");
+    expect(input).toContain("WatchTogetherComposerButton");
+    expect(input).toContain("isRemoteDmChannel");
+    expect(controls).toContain("WatchTogetherComposerProvider");
+    expect(controls).toContain("Start Watch Together");
+  });
+
+  it("sync hook uses host-authoritative payload helpers and waiting flow", () => {
+    expect(hook).toContain("WatchSyncPayload");
+    expect(hook).toContain("applyingRemoteRef");
+    expect(hook).toContain("hostActionInProgressRef");
+    expect(hook).toContain("readLocalPositionSeconds");
+    expect(hook).toContain("getCurrentTime");
+    expect(hook).toContain("expectedFromBroadcast");
+    expect(hook).toContain('setPhase("waiting")');
+    expect(hook).toContain("WATCH_RT_EVENT_PARTICIPANT_JOINED");
+    expect(hook).toContain('broadcastSync("heartbeat")');
+    expect(hook).toContain("registerWatchTogetherInviteHandlers");
+    expect(hook).toContain("nextSession.channel_id !== inviteChannelId");
+    expect(sync).toContain("classifyDrift");
+    expect(sync).toContain("computeDriftSeconds");
+  });
+});
+
+describe("watch together youtube control wiring", () => {
+  const root = resolve(process.cwd(), "src/components/chat");
+  const player = readFileSync(resolve(root, "YouTubeFloatingPlayer.tsx"), "utf8");
+  const context = readFileSync(resolve(root, "youtube-player-context.tsx"), "utf8");
   const hook = readFileSync(resolve(process.cwd(), "src/lib/use-watch-together.ts"), "utf8");
 
-  it("DM header mounts Watch Together and receives authUserId", () => {
-    expect(header).toContain("WatchTogetherControls");
-    expect(header).toContain("resolvedAuthUserId");
-    expect(chatApp).toMatch(/<ChatHeader[\s\S]*authUserId=\{authUserId\}/);
+  it("host pause/play call real YouTube player APIs", () => {
+    expect(player).toContain("pauseVideo()");
+    expect(player).toContain("playVideo()");
+    expect(player).toContain("getCurrentTime()");
   });
 
-  it("Watch Together button is visible for authenticated DMs and opens the start dialog", () => {
-    expect(controls).toContain('aria-label="Watch Together"');
-    expect(controls).toContain("Start watching");
-    expect(controls).toContain("useWatchTogether({");
-    expect(controls).toContain("startWatchTogether");
-    expect(controls).toContain("Join");
+  it("player init does not recreate iframe when isPlaying toggles", () => {
+    expect(player).toMatch(/\[activeVideoId, host, mediaKind\]/);
+    expect(player).toContain("Recreate only when the video identity changes");
   });
 
-  it("hook accepts the object args used by the DM header", () => {
-    expect(hook).toContain("UseWatchTogetherArgs");
-    expect(hook).toContain("channelIdOrOpts");
+  it("remote/programmatic control skips local rebroadcast", () => {
+    expect(context).toContain("silent?: boolean");
+    expect(player).toContain("options?.silent");
+    expect(hook).toContain("silent: true");
+    expect(hook).toContain("applyingRemoteRef");
+  });
+
+  it("heartbeat reads live player time and state", () => {
+    expect(hook).toContain("readLocalPlaying");
+    expect(hook).toContain('broadcastSync("heartbeat")');
+    expect(player).toContain("isPlayerPlaying");
+  });
+
+  it("blocks playback during waiting and disables native iframe controls", () => {
+    expect(player).toContain("controls: 0");
+    expect(player).toContain("canControlPlaybackRef");
+    expect(hook).toContain("force-pause-waiting");
+    expect(hook).toContain("waitForCinematicMount");
+    expect(context).toContain("waitForCinematicMount");
+  });
+
+  it("cinematic layout mounts player into inline stage", () => {
+    const cinematic = readFileSync(
+      resolve(process.cwd(), "src/components/chat/WatchTogetherCinematicLayout.tsx"),
+      "utf8",
+    );
+    const chatApp = readFileSync(resolve(process.cwd(), "src/components/chat/ChatApp.tsx"), "utf8");
+    const input = readFileSync(resolve(root, "MessageInput.tsx"), "utf8");
+    expect(cinematic).toContain("registerCinematicMount");
+    expect(cinematic).toContain("landscapeSplit");
+    expect(cinematic).toContain("min-width: 520px");
+    expect(cinematic).toContain("max-width: 1024px");
+    expect(chatApp).toContain("WatchTogetherCinematicLayout");
+    expect(chatApp).toContain("DmWatchTogetherShell");
+    expect(chatApp).toContain("WatchTogetherSessionBar");
+    expect(input).toContain("useOptionalWatchTogetherComposer");
+    expect(player).toContain("data-presentation=");
+    expect(player).toContain('presentationMode === "cinematic"');
   });
 });
 

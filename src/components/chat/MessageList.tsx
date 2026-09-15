@@ -36,6 +36,7 @@ import {
   safeMessageText,
   scrollMessageListToBottom,
 } from "@/lib/message-list-model";
+import { WatchTogetherInviteCard, parseWatchTogetherInvite } from "./WatchTogetherInviteCard";
 import "./message-list.css";
 
 function PresenceSystemLine({ text }: { text: string }) {
@@ -550,6 +551,18 @@ export function MessageList({ channelId }: { channelId: string }) {
                   </div>
                   <div className="flex max-w-[80%] flex-col items-end gap-1">
                     {g.map(m => {
+                      const watchInvite = parseWatchTogetherInvite(m);
+                      if (watchInvite) {
+                        return (
+                          <div key={m.id} className="w-full py-2">
+                            <WatchTogetherInviteCard
+                              message={m}
+                              hostName={author.name}
+                              isSelf
+                            />
+                          </div>
+                        );
+                      }
                       const replied = m.replyToId ? findMessageLocal(m.replyToId) : null;
                       const isReplyTarget = replyingTo?.id === m.id;
                       return (
@@ -621,6 +634,18 @@ export function MessageList({ channelId }: { channelId: string }) {
                   {g.map(m => {
                     const replied = m.replyToId ? findMessageLocal(m.replyToId) : null;
                     const isReplyTarget = replyingTo?.id === m.id;
+                    const watchInvite = parseWatchTogetherInvite(m);
+                    if (watchInvite) {
+                      return (
+                        <div key={m.id} className="py-2">
+                          <WatchTogetherInviteCard
+                            message={m}
+                            hostName={author.name}
+                            isSelf={false}
+                          />
+                        </div>
+                      );
+                    }
                     return (
                       <div key={m.id} className="flex flex-col">
                         {replied && <ReplyPreview message={replied} usersById={usersById} />}
