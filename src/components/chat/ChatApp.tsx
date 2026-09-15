@@ -33,7 +33,8 @@ import { PresenceFeed } from "@/components/chat/PresenceFeed";
 import { DjPlayerHost } from "@/components/chat/DjFooter";
 import { PollDiscoveryWidget } from "@/components/chat/PollDiscoveryWidget";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ProfileModal, LeaderboardModal, AchievementsModal } from "@/components/chat/Modals";
+import { ChatSettingsDrawer, ChatSettingsTrigger, useChatSettingsDrawer } from "@/components/chat/ChatSettingsDrawer";
+import { LeaderboardModal, AchievementsModal } from "@/components/chat/Modals";
 import { ScheduledAnnouncementsRunner } from "@/components/chat/ScheduledAnnouncements";
 import { ProfilePopupProvider } from "@/lib/profile-popup-context";
 import { YouTubePlayerProvider } from "@/components/chat/youtube-player-context";
@@ -99,7 +100,7 @@ export function ChatApp() {
 }
 
 function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOptionalChat>> }) {
-  const [profileOpen, setProfileOpen] = useState(false);
+  const { open: chatSettingsOpen, setOpen: setChatSettingsOpen } = useChatSettingsDrawer();
   const [lbOpen, setLbOpen] = useState(false);
   const [achOpen, setAchOpen] = useState(false);
   const [toast, setToast] = useState<EngageToast | null>(null);
@@ -457,7 +458,6 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
         >
           <SidebarPanelBoundary onFail={() => setSidebarOpen(false)}>
             <Sidebar
-              onOpenProfile={() => setProfileOpen(true)}
               onOpenLeaderboard={() => setLbOpen(true)}
               onOpenAchievements={() => setAchOpen(true)}
               onCollapse={() => setSidebarOpen(false)}
@@ -587,10 +587,15 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
             forceDesktopColumn={isClientLargeDesktopShell(shellLayout)}
           />
         )}
+        {isDM(state.activeChannel) && (
+          <div className="hidden h-full w-11 shrink-0 flex-col items-center border-l border-border/60 pt-2 md:flex">
+            <ChatSettingsTrigger />
+          </div>
+        )}
         <DesktopDmTabBridge />
         <MobileDMMinimizedDock />
         <TrioRoomsDock />
-        <ProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} />
+        <ChatSettingsDrawer open={chatSettingsOpen} onOpenChange={setChatSettingsOpen} />
         <LeaderboardModal open={lbOpen} onClose={() => setLbOpen(false)} />
         <AchievementsModal open={achOpen} onClose={() => setAchOpen(false)} />
         <ScheduledAnnouncementsRunner />

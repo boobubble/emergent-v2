@@ -80,6 +80,16 @@ describe("desktop app layout CSS split", () => {
     expect(header).toContain("Bots on");
     expect(header).toContain("palrgo:open-chat-theme-store");
     expect(header).not.toContain("onToggleSidebar");
+    const members = read("components/chat/MembersPanel.tsx");
+    expect(members).not.toContain("/feed?tab=account");
+    expect(members).toContain("ChatSettingsTrigger");
+    expect(sidebar).not.toContain("onOpenProfile");
+    expect(sidebar).not.toContain("Quick edit profile");
+    expect(sidebar).not.toContain("href=\"/account\"");
+    expect(sidebar).not.toMatch(/Sign out/);
+    expect(sidebar).not.toContain("End guest chat");
+    expect(chat).toContain("ChatSettingsDrawer");
+    expect(chat).not.toContain("onOpenProfile");
   });
 
   it("post-login client mount uses matchMedia, not a later CSS/hydration pass", () => {

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import {
-  Settings, LogOut, RotateCcw, Award, Flame, PanelLeftClose, Zap, Trash2, Gamepad2,
+  RotateCcw, Award, Flame, PanelLeftClose, Zap, Trash2, Gamepad2,
   LogIn, UserPlus, Search, X, Moon, Sun,
 } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
@@ -23,7 +23,6 @@ import { DjSidebarPlayer } from "./DjFooter";
 import { levelProgress } from "@/lib/ranks";
 
 interface Props {
-  onOpenProfile: () => void;
   onOpenLeaderboard?: () => void;
   onOpenAchievements?: () => void;
   onCollapse?: () => void;
@@ -37,9 +36,9 @@ const FILTERS: { id: SidebarRoomFilter; label: string }[] = [
   { id: "interests", label: "Interests" },
 ];
 
-export function Sidebar({ onOpenProfile, onCollapse, onSelectDiscoveryChannel }: Props) {
+export function Sidebar({ onCollapse, onSelectDiscoveryChannel }: Props) {
   const { state, setActive, createRoom, deleteRoom, reset, roomUnread } = useChat();
-  const { logout, user } = useAuth();
+  const { user } = useAuth();
   const { openSignIn, openSignUp, requireAuth } = useAuthGate();
   const guestChat = useGuestChat();
   const { isAdmin } = useMyRoles();
@@ -412,13 +411,7 @@ export function Sidebar({ onOpenProfile, onCollapse, onSelectDiscoveryChannel }:
 
           {user ? (
             <>
-              <a
-                href="/account"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group relative block w-full overflow-hidden rounded-xl border border-border/60 bg-card/70 p-2 text-left transition hover:border-primary/30"
-                title="Open account settings"
-              >
+              <div className="relative block w-full overflow-hidden rounded-xl border border-border/60 bg-card/70 p-2 text-left">
                 <div className="flex items-center gap-2">
                   <Avatar user={state.me} size={34} />
                   <div className="min-w-0 flex-1 leading-tight">
@@ -428,7 +421,6 @@ export function Sidebar({ onOpenProfile, onCollapse, onSelectDiscoveryChannel }:
                   <span className="inline-flex items-center gap-0.5 rounded-full bg-gradient-to-r from-amber-400/20 to-fuchsia-500/20 px-1.5 py-0.5 text-[9px] font-bold text-amber-200 ring-1 ring-amber-400/30">
                     <Zap className="h-2.5 w-2.5" /> Lv {state.me.level}
                   </span>
-                  <Settings className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                 </div>
                 {(() => {
                   const lp = levelProgress(state.me.xp ?? 0);
@@ -451,29 +443,14 @@ export function Sidebar({ onOpenProfile, onCollapse, onSelectDiscoveryChannel }:
                     </div>
                   );
                 })()}
-              </a>
+              </div>
               <button
                 type="button"
-                onClick={onOpenProfile}
-                className="mt-0.5 w-full rounded-lg px-2 py-0.5 text-[10px] text-muted-foreground hover:bg-white/5 hover:text-foreground"
+                onClick={() => { if (confirm("Reset chat data for this account?")) reset(); }}
+                className="mt-0.5 flex w-full items-center justify-center gap-1 rounded-lg px-2 py-1 text-[10px] text-muted-foreground hover:text-foreground"
               >
-                Quick edit profile
+                <RotateCcw className="h-3 w-3" /> Reset
               </button>
-              <div className="mt-0.5 flex gap-1">
-                <button
-                  onClick={() => { if (confirm("Reset chat data for this account?")) reset(); }}
-                  className="flex flex-1 items-center justify-center gap-1 rounded-lg px-2 py-1 text-[10px] text-muted-foreground hover:text-foreground"
-                >
-                  <RotateCcw className="h-3 w-3" /> Reset
-                </button>
-                <button
-                  onClick={() => { void logout().catch(() => undefined); }}
-                  className="flex flex-1 items-center justify-center gap-1 rounded-lg px-2 py-1 text-[10px] text-muted-foreground hover:text-destructive"
-                  title={user?.email}
-                >
-                  <LogOut className="h-3 w-3" /> Sign out
-                </button>
-              </div>
             </>
           ) : (
             <div className="rounded-xl border border-border/60 bg-card/70 p-2.5">
@@ -489,13 +466,6 @@ export function Sidebar({ onOpenProfile, onCollapse, onSelectDiscoveryChannel }:
                       className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-primary-foreground hover:opacity-90"
                     >
                       <LogIn className="h-3.5 w-3.5" /> Sign in to unlock all
-                    </button>
-                    <button
-                      type="button"
-                      onClick={guestChat.endGuestChat}
-                      className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-[11px] font-semibold hover:bg-white/5"
-                    >
-                      End guest chat
                     </button>
                   </div>
                 </>

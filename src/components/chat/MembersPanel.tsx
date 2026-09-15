@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Crown, Shield, ShieldHalf, MessageCircle, Inbox, Bell, X, UserCog, Users2, UserCheck, VolumeX, Search, Bot, Settings2, Check, Sparkles, Star } from "lucide-react";
+import { Crown, Shield, ShieldHalf, MessageCircle, Inbox, Bell, X, Users2, UserCheck, VolumeX, Search, Bot, Settings2, Check, Sparkles, Star } from "lucide-react";
 import { useHubBadge } from "./CommunityHub";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useChat } from "@/lib/chat-store";
@@ -25,6 +25,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ChatSettingsTrigger, OPEN_CHAT_SETTINGS_EVENT } from "@/components/chat/ChatSettingsDrawer";
 import type { Role, User } from "@/lib/chat-types";
 import {
   useNotifications,
@@ -171,6 +172,12 @@ export function MembersPanel({
   useEffect(() => {
     try { window.localStorage.setItem("chat-bot-mode", botMode); } catch { /* ignore */ }
   }, [botMode]);
+
+  useEffect(() => {
+    const closeMembers = () => setSheetOpen(false);
+    window.addEventListener(OPEN_CHAT_SETTINGS_EVENT, closeMembers);
+    return () => window.removeEventListener(OPEN_CHAT_SETTINGS_EVENT, closeMembers);
+  }, []);
 
 
   
@@ -533,16 +540,7 @@ export function MembersPanel({
           </DropdownMenu>
         )}
 
-        <a
-          href="/feed?tab=account"
-          target="_blank"
-          rel="noopener noreferrer"
-          title="Profile settings (opens in new tab)"
-          aria-label="Profile settings"
-          className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
-        >
-          <UserCog className="h-5 w-5" />
-        </a>
+        <ChatSettingsTrigger />
 
       </div>
 
