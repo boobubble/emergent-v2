@@ -69,7 +69,9 @@ describe("desktop app layout CSS split", () => {
     expect(tabs).toContain("onToggleSidebar");
     expect(tabs).toContain("PanelLeftClose");
     expect(tabs).toContain("data-chat-nav-sidebar-toggle");
-    expect(tabs).toContain("state.roomOrder");
+    expect(tabs).toContain("roomTabChannel");
+    expect(tabs).not.toContain("joinedRoomIds");
+    expect(tabs).not.toContain("state.roomOrder");
     expect(tabs).toContain("openDmTab(peerId)");
     expect(tabs).toContain("closeDmTab(peerId)");
     expect(tabs).toContain("hidden h-11");

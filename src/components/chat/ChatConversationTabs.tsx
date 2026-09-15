@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { X, Hash, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
@@ -16,7 +16,7 @@ type ChatConversationTabsProps = {
 };
 
 /**
- * Desktop (md+) compact chat nav: sidebar toggle, joined rooms, then DM tabs.
+ * Desktop (md+) compact chat nav: sidebar toggle, current room, then DM tabs.
  * Hidden on mobile via CSS so mobile ChatHeader is unchanged.
  */
 export function ChatConversationTabs({
@@ -26,11 +26,13 @@ export function ChatConversationTabs({
 }: ChatConversationTabsProps) {
   const {
     state,
+    isDM,
     channelLabel,
     setActive,
     openDmPeerIds,
     openDmTab,
     closeDmTab,
+    roomTabChannel,
     dmPeerUnreadCount,
     dmChannelFor,
     watchRemoteChannel,
@@ -40,15 +42,9 @@ export function ChatConversationTabs({
 
   const desktop = isClientDesktopShell(shellLayout);
   const activeChannel = state.activeChannel;
-
-  const joinedRoomIds = useMemo(() => {
-    const seen = new Set<string>();
-    return (state.roomOrder ?? []).filter((id) => {
-      if (!state.rooms[id] || seen.has(id)) return false;
-      seen.add(id);
-      return true;
-    });
-  }, [state.roomOrder, state.rooms]);
+  const activeIsDM = isDM(activeChannel);
+  const roomLabel = channelLabel(roomTabChannel);
+  const roomActive = !activeIsDM && activeChannel === roomTabChannel;
 
   useEffect(() => {
     if (!desktop) return;
@@ -80,29 +76,22 @@ export function ChatConversationTabs({
           {sidebarOpen ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
         </button>
 
-        {joinedRoomIds.map((roomId) => {
-          const tabActive = activeChannel === roomId;
-          const label = channelLabel(roomId);
-          return (
-            <button
-              key={roomId}
-              type="button"
-              role="tab"
-              aria-selected={tabActive}
-              onClick={() => setActive(roomId)}
-              title={label}
-              className={cn(
-                "inline-flex h-8 max-w-[11rem] shrink-0 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium transition-colors",
-                tabActive
-                  ? "border-primary/35 bg-primary/10 text-foreground shadow-sm"
-                  : "border-transparent bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground",
-              )}
-            >
-              <Hash className="h-3 w-3 shrink-0 opacity-70" aria-hidden />
-              <span className="truncate">{label}</span>
-            </button>
-          );
-        })}
+        <button
+          type="button"
+          role="tab"
+          aria-selected={roomActive}
+          onClick={() => setActive(roomTabChannel)}
+          title={roomLabel}
+          className={cn(
+            "inline-flex h-8 max-w-[11rem] shrink-0 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium transition-colors",
+            roomActive
+              ? "border-primary/35 bg-primary/10 text-foreground shadow-sm"
+              : "border-transparent bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+          )}
+        >
+          <Hash className="h-3 w-3 shrink-0 opacity-70" aria-hidden />
+          <span className="truncate">{roomLabel}</span>
+        </button>
 
         {openDmPeerIds.map((peerId) => {
           const channelId = dmChannelFor(peerId);
