@@ -9,12 +9,14 @@ export function LoginAsGuestButton({
   includeDialog = false,
   className,
   onBeforeOpen,
+  label = "Login as Guest",
 }: {
   /** Mount GuestNicknameDialog here when the parent does not already. */
   includeDialog?: boolean;
   className?: string;
   /** e.g. close the sign-in dialog before opening the nickname flow */
   onBeforeOpen?: () => void;
+  label?: string;
 }) {
   const guestChat = useGuestChat();
 
@@ -34,7 +36,7 @@ export function LoginAsGuestButton({
           ?? "w-full rounded-full border border-border bg-background px-4 py-2.5 text-sm font-bold text-foreground hover:bg-accent"
         }
       >
-        Login as Guest
+        {label}
       </button>
     </>
   );

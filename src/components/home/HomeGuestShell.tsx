@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import type { AuthPopup } from "@/components/auth/AuthDialogs";
 import { HomeSeoContent } from "@/components/home/HomeSeoContent";
 import { WelcomeCard, SectionTitle } from "@/components/home/welcome-primitives";
+import { AUTH_ENTRY_DESTINATION } from "@/lib/auth-entry";
 import { LANDING_DEFAULTS, type LandingConfig } from "@/lib/landing-config";
 import { resolveLandingView } from "@/lib/landing-live";
 import type { LandingPayload } from "@/lib/landing-payload";
@@ -116,13 +117,14 @@ export function HomeGuestShell() {
           });
         }}
         onLogin={() => openAuth("signin")}
-        onSignup={() => openAuth("signup")}
+        onSignup={() => openAuth("choice")}
+        onStartChat={() => openAuth("choice")}
         onPollChoice={setPollChoice}
         poetryExtra={<PoetryWidgetIsland />}
       />
       {authMounted && (
         <Suspense fallback={null}>
-          <AuthDialogs popup={authPopup} setPopup={setAuthPopup} />
+          <AuthDialogs popup={authPopup} setPopup={setAuthPopup} successPath={AUTH_ENTRY_DESTINATION} />
         </Suspense>
       )}
     </>

@@ -255,8 +255,8 @@ describe("members panel", () => {
 });
 
 describe("guest chat unchanged", () => {
-  it("guest lobby channel remains lobby", () => {
-    expect(GUEST_LOBBY_CHANNEL_ID).toBe("lobby");
+  it("guest lobby channel is Yaarzo Global", () => {
+    expect(GUEST_LOBBY_CHANNEL_ID).toBe("yaarzo-global");
   });
 
   it("guest commands remain blocked", () => {

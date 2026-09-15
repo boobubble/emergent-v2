@@ -16,7 +16,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { loadBrowserSupabase } from "@/integrations/supabase/load-browser";
 import { listGuestLobbyMessages } from "@/lib/guest-chat.functions";
-import { GUEST_LOBBY_CHANNEL_ID } from "@/lib/guest-chat-config";
+import { isGuestLobbyChannel } from "@/lib/guest-chat-config";
 import { rtLog } from "@/lib/realtime-debug";
 import {
   GUEST_LOBBY_ROW_EVENT,
@@ -61,7 +61,7 @@ function emitGuestRows(next: GuestLobbyRow[]) {
 
 function onGuestLobbyInsert(payload: { new: Record<string, unknown> }) {
   const n = payload.new;
-  if (n.channel_id !== GUEST_LOBBY_CHANNEL_ID) return;
+  if (!isGuestLobbyChannel(String(n.channel_id ?? ""))) return;
   if (n.expires_at && new Date(String(n.expires_at)).getTime() <= Date.now()) return;
   const row = payloadToGuestLobbyRow(n);
   if (!row) return;
@@ -72,7 +72,7 @@ function onGuestLobbyDelete(payload: { old: Record<string, unknown> }) {
   const n = payload.old;
   const id = String(n.id ?? "");
   if (!id) return;
-  if (n.channel_id && String(n.channel_id) !== GUEST_LOBBY_CHANNEL_ID) return;
+  if (n.channel_id && !isGuestLobbyChannel(String(n.channel_id))) return;
   emitGuestRows(sharedRows.filter((r) => r.id !== id));
 }
 

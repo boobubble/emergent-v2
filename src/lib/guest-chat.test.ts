@@ -214,9 +214,9 @@ describe("guest chat config defaults", () => {
     expect(mergeGuestChatConfig({ enabled: true }).enabled).toBe(true);
   });
 
-  it("uses Guest- prefix and lobby channel", () => {
+  it("uses Guest- prefix and Yaarzo Global as the guest default room", () => {
     expect(GUEST_CHAT_DEFAULTS.namePrefix).toBe("Guest-");
-    expect(GUEST_LOBBY_CHANNEL_ID).toBe("lobby");
+    expect(GUEST_LOBBY_CHANNEL_ID).toBe("yaarzo-global");
   });
 });
 
@@ -270,6 +270,10 @@ describe("no auth-guest regression", () => {
     const ctx = readFileSync(resolve(srcRoot, "lib/guest-chat-context.tsx"), "utf8");
     const root = readFileSync(resolve(srcRoot, "routes/__root.tsx"), "utf8");
 
+    expect(auth).toMatch(/AuthChoiceDialog|data-auth-choice-dialog/);
+    expect(auth).toMatch(/popup === "choice"/);
+    expect(auth).toMatch(/Register now/);
+    expect(auth).toMatch(/successPath/);
     expect(auth).toMatch(/LoginAsGuestButton/);
     expect(auth).toMatch(/Login with Username/);
     const signUpBlock = auth.slice(auth.indexOf("function SignUpDialog"), auth.indexOf("function ForgotDialog"));
@@ -282,6 +286,7 @@ describe("no auth-guest regression", () => {
     expect(btn).toMatch(/navigateToLobby:\s*true/);
     expect(btn).not.toMatch(/signInAnonymously|loginAsGuest/);
 
+    expect(hero).toMatch(/setPopup\("choice"\)/);
     expect(hero).not.toMatch(/ContinueAsGuest|LoginAsGuest|Continue as Guest/);
     expect(welcome).not.toMatch(/ContinueAsGuest|LoginAsGuest|Continue as Guest/);
     expect(heropage).not.toMatch(/ContinueAsGuest|LoginAsGuest|GuestNicknameDialog/);
@@ -367,7 +372,7 @@ describe("no auth-guest regression", () => {
     expect(src).toMatch(/retainGuestMessagesRealtime/);
     expect(src).toMatch(/openGuestMessagesChannel/);
     expect(src).toMatch(/messagesChannelOpening/);
-    const onIdx = src.indexOf('.on(\n        "postgres_changes"');
+    const onIdx = src.indexOf('"postgres_changes"');
     const subIdx = src.indexOf("ch.subscribe(", onIdx);
     expect(onIdx).toBeGreaterThan(-1);
     expect(subIdx).toBeGreaterThan(onIdx);

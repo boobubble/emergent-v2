@@ -1,11 +1,19 @@
 /**
- * Ephemeral Lobby guest chat (session-scoped visitors).
+ * Ephemeral guest chat (session-scoped visitors).
  * Never creates auth.users / profiles / anonymous Supabase sessions.
  * Settings live in app_settings.guest_chat (default OFF).
+ * Default room is Yaarzo Global; "lobby" remains a send/history alias.
  */
 
+import { LEGACY_LOBBY_ROOM_ID, YAARZO_GLOBAL_ROOM_ID, isGuestDefaultChatRoom } from "@/lib/auth-entry";
+
 export const GUEST_CHAT_SETTING_KEY = "guest_chat" as const;
-export const GUEST_LOBBY_CHANNEL_ID = "lobby" as const;
+export const GUEST_LOBBY_CHANNEL_ID = YAARZO_GLOBAL_ROOM_ID;
+export const GUEST_LOBBY_CHANNEL_ALIASES = [YAARZO_GLOBAL_ROOM_ID, LEGACY_LOBBY_ROOM_ID] as const;
+
+export function isGuestLobbyChannel(channelId: string): boolean {
+  return isGuestDefaultChatRoom(channelId);
+}
 
 export interface GuestChatConfig {
   /** Master switch — default OFF keeps read-only public browse. */

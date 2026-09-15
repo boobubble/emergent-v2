@@ -96,7 +96,7 @@ export function ChatroomsSection({
             <FeatureRow items={cfg.chatroomFeatures.slice(0, 8)} />
             <button
               type="button"
-              onClick={() => setPopup("signup")}
+              onClick={() => setPopup("choice")}
               className="group mt-8 inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_40px_-10px_rgba(124,58,237,0.5)] transition-transform hover:scale-[1.02] sm:w-auto"
             >
               <UserPlus className="h-4 w-4 shrink-0" />

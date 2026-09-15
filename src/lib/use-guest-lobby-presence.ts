@@ -9,7 +9,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { loadBrowserSupabase } from "@/integrations/supabase/load-browser";
 import { rtLog } from "@/lib/realtime-debug";
-import { GUEST_LOBBY_CHANNEL_ID } from "@/lib/guest-chat-config";
+import { GUEST_LOBBY_CHANNEL_ID, isGuestLobbyChannel } from "@/lib/guest-chat-config";
 import type { User } from "@/lib/chat-types";
 
 export const GUEST_LOBBY_PRESENCE_CHANNEL = "guest-lobby-presence";
@@ -57,7 +57,7 @@ function recomputePresence() {
       const visitorId = meta?.visitor_id || key;
       const displayName = meta?.display_name;
       if (!visitorId || !displayName) continue;
-      if (meta.channel_id && meta.channel_id !== GUEST_LOBBY_CHANNEL_ID) continue;
+      if (meta.channel_id && !isGuestLobbyChannel(meta.channel_id)) continue;
       byId[visitorId] = { visitorId, displayName };
     }
   }

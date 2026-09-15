@@ -3,7 +3,7 @@
  * Display form is always `${prefix}${nickname}` e.g. Guest-Arman.
  */
 
-import { GUEST_LOBBY_CHANNEL_ID } from "@/lib/guest-chat-config";
+import { isGuestLobbyChannel } from "@/lib/guest-chat-config";
 import { trimUrlTrailingPunctuation } from "@/lib/media-embed-text";
 import { parseYoutubeId } from "@/lib/media-providers-config";
 
@@ -129,8 +129,8 @@ export function assertGuestLobbyPlainText(input: {
   maxLen: number;
 }): { ok: true } | { ok: false; code: string; message: string } {
   if (!input.enabled) return { ok: false, code: "DISABLED", message: "Guest chat is currently disabled." };
-  if (input.channelId !== GUEST_LOBBY_CHANNEL_ID) {
-    return { ok: false, code: "ROOM", message: "Guests can only send messages in Lobby." };
+  if (!isGuestLobbyChannel(input.channelId)) {
+    return { ok: false, code: "ROOM", message: "Guests can only send messages in Yaarzo Global." };
   }
   if (isBotCommandOrAction(input.text)) {
     return { ok: false, code: "BOT", message: "GUEST_BOT_BLOCKED" };

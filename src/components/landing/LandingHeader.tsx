@@ -71,7 +71,7 @@ export function LandingHeader({
           </button>
           <button
             type="button"
-            onClick={() => setPopup("signup")}
+            onClick={() => setPopup("choice")}
             className="hidden rounded-full bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-4 py-2 text-sm font-semibold text-white shadow-lg sm:inline-block"
           >
             Join Now

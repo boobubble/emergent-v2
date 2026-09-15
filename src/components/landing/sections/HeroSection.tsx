@@ -91,7 +91,7 @@ export function HeroSection({
           <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap">
             <button
               type="button"
-              onClick={() => setPopup("signup")}
+              onClick={() => setPopup("choice")}
               className="group inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_40px_-10px_rgba(124,58,237,0.55)] transition-transform hover:scale-[1.02] sm:w-auto sm:px-7"
             >
               <UserPlus className="h-4 w-4 shrink-0" />

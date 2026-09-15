@@ -325,7 +325,7 @@ function HeroHomepage() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  if (user) return <Navigate to="/" replace />;
+  if (user) return <Navigate to="/chatroom" replace />;
 
 
   // Note: a bg-color fallback is required because Chromium fails to paint an
@@ -500,7 +500,7 @@ function HeroHomepage() {
                 <h2 className="mt-4 text-4xl font-black sm:text-5xl">{cfg.finalCtaTitle}</h2>
                 <p className="mt-4 mx-auto max-w-xl opacity-85">{cfg.finalCtaSubtitle}</p>
                 <div className="mt-8 flex flex-wrap justify-center gap-3">
-                  <button onClick={() => setPopup("signup")}
+                  <button onClick={() => setPopup("choice")}
                     className="rounded-full bg-white px-7 py-3.5 text-sm font-bold text-slate-900 shadow-xl transition hover:scale-105">{cfg.ctaJoinLabel}</button>
                   <button onClick={() => setPopup("signin")}
                     className="rounded-full bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-7 py-3.5 text-sm font-bold text-white shadow-xl transition hover:scale-105">{cfg.ctaLoginLabel}</button>
@@ -555,7 +555,7 @@ function HeroHomepage() {
 
       <LandingFooter brandName={cfg.brandName} />
 
-      <AuthDialogs popup={popup} setPopup={setPopup} />
+      <AuthDialogs popup={popup} setPopup={setPopup} successPath="/chatroom" />
     </div>
   );
 }

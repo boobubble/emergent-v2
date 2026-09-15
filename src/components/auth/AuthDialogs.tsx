@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { PasswordStrength } from "@/components/auth/PasswordStrength";
 import { LoginAsGuestButton } from "@/components/auth/ContinueAsGuestButton";
 import { useGuestChat } from "@/lib/guest-chat-context";
+import { useNavigate } from "@tanstack/react-router";
 
 function UsernameHint({ status }: { status: UsernameStatus }) {
   if (status.state === "idle") return null;
@@ -16,7 +17,7 @@ function UsernameHint({ status }: { status: UsernameStatus }) {
   return <p className="mt-1 text-[10px] font-semibold text-destructive">{status.message}</p>;
 }
 
-export type AuthPopup = null | "signin" | "signup" | "forgot";
+export type AuthPopup = null | "choice" | "signin" | "signup" | "forgot";
 
 /**
  * Embeddable auth dialogs. Intentionally excludes /login page chrome
@@ -27,26 +28,38 @@ export function AuthDialogs({
   popup,
   setPopup,
   signupEnabled = true,
+  successPath,
 }: {
   popup: AuthPopup;
   setPopup: (p: AuthPopup) => void;
   /** @deprecated Guest access has been removed. Ignored. */
   guestEnabled?: boolean;
   signupEnabled?: boolean;
+  /** After login/signup from this instance, go here (homepage/heropage/login). Omit for in-place requireAuth. */
+  successPath?: string;
 }) {
   return (
     <>
+      <AuthChoiceDialog
+        open={popup === "choice"}
+        onOpenChange={(v) => setPopup(v ? "choice" : null)}
+        onLogin={() => setPopup("signin")}
+        onRegister={() => signupEnabled && setPopup("signup")}
+        signupEnabled={signupEnabled}
+      />
       <SignInDialog
         open={popup === "signin"}
         onOpenChange={(v) => setPopup(v ? "signin" : null)}
         onForgot={() => setPopup("forgot")}
         onSwitchSignup={() => signupEnabled && setPopup("signup")}
+        successPath={successPath}
       />
       {signupEnabled && (
         <SignUpDialog
           open={popup === "signup"}
           onOpenChange={(v) => setPopup(v ? "signup" : null)}
           onSwitchSignin={() => setPopup("signin")}
+          successPath={successPath}
         />
       )}
       <ForgotDialog
@@ -58,9 +71,62 @@ export function AuthDialogs({
   );
 }
 
-function SignInDialog({ open, onOpenChange, onForgot, onSwitchSignup }: { open: boolean; onOpenChange: (v: boolean) => void; onForgot: () => void; onSwitchSignup: () => void }) {
+function AuthChoiceDialog({
+  open,
+  onOpenChange,
+  onLogin,
+  onRegister,
+  signupEnabled,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  onLogin: () => void;
+  onRegister: () => void;
+  signupEnabled: boolean;
+}) {
+  const brand = useBrand();
+  const guestChat = useGuestChat();
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-sm rounded-3xl" data-auth-choice-dialog="">
+        <DialogHeader>
+          <DialogTitle>Start chatting</DialogTitle>
+          <DialogDescription>Join {brand.name} with an account or as a guest.</DialogDescription>
+        </DialogHeader>
+        <div className={guestChat.enabled ? "grid gap-2 sm:grid-cols-2" : "grid gap-2"}>
+          <button
+            type="button"
+            onClick={onLogin}
+            className="w-full rounded-full px-4 py-2.5 text-sm font-bold text-primary-foreground"
+            style={{ background: "var(--gradient-accent, var(--primary))" }}
+          >
+            Login
+          </button>
+          {guestChat.enabled && (
+            <LoginAsGuestButton
+              label="Guest Login"
+              onBeforeOpen={() => onOpenChange(false)}
+            />
+          )}
+        </div>
+        {signupEnabled && (
+          <div className="text-center text-xs text-muted-foreground">
+            New here?{" "}
+            <button type="button" onClick={onRegister} className="font-semibold text-primary hover:underline">
+              Register now
+            </button>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function SignInDialog({ open, onOpenChange, onForgot, onSwitchSignup, successPath }: { open: boolean; onOpenChange: (v: boolean) => void; onForgot: () => void; onSwitchSignup: () => void; successPath?: string }) {
   const { login } = useAuth();
   const brand = useBrand();
+  const navigate = useNavigate();
   const guestChat = useGuestChat();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -70,7 +136,10 @@ function SignInDialog({ open, onOpenChange, onForgot, onSwitchSignup }: { open: 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setErr(""); setBusy(true);
-    try { await login(email, password); }
+    try {
+      await login(email, password);
+      if (successPath) void navigate({ to: successPath });
+    }
     catch (e) { setErr(e instanceof Error ? e.message : "Sign in failed"); }
     finally { setBusy(false); }
   }
@@ -120,9 +189,10 @@ function SignInDialog({ open, onOpenChange, onForgot, onSwitchSignup }: { open: 
   );
 }
 
-function SignUpDialog({ open, onOpenChange, onSwitchSignin }: { open: boolean; onOpenChange: (v: boolean) => void; onSwitchSignin: () => void }) {
+function SignUpDialog({ open, onOpenChange, onSwitchSignin, successPath }: { open: boolean; onOpenChange: (v: boolean) => void; onSwitchSignin: () => void; successPath?: string }) {
   const { signup } = useAuth();
   const brand = useBrand();
+  const navigate = useNavigate();
   const guestChat = useGuestChat();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -168,6 +238,7 @@ function SignUpDialog({ open, onOpenChange, onSwitchSignin }: { open: boolean; o
       } catch { /* ignore */ }
       await signup(email, password, username.trim(), gender);
       setInfo("Account created! You're being signed in…");
+      if (successPath) void navigate({ to: successPath });
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Sign up failed");
     } finally {

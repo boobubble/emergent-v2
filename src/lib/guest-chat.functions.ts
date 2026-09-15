@@ -11,6 +11,7 @@ import { withRateLimit } from "./rate-limit-middleware";
 import { enforceRateLimit } from "./rate-limit.server";
 import {
   GUEST_CHAT_SETTING_KEY,
+  GUEST_LOBBY_CHANNEL_ALIASES,
   GUEST_LOBBY_CHANNEL_ID,
   formatGuestDisplayName,
   mergeGuestChatConfig,
@@ -247,7 +248,7 @@ export const listGuestLobbyMessages = createServerFn({ method: "GET" })
     let q = sb
       .from("guest_chat_messages")
       .select("id, channel_id, visitor_id, display_name, text, created_at, expires_at")
-      .eq("channel_id", GUEST_LOBBY_CHANNEL_ID)
+      .in("channel_id", [...GUEST_LOBBY_CHANNEL_ALIASES])
       .gt("expires_at", new Date().toISOString())
       .order("created_at", { ascending: false })
       .limit(limit);

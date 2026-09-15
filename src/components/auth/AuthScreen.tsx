@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SIGNUP_ACCESS_DEFAULTS, type SignupAccessConfig } from "@/lib/signup-config";
 import { FeedbackShowcase } from "@/components/feedback/FeedbackShowcase";
 import { LiveCommunityBackground } from "@/components/auth/LiveCommunityBackground";
+import { AUTH_ENTRY_DESTINATION } from "@/lib/auth-entry";
 import { AuthDialogs, type AuthPopup } from "@/components/auth/AuthDialogs";
 
 export type { AuthPopup };
@@ -70,7 +71,7 @@ export function AuthScreen() {
         <FeedbackShowcase surface="signup" />
       </div>
 
-      <AuthDialogs popup={popup} setPopup={setPopup} signupEnabled={signupAvailable} />
+      <AuthDialogs popup={popup} setPopup={setPopup} signupEnabled={signupAvailable} successPath={AUTH_ENTRY_DESTINATION} />
     </LiveCommunityBackground>
   );
 }
