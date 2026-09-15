@@ -1,0 +1,15 @@
+{
+  "startup": "custom",
+  "kiwiServer": "wss://irc.yaarzo.com/webirc",
+  "restricted": true,
+  "customStartupText": "This IRC console is for Yaarzo staff only.\n\nChat on Yaarzo: https://yaarzo.com/chatroom",
+  "windowTitle": "Yaarzo IRC (staff)",
+  "theme": "Default",
+  "startupOptions": {
+    "server": "irc.yaarzo.com",
+    "port": 6697,
+    "tls": true,
+    "nick": "",
+    "channel": "#yaarzo-global"
+  }
+}

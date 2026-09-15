@@ -1,39 +1,57 @@
-# Gateway IRC moderation — repo reference (not deployed)
+# Gateway IRC moderation
 
-## Classification (current frontend)
+## WebSocket contracts (authenticated)
 
-| Action | Type | IRC room | DM | Current behavior |
-|--------|------|----------|-----|------------------|
-| Kick from room | A — channel IRC | Shown when `isPublicIrcRoomChannel` | Hidden | `staffKick` updates **local** moderation state only |
-| Mute in room | A + B | Shown in IRC rooms | Hidden for room mute | `muteUser` Supabase + `staffLocalMute` local |
-| Ban user | B — account | Shown | Shown | `banUser` Supabase (valid in DM context) |
-| Delete message | B/C | IRC + DM | Yes | Supabase mod delete |
-| Ignore user | C — local UI | Profile popup | Yes | `palrgo:ignore:v1` localStorage |
-| Ignore bots | C — global | Chat settings | N/A | `ignoreAllBots` in ignore-store |
+All moderation messages require a valid Supabase JWT (`auth` frame first). The gateway verifies permissions server-side via `is_admin`, `has_role`, `room_moderators`, and `staff_permissions` — **never** client role flags.
 
-## Missing for real IRC channel moderation
+### Request
 
-`staffKick` / room mute do **not** send IRC `KICK` / `MODE +q` via the gateway today.
-
-### Proposed minimal gateway patch (awaiting VPS approval)
-
-Add authenticated WebSocket message type (staff JWT + room mod check on frontend; gateway trusts signed staff token or relays only from gateway service account):
-
-```javascript
-// WS payload from staff client (future)
-{ "type": "moderation.kick", "room": "yaarzo-global", "targetNick": "username" }
-// Gateway → IRC: KICK #yaarzo-global :reason
-
-{ "type": "moderation.mode", "room": "yaarzo-global", "mode": "+q", "targetNick": "username" }
-// Gateway → IRC: MODE #yaarzo-global +q username
+```json
+{ "type": "moderation.kick", "room": "yaarzo-global", "targetNick": "username", "reason": "optional" }
+{ "type": "moderation.ban", "room": "yaarzo-global", "targetNick": "username" }
+{ "type": "moderation.unban", "room": "yaarzo-global", "targetNick": "username" }
+{ "type": "moderation.mute", "room": "yaarzo-global", "targetNick": "username" }
+{ "type": "moderation.unmute", "room": "yaarzo-global", "targetNick": "username" }
 ```
 
-Gateway must verify the sender is an IRC operator or channel halfop on that channel before relaying.
+Also accepts `{ "type": "moderation", "action": "kick", ... }`.
 
-Ergo-side: channel ops must be granted to `YaarzoGateway` or per-user IRC connections required for mod actions.
+### Response
 
-## Frontend repo status
+```json
+{ "type": "moderation.ok", "action": "kick", "room": "yaarzo-global", "targetNick": "username", "source": "admin" }
+{ "type": "moderation.error", "code": "FORBIDDEN", "message": "Not authorized for this moderation action" }
+```
 
-- Channel kick/mute UI hidden in DMs and non-IRC channels.
-- Account ban/delete unchanged (Supabase).
-- Ignore uses existing `ignore-store` localStorage — no schema change.
+### IRC commands issued (Ergo)
+
+| Action | IRC |
+|--------|-----|
+| kick | `KICK #room nick :reason` |
+| ban | `MODE #room +b nick!*@*` |
+| unban | `MODE #room -b nick!*@*` |
+| mute | `MODE #room +b m:nick!*@*` (Ergo extban — **not** `+q`) |
+| unmute | `MODE #room -b m:nick!*@*` |
+
+## Authorization model
+
+1. **super_admin / admin** (`is_admin` RPC) — all IRC moderation actions on any public room.
+2. **global moderator** — gated by `staff_permissions` (`mod_can_kick`, `mod_can_mute`, `mod_can_ban`).
+3. **room_moderators** row — per-room `can_kick` / `can_mute`.
+
+## Frontend
+
+- `lobbyIrcTransport.moderate()` sends WS frames.
+- `StaffActionsMenu` / `ProfilePopup` call IRC relay for kick/mute/channel-ban in public IRC rooms only.
+- DMs: channel kick/mute hidden; ignore + account-level actions remain.
+
+## Deployment
+
+Repo reference: `gateway-index-vps.js` → `/opt/yaarzo/gateway/index.js`
+
+Lib modules:
+
+- `scripts/gateway/irc-room-discovery.cjs` → `lib/irc-room-discovery.cjs`
+- `scripts/gateway/irc-moderation.cjs` → `lib/irc-moderation.cjs`
+
+Sync script: `scripts/deploy/sync-gateway-vps.sh` (creates timestamped backup before restart).

@@ -9,6 +9,8 @@ import { useChannelModeration } from "@/lib/use-channel-moderation";
 import { banUser, muteUser, deleteMessageMod, deleteGuestMessageMod } from "@/lib/moderation.functions";
 import { isGuestMessageId } from "@/lib/message-list-model";
 import { isPublicIrcRoomChannel } from "@/lib/dm-utils";
+import { toIrcNick } from "@/lib/irc-moderation-client";
+import { lobbyIrcTransport } from "@/lib/lobby-irc-transport";
 import { removeGuestLobbyRow } from "@/lib/use-guest-lobby-feed";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -62,11 +64,55 @@ export function StaffActionsMenu({
   if (!canKick && !canMute && !canBan && !canDelete) return null;
 
   const realId = targetUserId === "me" ? authUser?.id ?? "" : targetUserId;
+  const targetNick = toIrcNick(targetName);
+
+  async function relayIrcModeration(
+    action: "kick" | "ban" | "unban" | "mute" | "unmute",
+    reason?: string,
+  ) {
+    if (!targetNick) {
+      toast.error("Invalid IRC nick for this user");
+      return { ok: false as const };
+    }
+    const res = await lobbyIrcTransport.moderate({
+      action,
+      room: activeChannel,
+      targetNick,
+      reason,
+    });
+    if (!res.ok) {
+      toast.error(res.message || "IRC moderation failed");
+    }
+    return res;
+  }
+
+  async function doKick() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const res = await relayIrcModeration("kick", "Staff kick");
+      if (!res.ok) return;
+      staffKick(targetUserId, activeChannel, targetName);
+      toast.success(`Kicked ${targetName} from this room`);
+    } finally { setBusy(false); }
+  }
+
+  async function doChannelBan() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const res = await relayIrcModeration("ban", "Staff channel ban");
+      if (!res.ok) return;
+      toast.success(`Banned ${targetName} from this IRC channel`);
+    } finally { setBusy(false); }
+  }
 
   async function doMute(minutes: number) {
     if (busy) return;
     setBusy(true);
     try {
+      const ircRes = await relayIrcModeration("mute", "Staff mute");
+      if (!ircRes.ok) return;
       await muteFn({ data: { user_id: realId, scope: "room", channel_id: activeChannel, expires_in_minutes: minutes, reason: "Staff mute" } });
       staffLocalMute(targetUserId, activeChannel, minutes, targetName);
       toast.success(`Muted ${targetName} for ${minutes}m`);
@@ -128,8 +174,13 @@ export function StaffActionsMenu({
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {canKick && (
-          <DropdownMenuItem onSelect={() => { staffKick(targetUserId, activeChannel, targetName); toast.success(`Kicked ${targetName} from this room (5 min)`); }} className="gap-2 text-warning">
-            <LogOut className="h-3.5 w-3.5" /> Kick from room (5 min)
+          <DropdownMenuItem onSelect={doKick} className="gap-2 text-warning">
+            <LogOut className="h-3.5 w-3.5" /> Kick from room
+          </DropdownMenuItem>
+        )}
+        {canKick && (
+          <DropdownMenuItem onSelect={doChannelBan} className="gap-2 text-warning">
+            <Ban className="h-3.5 w-3.5" /> Ban from IRC channel
           </DropdownMenuItem>
         )}
         {canMute && <>

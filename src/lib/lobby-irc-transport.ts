@@ -1,4 +1,9 @@
 import { parseIrcPresenceLine } from "./irc-presence";
+import {
+  buildModerationFrame,
+  type IrcModerationAction,
+  type IrcModerationRequest,
+} from "./irc-moderation-client";
 
 /** Gateway room name (wire protocol). Normalized to {@link LOBBY_IRC_CHANNEL} for app consumers. */
 const GATEWAY_ROOM = "global";
@@ -137,6 +142,9 @@ export class LobbyIrcTransport {
   private reconnectAttempt = 0;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private lifecycleBound = false;
+  private moderationWaiter:
+    | ((result: { ok: true } | { ok: false; code: string; message: string }) => void)
+    | null = null;
 
   /** WebSocket is open (may still be awaiting gateway auth). */
   get open(): boolean {
@@ -226,6 +234,55 @@ export class LobbyIrcTransport {
       return false;
     }
   }
+  moderate(req: IrcModerationRequest): Promise<
+    { ok: true } | { ok: false; code: string; message: string }
+  > {
+    if (!this.connected || !this.ws) {
+      return Promise.resolve({
+        ok: false,
+        code: "OFFLINE",
+        message: "IRC gateway not connected",
+      });
+    }
+
+    if (this.moderationWaiter) {
+      return Promise.resolve({
+        ok: false,
+        code: "BUSY",
+        message: "Another moderation action is in progress",
+      });
+    }
+
+    return new Promise((resolve) => {
+      const timeout = setTimeout(() => {
+        this.moderationWaiter = null;
+        resolve({
+          ok: false,
+          code: "TIMEOUT",
+          message: "Moderation request timed out",
+        });
+      }, 8_000);
+
+      this.moderationWaiter = (result) => {
+        clearTimeout(timeout);
+        this.moderationWaiter = null;
+        resolve(result);
+      };
+
+      try {
+        this.ws!.send(JSON.stringify(buildModerationFrame(req)));
+      } catch {
+        clearTimeout(timeout);
+        this.moderationWaiter = null;
+        resolve({
+          ok: false,
+          code: "SEND_FAILED",
+          message: "Failed to send moderation request",
+        });
+      }
+    });
+  }
+
   send(
     messageId: string,
     text: string,
@@ -379,6 +436,25 @@ export class LobbyIrcTransport {
     }
 
     if (frame.type === "message.sent") {
+      return;
+    }
+
+    if (frame.type === "moderation.ok") {
+      const action = asNonEmptyString((frame as { action?: string }).action) as IrcModerationAction;
+      if (action) {
+        this.moderationWaiter?.({ ok: true });
+      }
+      return;
+    }
+
+    if (frame.type === "moderation.error") {
+      this.moderationWaiter?.({
+        ok: false,
+        code: asNonEmptyString((frame as { code?: string }).code) || "MODERATION_ERROR",
+        message:
+          asNonEmptyString((frame as { message?: string }).message) ||
+          "Moderation failed",
+      });
       return;
     }
 

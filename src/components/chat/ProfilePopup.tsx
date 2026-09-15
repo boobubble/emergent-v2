@@ -24,6 +24,8 @@ import { recordProfileView } from "@/lib/use-profile-views";
 import { FriendActionButton, useSocialGraph } from "@/lib/use-social-graph";
 import { FollowWriterButton } from "@/components/mehfil/FollowWriterButton";
 import { isPublicIrcRoomChannel } from "@/lib/dm-utils";
+import { toIrcNick } from "@/lib/irc-moderation-client";
+import { lobbyIrcTransport } from "@/lib/lobby-irc-transport";
 import { useAuthGate } from "@/lib/auth-gate";
 import type { Role } from "@/lib/chat-types";
 import type { ProfileCloseReason } from "@/lib/profile-popup-context";
@@ -404,7 +406,19 @@ export function ProfilePopup({
           <div className="flex flex-wrap gap-2 border-t border-border bg-card px-4 py-3">
             {canKick && (
               <button
-                onClick={() => {
+                onClick={async () => {
+                  const nick = toIrcNick(user.name);
+                  if (!nick) {
+                    toast.error("Invalid IRC nick for this user");
+                    return;
+                  }
+                  const res = await lobbyIrcTransport.moderate({
+                    action: "kick",
+                    room: state.activeChannel,
+                    targetNick: nick,
+                    reason: "Staff kick",
+                  });
+                  if (!res.ok) return;
                   staffKick(realId, state.activeChannel, user.name);
                   toast.success(`Kicked ${user.name} from this room`);
                 }}
@@ -418,6 +432,18 @@ export function ProfilePopup({
               <button
                 onClick={async () => {
                   try {
+                    const nick = toIrcNick(user.name);
+                    if (!nick) {
+                      toast.error("Invalid IRC nick for this user");
+                      return;
+                    }
+                    const ircRes = await lobbyIrcTransport.moderate({
+                      action: "mute",
+                      room: state.activeChannel,
+                      targetNick: nick,
+                      reason: "Staff mute",
+                    });
+                    if (!ircRes.ok) return;
                     await muteFn({ data: { user_id: realId, scope: "room", channel_id: state.activeChannel, expires_in_minutes: 60, reason: "Staff mute" } });
                     toast.success(`Muted ${user.name} for 1h`);
                   } catch (e: unknown) {
