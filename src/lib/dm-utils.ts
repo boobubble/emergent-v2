@@ -4,6 +4,7 @@
  * like "me", "bot-gamebot", or malformed channel strings.
  */
 
+import { resolvePrimaryActiveRoom } from "./irc-rooms";
 import { isGuestDmChannel, isGuestDmPeer } from "./guest-dm-utils";
 
 export const CHAT_STORAGE_VERSION = 4;
@@ -133,15 +134,15 @@ export function sanitizeActiveChannel(
   authUserId: string | null,
   roomOrder: string[],
   rooms: Record<string, unknown>,
+  primaryRoom?: string | null,
 ): string {
-  if (activeChannel === "lobby" || activeChannel === "games") return activeChannel;
   if (rooms[activeChannel]) return activeChannel;
   if (isGuestDmChannel(activeChannel) || activeChannel.startsWith("gdm:compose:")) return activeChannel;
   if (isLocalBotDmChannel(activeChannel)) return activeChannel;
   if (isRemoteDmChannel(activeChannel, authUserId)) return activeChannel;
   const fixed = fixLegacyDmChannel(activeChannel, authUserId);
   if (fixed && isRemoteDmChannel(fixed, authUserId)) return fixed;
-  return roomOrder[0] || "lobby";
+  return resolvePrimaryActiveRoom(roomOrder, rooms, primaryRoom);
 }
 
 export interface SanitizeChatSlice {
@@ -151,13 +152,18 @@ export interface SanitizeChatSlice {
   rooms: Record<string, unknown>;
 }
 
-export function sanitizeChatState<T extends SanitizeChatSlice>(state: T, authUserId: string | null): T {
+export function sanitizeChatState<T extends SanitizeChatSlice>(
+  state: T,
+  authUserId: string | null,
+  primaryRoom?: string | null,
+): T {
   const dmOrder = sanitizeDmOrder(state.dmOrder, authUserId);
   const activeChannel = sanitizeActiveChannel(
     state.activeChannel,
     authUserId,
     state.roomOrder,
     state.rooms,
+    primaryRoom,
   );
   if (dmOrder === state.dmOrder && activeChannel === state.activeChannel) return state;
   return { ...state, dmOrder, activeChannel };

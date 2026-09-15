@@ -113,6 +113,7 @@ describe("sanitizeActiveChannel", () => {
   it("resets corrupted activeChannel", () => {
     expect(sanitizeActiveChannel(`dm:me:${PEER}`, ME, roomOrder, rooms)).toBe(VALID_CHANNEL);
     expect(sanitizeActiveChannel("dm:bot-gamebot:garbage", ME, roomOrder, rooms)).toBe("lobby");
+    expect(sanitizeActiveChannel("missing-room", ME, roomOrder, rooms, "lobby")).toBe("lobby");
   });
 });
 

@@ -179,12 +179,14 @@ describe("command gating — complete registry", () => {
 describe("chat-store room membership", () => {
   const chatStore = read("lib/chat-store.tsx");
 
-  it("lobby has only social/moderation bots", () => {
-    expect(chatStore).toContain('members: ["me", ...LOBBY_BOT_IDS]');
+  it("keeps lobby and game bot id sets separate", () => {
+    expect(chatStore).toContain("LOBBY_BOT_IDS");
+    expect(chatStore).toContain("GAME_BOT_IDS");
   });
 
-  it("games has all game bots", () => {
-    expect(chatStore).toContain('members: ["me", ...GAME_BOT_IDS]');
+  it("enriches IRC games room with game bots when present", () => {
+    expect(chatStore).toContain("enrichGamesRoomMembership");
+    expect(chatStore).toContain("GAME_BOT_IDS");
   });
 
   it("createRoom does not add game bots", () => {
@@ -202,13 +204,9 @@ describe("chat-store room membership", () => {
     expect(chatStore).not.toMatch(/syncAdminChannels[\s\S]*SEED_BOTS\.map/);
   });
 
-  it("lobby seed messages have no game bot authors", () => {
-    const lobbySeed = chatStore.match(/messages\.lobby = \[([\s\S]*?)\];/);
-    expect(lobbySeed?.[1]).toBeTruthy();
-    const lobbyBlock = lobbySeed![1].split("rooms.games")[0];
-    for (const id of GAME_BOT_IDS) {
-      expect(lobbyBlock).not.toContain(`authorId: "${id}"`);
-    }
+  it("does not seed games room messages locally", () => {
+    expect(chatStore).not.toContain("SEED_ROOMS");
+    expect(chatStore).not.toMatch(/seed-games-intro/);
   });
 });
 

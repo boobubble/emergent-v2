@@ -38,6 +38,7 @@ import {
   trackGuestLobbyPresence,
   untrackGuestLobbyPresence,
 } from "@/lib/use-guest-lobby-presence";
+import { markChatFreshEntry } from "@/lib/auth-entry";
 
 export interface OpenGuestNicknameOptions {
   /** After a successful ephemeral session start, go to /chatroom with Lobby. */
@@ -182,6 +183,7 @@ export function GuestChatProvider({ children }: { children: ReactNode }) {
       const goLobby = navigateToLobbyAfterStartRef.current;
       navigateToLobbyAfterStartRef.current = false;
       if (goLobby) {
+        markChatFreshEntry();
         void navigate({ to: "/chatroom" });
       }
     } catch (e: unknown) {

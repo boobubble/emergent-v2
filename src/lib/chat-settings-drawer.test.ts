@@ -44,6 +44,9 @@ describe("chat settings drawer wiring", () => {
     expect(sidebar).not.toMatch(/Sign out/);
     expect(sidebar).not.toContain("End guest chat");
     expect(sidebar).not.toContain("onOpenProfile");
+    expect(sidebar).not.toContain('from "./Avatar"');
+    expect(sidebar).not.toContain("levelProgress");
+    expect(sidebar).toContain("Reset chat data");
     expect(app).toContain("ChatSettingsDrawer");
     expect(app).not.toContain("onOpenProfile");
   });

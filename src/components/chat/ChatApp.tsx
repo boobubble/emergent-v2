@@ -21,6 +21,8 @@ import { GamingArenaHero } from "@/components/chat/GamingArenaHero";
 import { useDmTheme } from "@/lib/use-dm-theme";
 import { supabase } from "@/integrations/supabase/client";
 import { useAppSettings } from "@/lib/app-settings";
+import { markChatFreshEntry, setRequestedChatRoom } from "@/lib/auth-entry";
+import { parseGatewayRoomsPayload } from "@/lib/irc-rooms";
 
 
 import { useBotEventsNotifier } from "@/lib/use-bot-events-notifier";
@@ -129,6 +131,15 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
   const { raw } = useAppSettings();
   const chatRef = useRef(chat);
   chatRef.current = chat;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const requested = params.get("room")?.trim();
+    if (requested) setRequestedChatRoom(requested);
+    else markChatFreshEntry();
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -137,24 +148,18 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
         const res = await fetch("https://ws.yaarzo.com/rooms");
         if (!res.ok) throw new Error(`IRC rooms HTTP ${res.status}`);
 
-        const payload = await res.json() as {
-          rooms?: Array<{ room?: string; channel?: string; users?: number; topic?: string }>;
-        };
-
+        const payload = await res.json();
         if (cancelled) return;
 
-        const list = Array.isArray(payload.rooms)
-          ? payload.rooms
-              .filter((r) => typeof r?.room === "string" && r.room.trim())
-              .map((r) => ({
-                id: r.room!.trim(),
-                name: r.room!.trim(),
-                topic: typeof r.topic === "string" ? r.topic : "",
-                memberCount: typeof r.users === "number" ? r.users : 0,
-              }))
-          : [];
+        const { channels, meta } = parseGatewayRoomsPayload(payload);
+        const list = channels.map((r) => ({
+          id: r.id,
+          name: r.name,
+          topic: r.topic,
+          memberCount: r.memberCount,
+        }));
 
-        chatRef.current?.syncAdminChannels(list);
+        chatRef.current?.syncAdminChannels(list, meta);
       } catch (err) {
         console.error("Failed to sync IRC room list:", err);
       }

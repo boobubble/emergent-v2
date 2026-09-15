@@ -9,6 +9,7 @@ import { PasswordStrength } from "@/components/auth/PasswordStrength";
 import { LoginAsGuestButton } from "@/components/auth/ContinueAsGuestButton";
 import { useGuestChat } from "@/lib/guest-chat-context";
 import { useNavigate } from "@tanstack/react-router";
+import { AUTH_ENTRY_DESTINATION, markChatFreshEntry } from "@/lib/auth-entry";
 
 function UsernameHint({ status }: { status: UsernameStatus }) {
   if (status.state === "idle") return null;
@@ -138,7 +139,10 @@ function SignInDialog({ open, onOpenChange, onForgot, onSwitchSignup, successPat
     setErr(""); setBusy(true);
     try {
       await login(email, password);
-      if (successPath) void navigate({ to: successPath });
+      if (successPath) {
+        if (successPath === AUTH_ENTRY_DESTINATION) markChatFreshEntry();
+        void navigate({ to: successPath });
+      }
     }
     catch (e) { setErr(e instanceof Error ? e.message : "Sign in failed"); }
     finally { setBusy(false); }
@@ -238,7 +242,10 @@ function SignUpDialog({ open, onOpenChange, onSwitchSignin, successPath }: { ope
       } catch { /* ignore */ }
       await signup(email, password, username.trim(), gender);
       setInfo("Account created! You're being signed in…");
-      if (successPath) void navigate({ to: successPath });
+      if (successPath) {
+        if (successPath === AUTH_ENTRY_DESTINATION) markChatFreshEntry();
+        void navigate({ to: successPath });
+      }
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Sign up failed");
     } finally {

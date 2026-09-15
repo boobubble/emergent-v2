@@ -3,6 +3,17 @@ import { useServerFn } from "@tanstack/react-start";
 import { flushSync } from "react-dom";
 import type { User, Message, Room, GameState, Attachment, RoomGameConfig } from "./chat-types";
 import { canonicalGameType } from "./games-registry";
+import {
+  consumeChatFreshEntry,
+  consumeRequestedChatRoom,
+  YAARZO_GLOBAL_ROOM_ID,
+} from "./auth-entry";
+import {
+  buildIrcReconciledRoomOrder,
+  pruneStaleIrcSidebarRooms,
+  resolvePrimaryActiveRoom,
+  type IrcRoomsSyncMeta,
+} from "./irc-rooms";
 
 export interface AdminChannelInput {
   id: string;
@@ -387,18 +398,7 @@ function isHelpQuery(t: string): boolean {
     || /\?\s*$/.test(t) && /\b(you|u)\b/i.test(t);
 }
 
-const MAIN_IRC_ROOM_ID = "yaarzo-global";
-
-const SEED_ROOMS: Room[] = [
-  {
-    id: "games",
-    name: "Games",
-    topic: "🎲 Game room — try !ludo for a 1v1 race, !trivia, !hangman and more.",
-    members: ["me", ...GAME_BOT_IDS],
-    roles: { me: "member", "bot-gamebot": "owner", "bot-ryze": "mod" },
-    isPublic: true,
-  },
-];
+const MAIN_IRC_ROOM_ID = YAARZO_GLOBAL_ROOM_ID;
 
 interface ModEntry {
   muteVotes: string[];      // unique voter names
@@ -433,26 +433,39 @@ function seed(name = "user0000"): State {
   const users: Record<string, User> = { me };
   SEED_BOTS.forEach(b => (users[b.id] = b));
   const rooms: Record<string, Room> = {};
-  SEED_ROOMS.forEach(r => (rooms[r.id] = r));
   const messages: Record<string, Message[]> = {};
-  rooms[MAIN_IRC_ROOM_ID] && (messages[MAIN_IRC_ROOM_ID] = [
-    { id: "seed-welcome-echo", channelId: MAIN_IRC_ROOM_ID, authorId: "bot-echo", text: `hey @${name} 👋 welcome in!`, ts: SEED_TIME - 40000 },
-  ]);
-  rooms.games && (messages.games = [
-    { id: "seed-games-intro", channelId: "games", authorId: "bot-gamebot", text: `🎮 **Welcome to the Games room!**\nThis is the place to play with everyone online. Try:\n• **!ludo** — start a 1v1 Ludo race (opponent types **!join**, roll with **!lr**)\n• **!trivia**, **!hangman**, **!roll**, **!fish**, **!dig**\nType **!help** for the full list.`, ts: SEED_TIME - 50000 },
-    { id: "seed-games-ryze", channelId: "games", authorId: "bot-ryze", text: "first one to !ludo me wins bragging rights 😏", ts: SEED_TIME - 30000 },
-  ]);
   // Personal welcome DM from GameBot
   messages["dm:bot-gamebot"] = [
     { id: "seed-dm-welcome", channelId: "dm:bot-gamebot", authorId: "bot-gamebot", text: `Hi @${name}! 👋 I'm GameBot. Here's a quick start:\n• Type !help to see all commands\n• Try !trivia, !hangman, or !wordchain to play games\n• Earn XP, coins, and badges as you chat\n• Add friends from any user's profile\nHave fun! 🎮`, ts: SEED_TIME - 10000 },
   ];
   return {
     me, users, rooms,
-    roomOrder: SEED_ROOMS.map(r => r.id),
+    roomOrder: [],
     dmOrder: ["bot-gamebot", "bot-nova"],
     messages,
     games: {},
     activeChannel: MAIN_IRC_ROOM_ID,
+  };
+}
+
+/** When IRC exposes #games, attach game bots without creating the room locally. */
+function enrichGamesRoomMembership(rooms: Record<string, Room>): Record<string, Room> {
+  const games = rooms[GAMES_CHANNEL_ID];
+  if (!games) return rooms;
+  const members = Array.isArray(games.members) ? games.members : ["me"];
+  const merged = [...new Set([...members, ...GAME_BOT_IDS])];
+  return {
+    ...rooms,
+    [GAMES_CHANNEL_ID]: {
+      ...games,
+      members: merged,
+      roles: {
+        ...games.roles,
+        me: games.roles?.me ?? "member",
+        "bot-gamebot": games.roles?.["bot-gamebot"] ?? "owner",
+        "bot-ryze": games.roles?.["bot-ryze"] ?? "mod",
+      },
+    },
   };
 }
 
@@ -502,29 +515,6 @@ function ensureBots(state: State): State {
       rooms[id] = { ...r, members: ["me"] };
     }
   });
-  // Make sure every seeded room exists (handles older cached state without "games")
-  SEED_ROOMS.forEach(seedRoom => {
-    if (!rooms[seedRoom.id]) {
-      rooms[seedRoom.id] = { ...seedRoom };
-      if (!roomOrder.includes(seedRoom.id)) roomOrder.push(seedRoom.id);
-      return;
-    }
-    const r = rooms[seedRoom.id];
-    if (seedRoom.id === "lobby" || seedRoom.id === "games") {
-      rooms[seedRoom.id] = {
-        ...r,
-        topic: seedRoom.topic,
-        members: [...seedRoom.members],
-        roles: { ...seedRoom.roles, ...r.roles, me: r.roles?.me ?? seedRoom.roles.me },
-      };
-      return;
-    }
-    const members = Array.isArray(r.members) ? r.members : [];
-    const missingBots = seedRoom.members.filter(id => !members.includes(id));
-    if (missingBots.length || !Array.isArray(r.members)) {
-      rooms[seedRoom.id] = { ...r, members: [...members, ...missingBots] };
-    }
-  });
   // Strip game bots from every room except #games (handles cached/stale membership).
   Object.keys(rooms).forEach((id) => {
     if (id === GAMES_CHANNEL_ID) return;
@@ -535,7 +525,8 @@ function ensureBots(state: State): State {
       rooms[id] = { ...r, members: cleaned };
     }
   });
-  return { ...state, users, rooms, roomOrder };
+  const enriched = enrichGamesRoomMembership(rooms);
+  return { ...state, users, rooms: enriched, roomOrder };
 }
 
 function load(username: string): State {
@@ -696,7 +687,7 @@ interface Ctx {
   wipeChannel: (channelId: string) => void;
   removeMessage: (channelId: string, messageId: string) => void;
   deleteRoom: (roomId: string) => void;
-  syncAdminChannels: (channels: AdminChannelInput[]) => void;
+  syncAdminChannels: (channels: AdminChannelInput[], meta?: IrcRoomsSyncMeta) => void;
   registerCommunityRoom: (room: CommunityRoomInput) => void;
   leaveCommunityRoom: (roomId: string) => void;
 
@@ -878,6 +869,9 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
   const [guestDmReads, setGuestDmReads] = useState<Record<string, number>>({});
   const [guestDmThreads, setGuestDmThreads] = useState<Record<string, GuestDmThreadMeta>>({});
   const [openDmPeerIds, setOpenDmPeerIds] = useState<string[]>([]);
+  const primaryRoomRef = useRef<string | null>(null);
+  const pendingFreshPrimaryRef = useRef(false);
+  const explicitRoomSelectionRef = useRef(false);
   const [roomTabChannel, setRoomTabChannel] = useState<string>(() => {
     const ch = state.activeChannel;
     if (
@@ -888,7 +882,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     ) {
       return ch;
     }
-    return state.roomOrder?.[0] || MAIN_IRC_ROOM_ID;
+    return MAIN_IRC_ROOM_ID;
   });
   const ircPresenceDedupRef = useRef<Map<string, number>>(new Map());
   const listGuestDmForGuestFn = useServerFn(listGuestDmConversationsForGuest);
@@ -908,7 +902,20 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     try {
       const loaded = load(username);
       const me = { ...loaded.me, isGuest };
-      setState({ ...loaded, me, users: { ...loaded.users, me } });
+      const requestedRoom = consumeRequestedChatRoom();
+      const freshEntry = consumeChatFreshEntry();
+      let activeChannel = loaded.activeChannel;
+      if (requestedRoom) {
+        explicitRoomSelectionRef.current = true;
+        pendingFreshPrimaryRef.current = false;
+        activeChannel = requestedRoom;
+      } else if (freshEntry) {
+        explicitRoomSelectionRef.current = false;
+        pendingFreshPrimaryRef.current = true;
+        activeChannel = MAIN_IRC_ROOM_ID;
+      }
+      setState({ ...loaded, me, users: { ...loaded.users, me }, activeChannel });
+      if (requestedRoom || freshEntry) setRoomTabChannel(activeChannel);
     } catch (err) {
       if (import.meta.env.DEV) console.warn("[chat-store] Hydration failed; resetting chat state.", err);
       try {
@@ -925,7 +932,8 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
   // Self-heal persisted DM identity once auth UUID is known (replace "me", drop malformed entries).
   useEffect(() => {
     if (!storageReady || !authUserId) return;
-    setState((s) => sanitizeChatState(s, authUserId));
+    if (pendingFreshPrimaryRef.current || explicitRoomSelectionRef.current) return;
+    setState((s) => sanitizeChatState(s, authUserId, primaryRoomRef.current));
   }, [storageReady, authUserId]);
 
   // Reload: confirm optimistic rows that already exist in public.messages; fail
@@ -1844,6 +1852,8 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       isGuestDmChannel(channelId) ||
       isGuestDmComposeChannel(channelId);
     if (!isDmChannel) {
+      explicitRoomSelectionRef.current = true;
+      pendingFreshPrimaryRef.current = false;
       setRoomTabChannel(channelId);
     }
     setState(s => ({ ...s, activeChannel: channelId }));
@@ -1855,6 +1865,23 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       return next;
     });
   }, []);
+
+  // Fresh auth/guest/plain entry: switch to gateway primaryRoom once IRC sync adds it.
+  useEffect(() => {
+    if (!storageReady) return;
+    const primary = primaryRoomRef.current;
+    const target =
+      explicitRoomSelectionRef.current
+        ? null
+        : pendingFreshPrimaryRef.current && primary && state.rooms[primary]
+          ? primary
+          : pendingFreshPrimaryRef.current && state.rooms[MAIN_IRC_ROOM_ID]
+            ? MAIN_IRC_ROOM_ID
+            : null;
+    if (!target || state.activeChannel === target) return;
+    pendingFreshPrimaryRef.current = false;
+    setActive(target);
+  }, [storageReady, state.rooms, state.activeChannel, setActive]);
 
   const send = useCallback((text: string, opts?: { attachment?: Attachment; replyToId?: string; channelId?: string }) => {
     const trimmed = text.trim();
@@ -2386,8 +2413,11 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     if (channelId && stateRef.current.activeChannel === channelId) {
       const fallback =
         roomTabChannel ||
-        stateRef.current.roomOrder[0] ||
-        MAIN_IRC_ROOM_ID;
+        resolvePrimaryActiveRoom(
+          stateRef.current.roomOrder,
+          stateRef.current.rooms,
+          primaryRoomRef.current,
+        );
       setActive(fallback);
     }
   }, [authUserId, guestDmConvByPeer, roomTabChannel, setActive]);
@@ -2399,7 +2429,9 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     setState(s => ({
       ...s,
       dmOrder: s.dmOrder.filter(id => id !== userId),
-      activeChannel: s.activeChannel === channelId ? s.roomOrder[0] || s.activeChannel : s.activeChannel,
+      activeChannel: s.activeChannel === channelId
+        ? resolvePrimaryActiveRoom(s.roomOrder, s.rooms, primaryRoomRef.current)
+        : s.activeChannel,
     }));
   }, [authUserId]);
 
@@ -2635,17 +2667,24 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       const { [roomId]: _removed, ...rooms } = s.rooms;
       const { [roomId]: _msgs, ...messages } = s.messages;
       const roomOrder = s.roomOrder.filter(id => id !== roomId);
-      const activeChannel = s.activeChannel === roomId ? (roomOrder[0] || "lobby") : s.activeChannel;
+      const activeChannel = s.activeChannel === roomId
+        ? resolvePrimaryActiveRoom(roomOrder, rooms, primaryRoomRef.current)
+        : s.activeChannel;
       return { ...s, rooms, messages, roomOrder, activeChannel };
     });
   }, []);
 
-  const syncAdminChannels = useCallback((channels: AdminChannelInput[]) => {
+  const syncAdminChannels = useCallback((channels: AdminChannelInput[], meta?: IrcRoomsSyncMeta) => {
+    if (meta?.primaryRoom) primaryRoomRef.current = meta.primaryRoom;
+    const validIds = new Set(
+      channels.map((c) => c?.id).filter((id): id is string => typeof id === "string" && !!id),
+    );
+    const ircOrder = channels.map((c) => c.id).filter((id) => validIds.has(id));
+
     setState(s => {
-      const rooms = { ...s.rooms };
-      let roomOrder = [...(s.roomOrder ?? [])];
-      const validIds = new Set(channels.map(c => c?.id).filter((id): id is string => typeof id === "string" && !!id));
-      // Add or update admin-managed rooms
+      let rooms = { ...s.rooms };
+      const messages = { ...s.messages };
+
       for (const c of channels) {
         if (!c || typeof c.id !== "string" || !c.id) continue;
         const name = typeof c.name === "string" && c.name.trim() ? c.name : c.id;
@@ -2674,19 +2713,34 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
             kind,
             game: kind === "game" ? normalizeRoomGameConfig(c.game) : undefined,
           };
-          if (!roomOrder.includes(c.id)) roomOrder.push(c.id);
         }
       }
-      // Remove previously admin-managed rooms (adm-* prefix) not in list
-      const messages = { ...s.messages };
+
+      rooms = enrichGamesRoomMembership(rooms);
+      const pruned = pruneStaleIrcSidebarRooms(rooms, s.roomOrder ?? [], validIds);
+      rooms = pruned.rooms;
+      let roomOrder = buildIrcReconciledRoomOrder(ircOrder, pruned.roomOrder, rooms, validIds);
+
       for (const id of Object.keys(rooms)) {
         if (id.startsWith("adm-") && !validIds.has(id)) {
           delete rooms[id];
           delete messages[id];
-          roomOrder = roomOrder.filter(x => x !== id);
+          roomOrder = roomOrder.filter((x) => x !== id);
         }
       }
-      const activeChannel = rooms[s.activeChannel] ? s.activeChannel : (roomOrder[0] || "lobby");
+
+      let activeChannel = s.activeChannel;
+      const primary = meta?.primaryRoom ?? primaryRoomRef.current;
+      const requestedStillValid =
+        explicitRoomSelectionRef.current && !!rooms[activeChannel];
+      if (requestedStillValid) {
+        // explicit user / ?room= selection wins
+      } else if (pendingFreshPrimaryRef.current) {
+        activeChannel = resolvePrimaryActiveRoom(roomOrder, rooms, primary);
+      } else if (!rooms[activeChannel]) {
+        activeChannel = resolvePrimaryActiveRoom(roomOrder, rooms, primary);
+      }
+
       return { ...s, rooms, messages, roomOrder, activeChannel };
     });
   }, []);
@@ -2724,7 +2778,9 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       const { [roomId]: _removed, ...rooms } = s.rooms;
       const roomOrder = s.roomOrder.filter(id => id !== roomId);
       const activeChannel =
-        s.activeChannel === roomId ? (roomOrder[0] || "lobby") : s.activeChannel;
+        s.activeChannel === roomId
+          ? resolvePrimaryActiveRoom(roomOrder, rooms, primaryRoomRef.current)
+          : s.activeChannel;
       return { ...s, rooms, roomOrder, activeChannel };
     });
   }, []);

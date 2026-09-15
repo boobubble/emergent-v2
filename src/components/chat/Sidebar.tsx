@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import {
-  RotateCcw, Award, Flame, PanelLeftClose, Zap, Trash2, Gamepad2,
+  RotateCcw, Award, PanelLeftClose, Trash2, Gamepad2,
   LogIn, UserPlus, Search, X, Moon, Sun,
 } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
@@ -11,7 +11,6 @@ import { GUEST_LOBBY_CHANNEL_ID } from "@/lib/guest-chat-config";
 import { useMyRoles } from "@/lib/use-my-role";
 import { useRoomOnlineCounts } from "@/lib/use-room-online-counts";
 import { BrandText, useBrandingMap } from "@/components/BrandMark";
-import { Avatar } from "./Avatar";
 import { cn } from "@/lib/utils";
 import { ChatExploreMenu } from "./ChatExploreMenu";
 import {
@@ -20,7 +19,6 @@ import {
   type SidebarRoomFilter,
 } from "@/components/discovery/ChatroomDiscoveryPanel";
 import { DjSidebarPlayer } from "./DjFooter";
-import { levelProgress } from "@/lib/ranks";
 
 interface Props {
   onOpenLeaderboard?: () => void;
@@ -373,7 +371,7 @@ export function Sidebar({ onCollapse, onSelectDiscoveryChannel }: Props) {
         <div className="sidebar-flex-spacer min-h-0 shrink" aria-hidden="true" />
         </div>
 
-        {/* Pinned bottom: utilities → radio → profile */}
+        {/* Pinned bottom: utilities → radio → session actions */}
         <div className="sidebar-bottom-panel shrink-0 border-t border-border/40 bg-card/20 px-1.5 pt-1 pb-1.5 backdrop-blur-sm">
           <div className="mb-1 flex items-center gap-1">
             <div className="min-w-0 flex-1">
@@ -410,48 +408,13 @@ export function Sidebar({ onCollapse, onSelectDiscoveryChannel }: Props) {
           <DjSidebarPlayer className="mb-1" />
 
           {user ? (
-            <>
-              <div className="relative block w-full overflow-hidden rounded-xl border border-border/60 bg-card/70 p-2 text-left">
-                <div className="flex items-center gap-2">
-                  <Avatar user={state.me} size={34} />
-                  <div className="min-w-0 flex-1 leading-tight">
-                    <div className="truncate text-[12px] font-bold text-foreground">{state.me.name}</div>
-                    <div className="text-[10px] text-emerald-400">Online</div>
-                  </div>
-                  <span className="inline-flex items-center gap-0.5 rounded-full bg-gradient-to-r from-amber-400/20 to-fuchsia-500/20 px-1.5 py-0.5 text-[9px] font-bold text-amber-200 ring-1 ring-amber-400/30">
-                    <Zap className="h-2.5 w-2.5" /> Lv {state.me.level}
-                  </span>
-                </div>
-                {(() => {
-                  const lp = levelProgress(state.me.xp ?? 0);
-                  return (
-                    <div className="mt-1.5">
-                      <div className="h-1 overflow-hidden rounded-full bg-white/10">
-                        <div
-                          className="h-full rounded-full bg-gradient-to-r from-yellow-300 via-amber-400 to-fuchsia-500 transition-all duration-700"
-                          style={{ width: `${lp.pct}%` }}
-                        />
-                      </div>
-                      <div className="mt-0.5 flex items-center justify-between text-[9px] font-semibold text-muted-foreground">
-                        <span>{lp.intoLevel}/{lp.toNext} XP</span>
-                        {(state.me.streak ?? 0) > 0 && (
-                          <span className="inline-flex items-center gap-0.5 text-rose-300">
-                            <Flame className="h-2.5 w-2.5" />{state.me.streak}d
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-              <button
-                type="button"
-                onClick={() => { if (confirm("Reset chat data for this account?")) reset(); }}
-                className="mt-0.5 flex w-full items-center justify-center gap-1 rounded-lg px-2 py-1 text-[10px] text-muted-foreground hover:text-foreground"
-              >
-                <RotateCcw className="h-3 w-3" /> Reset
-              </button>
-            </>
+            <button
+              type="button"
+              onClick={() => { if (confirm("Reset chat data for this account?")) reset(); }}
+              className="flex w-full items-center justify-center gap-1 rounded-lg px-2 py-1 text-[10px] text-muted-foreground hover:text-foreground"
+            >
+              <RotateCcw className="h-3 w-3" /> Reset chat data
+            </button>
           ) : (
             <div className="rounded-xl border border-border/60 bg-card/70 p-2.5">
               {guestChat.isGuestChatting ? (

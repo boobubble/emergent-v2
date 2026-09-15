@@ -67,8 +67,11 @@ describe("homepage / heropage / login CTA auth entry", () => {
     expect(isGuestLobbyChannel(LEGACY_LOBBY_ROOM_ID)).toBe(true);
     expect(isGuestDefaultChatRoom("games")).toBe(false);
     const store = read("lib/chat-store.tsx");
-    expect(store).toMatch(/const MAIN_IRC_ROOM_ID = "yaarzo-global"/);
+    expect(store).toMatch(/const MAIN_IRC_ROOM_ID = YAARZO_GLOBAL_ROOM_ID/);
     expect(store).toMatch(/activeChannel: MAIN_IRC_ROOM_ID/);
+    expect(store).not.toContain("SEED_ROOMS");
+    expect(store).toContain("syncAdminChannels");
+    expect(store).toContain("pruneStaleIrcSidebarRooms");
   });
 
   it("authenticated users are not kept on welcome / heropage / login / homepage chat embed", () => {
