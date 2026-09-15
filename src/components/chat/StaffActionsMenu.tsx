@@ -8,6 +8,7 @@ import { useStaffPermissions } from "@/lib/use-staff-permissions";
 import { useChannelModeration } from "@/lib/use-channel-moderation";
 import { banUser, muteUser, deleteMessageMod, deleteGuestMessageMod } from "@/lib/moderation.functions";
 import { isGuestMessageId } from "@/lib/message-list-model";
+import { isPublicIrcRoomChannel } from "@/lib/dm-utils";
 import { removeGuestLobbyRow } from "@/lib/use-guest-lobby-feed";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -40,7 +41,10 @@ export function StaffActionsMenu({
   const { user: authUser } = useAuth();
   const perms = useStaffPermissions();
   const activeChannel = channelId ?? state.activeChannel;
-  const { isAdmin, isModerator, roomPerms, isStaff } = useChannelModeration(activeChannel);
+  const isChannelModContext = isPublicIrcRoomChannel(activeChannel, state.rooms);
+  const { isAdmin, isModerator, roomPerms, isStaff } = useChannelModeration(
+    isChannelModContext ? activeChannel : "",
+  );
   const banFn = useServerFn(banUser);
   const muteFn = useServerFn(muteUser);
   const delFn = useServerFn(deleteMessageMod);
@@ -51,8 +55,8 @@ export function StaffActionsMenu({
   const isGuestTarget = targetUserId.startsWith("visitor_");
   if (isMe || isBot || !isStaff) return null;
 
-  const canKick = !isGuestTarget && (isAdmin || (isModerator && perms.mod_can_kick) || roomPerms.can_kick);
-  const canMute = !isGuestTarget && (isAdmin || (isModerator && perms.mod_can_mute) || roomPerms.can_mute);
+  const canKick = isChannelModContext && !isGuestTarget && (isAdmin || (isModerator && perms.mod_can_kick) || roomPerms.can_kick);
+  const canMute = isChannelModContext && !isGuestTarget && (isAdmin || (isModerator && perms.mod_can_mute) || roomPerms.can_mute);
   const canBan = !isGuestTarget && (isAdmin || (isModerator && perms.mod_can_ban));
   const canDelete = isAdmin || isModerator || roomPerms.can_delete;
   if (!canKick && !canMute && !canBan && !canDelete) return null;

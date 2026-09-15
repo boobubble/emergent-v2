@@ -23,6 +23,7 @@ import { banUser, muteUser } from "@/lib/moderation.functions";
 import { recordProfileView } from "@/lib/use-profile-views";
 import { FriendActionButton, useSocialGraph } from "@/lib/use-social-graph";
 import { FollowWriterButton } from "@/components/mehfil/FollowWriterButton";
+import { isPublicIrcRoomChannel } from "@/lib/dm-utils";
 import { useAuthGate } from "@/lib/auth-gate";
 import type { Role } from "@/lib/chat-types";
 import type { ProfileCloseReason } from "@/lib/profile-popup-context";
@@ -91,9 +92,11 @@ export function ProfilePopup({
   const { isAdmin, isModerator } = useMyRoles();
   const staffPerms = useStaffPermissions();
   const isStaff = isModerator && !isMe && !user?.isBot;
-  const canKick = isStaff && (isAdmin || staffPerms.mod_can_kick);
-  const canMute = isStaff && (isAdmin || staffPerms.mod_can_mute);
+  const isChannelModContext = isPublicIrcRoomChannel(state.activeChannel, state.rooms);
+  const canKick = isChannelModContext && isStaff && (isAdmin || staffPerms.mod_can_kick);
+  const canMute = isChannelModContext && isStaff && (isAdmin || staffPerms.mod_can_mute);
   const canBan  = isStaff && (isAdmin || staffPerms.mod_can_ban);
+  const ignoreTargetId = !isMe && realId !== "me" ? realId : "";
   const banFn = useServerFn(banUser);
   const muteFn = useServerFn(muteUser);
 
@@ -386,15 +389,15 @@ export function ProfilePopup({
                 <Ban className="h-4 w-4 shrink-0" />
               </button>
             ))}
-            {isIgnored(userId, user.isBot) ? (
-              <button onClick={() => toggleIgnoreUser(userId)} className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-card hover:bg-white/5" title="Unignore (show messages)">
+            {ignoreTargetId && (isIgnored(ignoreTargetId, user.isBot) ? (
+              <button onClick={() => toggleIgnoreUser(ignoreTargetId)} className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-card hover:bg-white/5" title="Unignore (show messages)">
                 <Bell className="h-4 w-4 shrink-0" />
               </button>
             ) : (
-              <button onClick={() => toggleIgnoreUser(userId)} className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-card text-muted-foreground hover:bg-white/5 hover:text-foreground" title="Ignore (hide messages in chat)">
+              <button onClick={() => toggleIgnoreUser(ignoreTargetId)} className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-card text-muted-foreground hover:bg-white/5 hover:text-foreground" title="Ignore user (hide messages and DMs)">
                 <BellOff className="h-4 w-4 shrink-0" />
               </button>
-            )}
+            ))}
           </div>
         )}
         {isStaff && (canKick || canMute || canBan) && (

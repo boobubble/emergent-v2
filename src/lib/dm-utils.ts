@@ -129,6 +129,31 @@ export function sanitizeDmOrder(dmOrder: string[] | undefined, authUserId: strin
   return out;
 }
 
+/** True when the user has an active DM/guest-DM selection that must not be replaced by IRC sync. */
+export function isActiveDmSelection(
+  activeChannel: string,
+  authUserId: string | null | undefined,
+): boolean {
+  if (!activeChannel) return false;
+  if (isGuestDmChannel(activeChannel) || activeChannel.startsWith("gdm:compose:")) return true;
+  if (!activeChannel.startsWith("dm:")) return false;
+  if (isLocalBotDmChannel(activeChannel)) return true;
+  if (isRemoteDmChannel(activeChannel, authUserId)) return true;
+  const fixed = fixLegacyDmChannel(activeChannel, authUserId);
+  return !!(fixed && isRemoteDmChannel(fixed, authUserId));
+}
+
+/** Public IRC-backed room channel (not DM / guest compose). */
+export function isPublicIrcRoomChannel(
+  channelId: string,
+  rooms: Record<string, unknown>,
+): boolean {
+  if (!channelId || channelId.startsWith("dm:") || isGuestDmChannel(channelId) || channelId.startsWith("gdm:")) {
+    return false;
+  }
+  return Object.prototype.hasOwnProperty.call(rooms, channelId);
+}
+
 export function sanitizeActiveChannel(
   activeChannel: string,
   authUserId: string | null,

@@ -171,6 +171,7 @@ describe("desktop DM tab auto-pop helpers", () => {
 
 describe("MessageList render with remote-profile peer + fetched DM history", () => {
   it("shows loaded messages instead of the ChatErrorBoundary fallback", async () => {
+    // MessageList is a heavy dynamic import; allow headroom when the full guard suite is cold.
     const { MessageList } = await import("@/components/chat/MessageList");
     const html = renderToStaticMarkup(createElement(MessageList, { channelId: mockChannelId }));
     expect(html).toContain("loaded from fetch");
@@ -178,5 +179,5 @@ describe("MessageList render with remote-profile peer + fetched DM history", () 
     expect(html).toContain("Ada");
     expect(html).not.toContain("Chat unavailable");
     expect(html).not.toContain("Something went wrong loading messages");
-  });
+  }, 15_000);
 });

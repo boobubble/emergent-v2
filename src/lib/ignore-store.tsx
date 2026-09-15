@@ -16,7 +16,7 @@ const DEFAULTS: IgnoreState = { ignoredIds: [], ignoreAllBots: false };
 
 const Ctx = createContext<IgnoreCtx | null>(null);
 
-function load(): IgnoreState {
+export function loadIgnoreState(): IgnoreState {
   if (typeof window === "undefined") return DEFAULTS;
   try {
     const raw = localStorage.getItem(KEY);
@@ -29,6 +29,18 @@ function load(): IgnoreState {
   } catch { return DEFAULTS; }
 }
 
+/** Sync read for chat-store (no React hook). */
+export function isUserLocallyIgnored(userId: string, isBot?: boolean): boolean {
+  if (!userId || userId === "me") return false;
+  const s = loadIgnoreState();
+  if (isBot && s.ignoreAllBots) return true;
+  return s.ignoredIds.includes(userId);
+}
+
+function load(): IgnoreState {
+  return loadIgnoreState();
+}
+
 export function IgnoreProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<IgnoreState>(DEFAULTS);
 
@@ -39,6 +51,7 @@ export function IgnoreProvider({ children }: { children: ReactNode }) {
   }, [state]);
 
   const toggleIgnoreUser = useCallback((id: string) => {
+    if (!id || id === "me") return;
     setState(s => s.ignoredIds.includes(id)
       ? { ...s, ignoredIds: s.ignoredIds.filter(x => x !== id) }
       : { ...s, ignoredIds: [...s.ignoredIds, id] });

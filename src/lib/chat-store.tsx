@@ -122,12 +122,14 @@ import {
   sanitizeRoomMembers,
   shouldHideGameBotMessage,
 } from "./chat-bot-channels";
+import { isUserLocallyIgnored } from "@/lib/ignore-store";
 import { ChatErrorBoundary } from "@/components/ChatErrorBoundary";
 import {
   CHAT_SYNC_CHANNEL,
   LEGACY_CHAT_STORAGE_KEYS,
   UUID_RE,
   dmChannelFor,
+  isActiveDmSelection,
   isBotUiId,
   isLocalBotPeerId,
   isRemoteDmChannel,
@@ -892,6 +894,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
   /** Desktop: show a passive DM tab on live inbound messages (no activeChannel switch). */
   const revealIncomingDmTab = useCallback((peerId: string, channelId: string) => {
     if (!authUserId || !peerId) return;
+    if (isUserLocallyIgnored(peerId)) return;
     if (!isDesktopDmTabStrip()) return;
     if (!shouldAutoOpenIncomingDmTab(stateRef.current.activeChannel, channelId)) return;
     setOpenDmPeerIds((prev) => (prev.includes(peerId) ? prev : [...prev, peerId]));
@@ -909,6 +912,10 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
         explicitRoomSelectionRef.current = true;
         pendingFreshPrimaryRef.current = false;
         activeChannel = requestedRoom;
+      } else if (isActiveDmSelection(loaded.activeChannel, null)) {
+        explicitRoomSelectionRef.current = true;
+        pendingFreshPrimaryRef.current = false;
+        activeChannel = loaded.activeChannel;
       } else if (freshEntry) {
         explicitRoomSelectionRef.current = false;
         pendingFreshPrimaryRef.current = true;
@@ -1500,13 +1507,18 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
         });
 
         if (msg.channelId.startsWith("dm:")) {
-          setDmLatestTs(prev => (prev[msg.channelId] ?? 0) >= msg.ts ? prev : { ...prev, [msg.channelId]: msg.ts });
+          const dmPeerId = authUserId
+            ? msg.channelId.slice(3).split(":").find((p) => p !== authUserId)
+            : null;
+          if (!dmPeerId || !isUserLocallyIgnored(dmPeerId)) {
+            setDmLatestTs(prev => (prev[msg.channelId] ?? 0) >= msg.ts ? prev : { ...prev, [msg.channelId]: msg.ts });
+          }
         }
 
         if (msg.authorId !== "me") {
           if (msg.channelId.startsWith("dm:") && authUserId) {
             const peerId = msg.channelId.slice(3).split(":").find((p) => p !== authUserId);
-            if (peerId) {
+            if (peerId && !isUserLocallyIgnored(peerId)) {
               if (msg.kind === "watch-together-invite") {
                 startDmForWatchInviteRef.current(peerId);
               } else {
@@ -1515,7 +1527,10 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
             }
           }
           if (msg.channelId.startsWith("dm:")) {
-            playDmPing();
+            const peerId = msg.channelId.slice(3).split(":").find((p) => p !== authUserId);
+            if (!peerId || !isUserLocallyIgnored(peerId)) {
+              playDmPing();
+            }
           } else {
             playPublicChatTick();
             const myName = (typeof window !== "undefined" ? username : "");
@@ -1847,13 +1862,13 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
   
 
   const setActive = useCallback((channelId: string) => {
+    explicitRoomSelectionRef.current = true;
+    pendingFreshPrimaryRef.current = false;
     const isDmChannel =
       channelId.startsWith("dm:") ||
       isGuestDmChannel(channelId) ||
       isGuestDmComposeChannel(channelId);
     if (!isDmChannel) {
-      explicitRoomSelectionRef.current = true;
-      pendingFreshPrimaryRef.current = false;
       setRoomTabChannel(channelId);
     }
     setState(s => ({ ...s, activeChannel: channelId }));
@@ -1869,6 +1884,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
   // Fresh auth/guest/plain entry: switch to gateway primaryRoom once IRC sync adds it.
   useEffect(() => {
     if (!storageReady) return;
+    if (isActiveDmSelection(state.activeChannel, authUserId)) return;
     const primary = primaryRoomRef.current;
     const target =
       explicitRoomSelectionRef.current
@@ -1881,7 +1897,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     if (!target || state.activeChannel === target) return;
     pendingFreshPrimaryRef.current = false;
     setActive(target);
-  }, [storageReady, state.rooms, state.activeChannel, setActive]);
+  }, [storageReady, state.rooms, state.activeChannel, authUserId, setActive]);
 
   const send = useCallback((text: string, opts?: { attachment?: Attachment; replyToId?: string; channelId?: string }) => {
     const trimmed = text.trim();
@@ -2731,10 +2747,11 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
 
       let activeChannel = s.activeChannel;
       const primary = meta?.primaryRoom ?? primaryRoomRef.current;
+      const preserveDm = isActiveDmSelection(activeChannel, authUserId);
       const requestedStillValid =
-        explicitRoomSelectionRef.current && !!rooms[activeChannel];
-      if (requestedStillValid) {
-        // explicit user / ?room= selection wins
+        explicitRoomSelectionRef.current && (!!rooms[activeChannel] || preserveDm);
+      if (preserveDm || requestedStillValid) {
+        // active DM or explicit user / ?room= selection wins
       } else if (pendingFreshPrimaryRef.current) {
         activeChannel = resolvePrimaryActiveRoom(roomOrder, rooms, primary);
       } else if (!rooms[activeChannel]) {
@@ -2743,7 +2760,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
 
       return { ...s, rooms, messages, roomOrder, activeChannel };
     });
-  }, []);
+  }, [authUserId]);
 
   const registerCommunityRoom = useCallback((room: CommunityRoomInput) => {
     dbBackedRemoteChannels.add(room.id);

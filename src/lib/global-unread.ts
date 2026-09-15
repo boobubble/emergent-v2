@@ -6,6 +6,7 @@ import { useMemo } from "react";
 import { useOptionalChat } from "@/lib/chat-store";
 import { useNotificationsOptional } from "@/lib/use-notifications";
 import { dmChannelFor, isRemoteDmChannel, isUuid } from "@/lib/dm-utils";
+import { isUserLocallyIgnored } from "@/lib/ignore-store";
 
 /** True when the user is actively viewing this remote DM thread. */
 export function isDmChannelViewed(
@@ -72,6 +73,7 @@ export function peerDmUnreadMessageCount(
   messages: readonly DmUnreadMsg[],
 ): number {
   if (!authUserId || !isUuid(peerId)) return 0;
+  if (isUserLocallyIgnored(peerId)) return 0;
   const ch = dmChannelFor(authUserId, peerId);
   if (!ch || !isRemoteDmChannel(ch, authUserId)) return 0;
   if (isDmChannelViewed(ch, authUserId, activeChannel, openDmPeerIds)) return 0;
