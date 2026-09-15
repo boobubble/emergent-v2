@@ -65,9 +65,19 @@ describe("desktop app layout CSS split", () => {
     const sidebar = read("components/chat/Sidebar.tsx");
     expect(sidebar).toContain("md:hidden");
     expect(sidebar).toContain("onCollapse?.()");
+    const tabs = read("components/chat/ChatConversationTabs.tsx");
+    expect(tabs).toContain("onToggleSidebar");
+    expect(tabs).toContain("PanelLeftClose");
+    expect(tabs).toContain("data-chat-nav-sidebar-toggle");
+    expect(tabs).toContain("state.roomOrder");
+    expect(tabs).toContain("openDmTab(peerId)");
+    expect(tabs).toContain("closeDmTab(peerId)");
+    expect(tabs).toContain("hidden h-11");
     const header = read("components/chat/ChatHeader.tsx");
-    expect(header).toContain("onToggleSidebar");
-    expect(header).toContain("PanelLeftClose");
+    expect(header).toContain("md:hidden");
+    expect(header).toContain("Bots on");
+    expect(header).toContain("palrgo:open-chat-theme-store");
+    expect(header).not.toContain("onToggleSidebar");
   });
 
   it("post-login client mount uses matchMedia, not a later CSS/hydration pass", () => {

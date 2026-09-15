@@ -116,7 +116,7 @@ describe("opening a DM must not trip the Chatrooms error boundary", () => {
   });
 
   it("desktop DM tabs render in the main column beside the message pane", () => {
-    expect(chatApp).toMatch(/<ChatConversationTabs /);
+    expect(chatApp).toMatch(/<ChatConversationTabs[\s>]/);
     expect(chatApp).toMatch(/<DesktopDmTabBridge \/>/);
     expect(chatApp).toMatch(/ChatErrorBoundary label="chat-messages"/);
     expect(chatApp).toMatch(/<ChatChannelBody /);

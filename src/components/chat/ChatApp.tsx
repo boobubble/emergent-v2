@@ -65,7 +65,6 @@ import {
   chatroomShellLayoutAttr,
   bindChatShellToVisualViewport,
   isClientLargeDesktopShell,
-  isClientDesktopShell,
   readChatroomShellLayout,
 } from "@/components/chat/chatroom-shell";
 
@@ -496,15 +495,16 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
                     <ChatHeader
                       onOpenHub={() => setHubOpen(true)}
                       hubOpen={hubOpen}
-                      desktopShell={isClientDesktopShell(shellLayout)}
                       largeDesktop={isClientLargeDesktopShell(shellLayout)}
-                      sidebarOpen={sidebarOpen}
-                      onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
                       authUserId={authUserId}
                     />
                   </ChatErrorBoundary>
                 )}
-                <ChatConversationTabs shellLayout={shellLayout} />
+                <ChatConversationTabs
+                  shellLayout={shellLayout}
+                  sidebarOpen={sidebarOpen}
+                  onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+                />
                 <div className="relative flex min-h-0 flex-1 flex-col">
                   {activeIsDM && (
                     <DMChatBackground

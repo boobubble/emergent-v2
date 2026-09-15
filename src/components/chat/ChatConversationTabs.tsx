@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { X, Hash } from "lucide-react";
+import { useEffect, useMemo } from "react";
+import { X, Hash, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
 import { resolveMiniDmPeer } from "@/lib/mini-dm";
@@ -7,25 +7,30 @@ import { isGuestDmPeer, formatGuestDmLabel } from "@/lib/guest-dm-utils";
 import { FrameAvatar } from "@/components/cosmetics/CosmeticBits";
 import { cn } from "@/lib/utils";
 import { formatDmUnreadBadge } from "@/lib/global-unread";
-import { isClientLargeDesktopShell, type ChatroomShellLayout } from "@/components/chat/chatroom-shell";
+import { isClientDesktopShell, type ChatroomShellLayout } from "@/components/chat/chatroom-shell";
 
 type ChatConversationTabsProps = {
   shellLayout: ChatroomShellLayout;
+  sidebarOpen: boolean;
+  onToggleSidebar: () => void;
 };
 
 /**
- * Desktop (lg+) conversation tabs: room + open DMs in the main chat column.
+ * Desktop (md+) compact chat nav: sidebar toggle, joined rooms, then DM tabs.
+ * Hidden on mobile via CSS so mobile ChatHeader is unchanged.
  */
-export function ChatConversationTabs({ shellLayout }: ChatConversationTabsProps) {
+export function ChatConversationTabs({
+  shellLayout,
+  sidebarOpen,
+  onToggleSidebar,
+}: ChatConversationTabsProps) {
   const {
     state,
-    isDM,
     channelLabel,
     setActive,
     openDmPeerIds,
     openDmTab,
     closeDmTab,
-    roomTabChannel,
     dmPeerUnreadCount,
     dmChannelFor,
     watchRemoteChannel,
@@ -33,49 +38,71 @@ export function ChatConversationTabs({ shellLayout }: ChatConversationTabsProps)
   } = useChat();
   const { profiles } = useRemoteProfiles();
 
-  const largeDesktop = isClientLargeDesktopShell(shellLayout);
+  const desktop = isClientDesktopShell(shellLayout);
   const activeChannel = state.activeChannel;
-  const activeIsDM = isDM(activeChannel);
+
+  const joinedRoomIds = useMemo(() => {
+    const seen = new Set<string>();
+    return (state.roomOrder ?? []).filter((id) => {
+      if (!state.rooms[id] || seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+  }, [state.roomOrder, state.rooms]);
 
   useEffect(() => {
-    if (!largeDesktop) return;
+    if (!desktop) return;
     for (const peerId of openDmPeerIds) {
       const ch = dmChannelFor(peerId);
       if (ch) watchRemoteChannel(ch);
     }
-  }, [largeDesktop, openDmPeerIds, dmChannelFor, watchRemoteChannel]);
-
-  if (!largeDesktop) return null;
-
-  const roomLabel = channelLabel(roomTabChannel);
-  const roomActive = !activeIsDM;
+  }, [desktop, openDmPeerIds, dmChannelFor, watchRemoteChannel]);
 
   return (
     <div
-      className="chat-glass shrink-0 border-b border-border/60"
+      className="hidden h-11 shrink-0 border-b border-border/70 bg-background md:flex"
       data-chat-conversation-tabs=""
     >
       <div
-        className="flex items-stretch gap-1 overflow-x-auto overflow-y-hidden px-2 py-1.5 scrollbar-thin"
+        className="flex h-full min-w-0 flex-1 items-center gap-1 overflow-x-auto overflow-y-hidden px-2 scrollbar-thin"
         style={{ flexWrap: "nowrap" }}
         role="tablist"
         aria-label="Conversations"
       >
         <button
           type="button"
-          role="tab"
-          aria-selected={roomActive}
-          onClick={() => setActive(roomTabChannel)}
-          className={cn(
-            "inline-flex max-w-[11rem] shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors",
-            roomActive
-              ? "border-primary/35 bg-primary/10 text-foreground shadow-sm"
-              : "border-transparent bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground",
-          )}
+          onClick={onToggleSidebar}
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-muted-foreground transition hover:bg-muted/70 hover:text-foreground"
+          title={sidebarOpen ? "Hide sidebar" : "Show sidebar"}
+          aria-label={sidebarOpen ? "Hide sidebar" : "Show sidebar"}
+          data-chat-nav-sidebar-toggle=""
         >
-          <Hash className="h-3 w-3 shrink-0 opacity-70" aria-hidden />
-          <span className="truncate">{roomLabel}</span>
+          {sidebarOpen ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
         </button>
+
+        {joinedRoomIds.map((roomId) => {
+          const tabActive = activeChannel === roomId;
+          const label = channelLabel(roomId);
+          return (
+            <button
+              key={roomId}
+              type="button"
+              role="tab"
+              aria-selected={tabActive}
+              onClick={() => setActive(roomId)}
+              title={label}
+              className={cn(
+                "inline-flex h-8 max-w-[11rem] shrink-0 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium transition-colors",
+                tabActive
+                  ? "border-primary/35 bg-primary/10 text-foreground shadow-sm"
+                  : "border-transparent bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+              )}
+            >
+              <Hash className="h-3 w-3 shrink-0 opacity-70" aria-hidden />
+              <span className="truncate">{label}</span>
+            </button>
+          );
+        })}
 
         {openDmPeerIds.map((peerId) => {
           const channelId = dmChannelFor(peerId);
@@ -103,7 +130,7 @@ export function ChatConversationTabs({ shellLayout }: ChatConversationTabsProps)
               role="tab"
               aria-selected={tabActive}
               className={cn(
-                "inline-flex max-w-[10.5rem] shrink-0 items-center rounded-lg border text-xs font-medium transition-colors",
+                "inline-flex h-8 max-w-[10.5rem] shrink-0 items-center rounded-lg border text-xs font-medium transition-colors",
                 tabActive
                   ? "border-primary/35 bg-primary/10 text-foreground shadow-sm"
                   : "border-transparent bg-muted/30 text-muted-foreground",
@@ -112,7 +139,7 @@ export function ChatConversationTabs({ shellLayout }: ChatConversationTabsProps)
               <button
                 type="button"
                 onClick={() => openDmTab(peerId)}
-                className="inline-flex min-w-0 flex-1 items-center gap-1.5 px-2 py-1.5 text-left hover:text-foreground"
+                className="inline-flex min-w-0 flex-1 items-center gap-1.5 px-2 py-1 text-left hover:text-foreground"
               >
                 {user ? (
                   <FrameAvatar user={user} size={18} />
