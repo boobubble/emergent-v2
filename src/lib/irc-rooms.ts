@@ -31,6 +31,90 @@ export interface IrcRoomsSyncMeta {
   source?: string;
 }
 
+/** Gateway IRC LIST endpoint — source of truth for public chatroom sidebar. */
+export const IRC_ROOMS_GATEWAY_URL = "https://ws.yaarzo.com/rooms";
+
+/** Poll interval for live IRC room discovery while chatroom is open. */
+export const IRC_ROOMS_POLL_MS = 30_000;
+
+/**
+ * IRC-managed public slug rooms (yaarzo-global, games, music, …).
+ * Not persisted — always re-hydrated from gateway `/rooms`.
+ */
+export function isGatewayIrcPublicRoom(id: string, room: Room | undefined): boolean {
+  if (!room?.isPublic) return false;
+  if (room.dbBacked) return false;
+  if (isUuid(id)) return false;
+  if (id.startsWith("adm-")) return false;
+  if (room.roles?.me === "owner") return false;
+  if (id.startsWith("dm:") || id.startsWith("gdm:")) return false;
+  return true;
+}
+
+/** Remove stale cached IRC public rooms so gateway `/rooms` remains authoritative. */
+export function stripGatewayIrcRoomsFromPersistedState<
+  T extends { rooms: Record<string, Room>; roomOrder: string[]; activeChannel?: string },
+>(state: T): T {
+  const rooms = { ...state.rooms };
+  const removeIds = new Set<string>();
+  for (const id of Object.keys(rooms)) {
+    if (isGatewayIrcPublicRoom(id, rooms[id])) {
+      delete rooms[id];
+      removeIds.add(id);
+    }
+  }
+  const roomOrder = state.roomOrder.filter((id) => !removeIds.has(id));
+  let activeChannel = state.activeChannel;
+  if (activeChannel && removeIds.has(activeChannel)) {
+    activeChannel = YAARZO_GLOBAL_ROOM_ID;
+  }
+  return { ...state, rooms, roomOrder, activeChannel };
+}
+
+/**
+ * Pure reconciliation used by chat-store sync and regression tests.
+ * Any IRC channel in `channels` is added; channels absent from IRC are pruned.
+ */
+export function applyIrcGatewayRoomSync(
+  rooms: Record<string, Room>,
+  roomOrder: string[],
+  channels: ParsedIrcChannel[],
+): { rooms: Record<string, Room>; roomOrder: string[] } {
+  const validIds = new Set(channels.map((c) => c.id));
+  const ircOrder = channels.map((c) => c.id);
+  let nextRooms = { ...rooms };
+
+  for (const ch of channels) {
+    const existing = nextRooms[ch.id];
+    if (existing) {
+      nextRooms[ch.id] = {
+        ...existing,
+        name: ch.name,
+        topic: ch.topic || existing.topic || "",
+        isPublic: true,
+      };
+    } else {
+      nextRooms[ch.id] = {
+        id: ch.id,
+        name: ch.name,
+        topic: ch.topic || "",
+        members: ["me"],
+        roles: { me: "member" },
+        isPublic: true,
+      };
+    }
+  }
+
+  const pruned = pruneStaleIrcSidebarRooms(nextRooms, roomOrder, validIds);
+  const nextOrder = buildIrcReconciledRoomOrder(
+    ircOrder,
+    pruned.roomOrder,
+    pruned.rooms,
+    validIds,
+  );
+  return { rooms: pruned.rooms, roomOrder: nextOrder };
+}
+
 export function parseGatewayRoomsPayload(payload: unknown): {
   channels: ParsedIrcChannel[];
   meta: IrcRoomsSyncMeta;

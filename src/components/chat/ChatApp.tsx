@@ -22,9 +22,6 @@ import { useDmTheme } from "@/lib/use-dm-theme";
 import { supabase } from "@/integrations/supabase/client";
 import { useAppSettings } from "@/lib/app-settings";
 import { markChatFreshEntry, setRequestedChatRoom } from "@/lib/auth-entry";
-import { parseGatewayRoomsPayload } from "@/lib/irc-rooms";
-
-
 import { useBotEventsNotifier } from "@/lib/use-bot-events-notifier";
 import { MembersPanel } from "@/components/chat/MembersPanel";
 import { ChatConversationTabs } from "@/components/chat/ChatConversationTabs";
@@ -129,49 +126,12 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
   useBotEventsNotifier();
 
   const { raw } = useAppSettings();
-  const chatRef = useRef(chat);
-  chatRef.current = chat;
-
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     const requested = params.get("room")?.trim();
     if (requested) setRequestedChatRoom(requested);
     else markChatFreshEntry();
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const syncIrcRooms = async () => {
-      try {
-        const res = await fetch("https://ws.yaarzo.com/rooms");
-        if (!res.ok) throw new Error(`IRC rooms HTTP ${res.status}`);
-
-        const payload = await res.json();
-        if (cancelled) return;
-
-        const { channels, meta } = parseGatewayRoomsPayload(payload);
-        const list = channels.map((r) => ({
-          id: r.id,
-          name: r.name,
-          topic: r.topic,
-          memberCount: r.memberCount,
-        }));
-
-        chatRef.current?.syncAdminChannels(list, meta);
-      } catch (err) {
-        console.error("Failed to sync IRC room list:", err);
-      }
-    };
-
-    void syncIrcRooms();
-    const timer = window.setInterval(syncIrcRooms, 30000);
-
-    return () => {
-      cancelled = true;
-      window.clearInterval(timer);
-    };
   }, []);
 
   useEffect(() => {

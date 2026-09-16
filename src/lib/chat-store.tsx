@@ -10,6 +10,10 @@ import {
 } from "./auth-entry";
 import {
   buildIrcReconciledRoomOrder,
+  IRC_ROOMS_GATEWAY_URL,
+  IRC_ROOMS_POLL_MS,
+  parseGatewayRoomsPayload,
+  stripGatewayIrcRoomsFromPersistedState,
   pruneStaleIrcSidebarRooms,
   resolvePrimaryActiveRoom,
   type IrcRoomsSyncMeta,
@@ -553,7 +557,8 @@ function load(username: string): State {
         return seed(username);
       }
       const sanitized = sanitizeChatState(parsed, null);
-      const state = ensureBots(ensureWelcome(normalizeMe(sanitized, username), username));
+      const stripped = stripGatewayIrcRoomsFromPersistedState(sanitized);
+      const state = ensureBots(ensureWelcome(normalizeMe(stripped, username), username));
       try {
         localStorage.setItem(storageKeyFor(username), JSON.stringify(state));
       } catch {
@@ -1368,6 +1373,44 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       window.removeEventListener("online", onOnline);
     };
   }, [authUserId]);
+
+  // IRC `/rooms` is authoritative for public chatrooms — sync after hydration, then poll.
+  useEffect(() => {
+    if (!storageReady || typeof window === "undefined") return;
+    let cancelled = false;
+
+    const syncFromGateway = async () => {
+      try {
+        const res = await fetch(IRC_ROOMS_GATEWAY_URL);
+        if (!res.ok) throw new Error(`IRC rooms HTTP ${res.status}`);
+        const payload = await res.json();
+        if (cancelled) return;
+        const { channels, meta } = parseGatewayRoomsPayload(payload);
+        const list = channels.map((r) => ({
+          id: r.id,
+          name: r.name,
+          topic: r.topic,
+          memberCount: r.memberCount,
+        }));
+        syncAdminChannels(list, meta);
+      } catch (err) {
+        console.error("Failed to sync IRC room list:", err);
+      }
+    };
+
+    void syncFromGateway();
+    const timer = window.setInterval(syncFromGateway, IRC_ROOMS_POLL_MS);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void syncFromGateway();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [storageReady, syncAdminChannels]);
 
   // Keep remote-channel registry aligned with persisted db-backed rooms.
   useEffect(() => {
