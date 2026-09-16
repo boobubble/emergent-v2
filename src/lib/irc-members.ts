@@ -119,3 +119,73 @@ export function renameIrcMemberInRoom(
   if (without.includes(newMemberId)) return without;
   return [...without, newMemberId];
 }
+
+/** Prefer gateway-assigned IRC nick, then guest-chosen nickname. */
+export function resolveGuestIrcNick(opts: {
+  ircNick?: string | null;
+  nickname?: string | null;
+}): string | null {
+  const nick = opts.ircNick?.trim() || opts.nickname?.trim();
+  return nick || null;
+}
+
+export function stripPlaceholderMeFromMembers(
+  members: string[],
+  selfVisitorId?: string | null,
+): string[] {
+  const withoutMe = members.filter((id) => id !== "me");
+  if (!selfVisitorId) return withoutMe;
+  return withoutMe.includes(selfVisitorId)
+    ? withoutMe
+    : addIrcMember(withoutMe, selfVisitorId);
+}
+
+/**
+ * Merge IRC NAMES snapshot into room members while preserving local bots
+ * and replacing the placeholder `me` id with the guest visitor id when known.
+ */
+export function mergeIrcNamesSnapshotMembers(
+  existingMembers: string[],
+  entries: IrcRoomMember[],
+  botMemberIds: Iterable<string> = [],
+  selfVisitorId?: string | null,
+): string[] {
+  const bots = new Set(botMemberIds);
+  const preservedBots = existingMembers.filter((id) => bots.has(id));
+  const ircMembers = mergeIrcNamesMembers(
+    existingMembers.filter((id) => id !== "me" && !bots.has(id)),
+    entries,
+  );
+  const merged = [...ircMembers, ...preservedBots];
+  return stripPlaceholderMeFromMembers(merged, selfVisitorId);
+}
+
+export function applyGuestIrcIdentity<
+  S extends {
+    me: User;
+    users: Record<string, User>;
+    rooms: Record<string, { members: string[] } & Record<string, unknown>>;
+  },
+>(
+  state: S,
+  visitorId: string,
+  nick: string,
+  isIrcLiveRoom: (roomId: string) => boolean,
+): S {
+  const entry: IrcRoomMember = { nick, userId: visitorId, isGuest: true };
+  const memberId = memberIdForIrcEntry(entry);
+  const guestUser = buildIrcMemberUser(entry, memberId);
+  const me = { ...state.me, name: nick, isGuest: true };
+  const users = { ...state.users, me, [memberId]: guestUser };
+  const rooms = { ...state.rooms } as S["rooms"];
+
+  for (const [roomId, room] of Object.entries(state.rooms)) {
+    if (!isIrcLiveRoom(roomId)) continue;
+    rooms[roomId] = {
+      ...room,
+      members: stripPlaceholderMeFromMembers(room.members, memberId),
+    } as S["rooms"][string];
+  }
+
+  return { ...state, me, users, rooms };
+}

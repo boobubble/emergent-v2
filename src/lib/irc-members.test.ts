@@ -1,11 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
   addIrcMember,
+  applyGuestIrcIdentity,
   mergeIrcNamesMembers,
+  mergeIrcNamesSnapshotMembers,
   memberIdForIrcEntry,
   removeIrcMember,
   removeIrcMemberFromAllRooms,
   renameIrcMemberInRoom,
+  resolveGuestIrcNick,
+  stripPlaceholderMeFromMembers,
 } from "./irc-members";
 
 describe("irc-members", () => {
@@ -82,5 +86,64 @@ describe("irc-members", () => {
       { nick: "Ranjha", userId: "visitor_guest1", isGuest: true },
     ]);
     expect(merged).toEqual(["uuid-max", "irc:JD", "visitor_guest1"]);
+  });
+
+  it("prefers assigned IRC nick over guest nickname", () => {
+    expect(
+      resolveGuestIrcNick({ ircNick: "Ranjha_2", nickname: "Ranjha" }),
+    ).toBe("Ranjha_2");
+    expect(resolveGuestIrcNick({ nickname: "Ranjha" })).toBe("Ranjha");
+  });
+
+  it("replaces placeholder me with visitor id in IRC members", () => {
+    expect(
+      stripPlaceholderMeFromMembers(["me", "irc:JD"], "visitor_abc"),
+    ).toEqual(["irc:JD", "visitor_abc"]);
+  });
+
+  it("NAMES snapshot keeps bots and drops me", () => {
+    const members = mergeIrcNamesSnapshotMembers(
+      ["me", "bot-echo", "irc:old"],
+      [{ nick: "Ranjha", userId: "visitor_abc", isGuest: true }],
+      ["bot-echo"],
+      "visitor_abc",
+    );
+    expect(members).toEqual(["visitor_abc", "bot-echo"]);
+  });
+
+  it("applyGuestIrcIdentity sets live nick and visitor membership", () => {
+    const next = applyGuestIrcIdentity(
+      {
+        me: {
+          id: "me",
+          name: "__public__",
+          avatarColor: "x",
+          status: "online",
+          xp: 0,
+          level: 1,
+        },
+        users: {
+          me: {
+            id: "me",
+            name: "__public__",
+            avatarColor: "x",
+            status: "online",
+            xp: 0,
+            level: 1,
+          },
+        },
+        rooms: {
+          "yaarzo-global": { members: ["me", "irc:JD"] },
+          local: { members: ["me"] },
+        },
+      },
+      "visitor_abc",
+      "Ranjha",
+      (id) => id === "yaarzo-global",
+    );
+    expect(next.me.name).toBe("Ranjha");
+    expect(next.users.visitor_abc?.name).toBe("Ranjha");
+    expect(next.rooms["yaarzo-global"].members).toEqual(["irc:JD", "visitor_abc"]);
+    expect(next.rooms.local.members).toEqual(["me"]);
   });
 });

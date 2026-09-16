@@ -180,12 +180,15 @@ import { useGuestChat } from "./guest-chat-context";
 import { updateGuestChatIrcNick } from "./visitor-session";
 import {
   addIrcMember,
+  applyGuestIrcIdentity,
   buildIrcMemberUser,
   memberIdForIrcEntry,
-  mergeIrcNamesMembers,
+  mergeIrcNamesSnapshotMembers,
   removeIrcMember,
   removeIrcMemberFromAllRooms,
   renameIrcMemberInRoom,
+  resolveGuestIrcNick,
+  stripPlaceholderMeFromMembers,
   type IrcRoomMember,
 } from "./irc-members";
 import {
@@ -1037,6 +1040,26 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     streakChecked.current = null;
   }, [username, isGuest]);
 
+  // Guest IRC identity: never show placeholder `__public__` as the live nick.
+  useEffect(() => {
+    if (!storageReady || !isGuest || !guestVisitorId) return;
+    const nick = resolveGuestIrcNick({
+      ircNick: guestChat.session?.ircNick,
+      nickname: guestChat.session?.nickname,
+    });
+    if (!nick) return;
+    setState((s) => {
+      if (s.me.name === nick && s.users[guestVisitorId]?.name === nick) return s;
+      return applyGuestIrcIdentity(s, guestVisitorId, nick, usesIrcLive);
+    });
+  }, [
+    storageReady,
+    isGuest,
+    guestVisitorId,
+    guestChat.session?.nickname,
+    guestChat.session?.ircNick,
+  ]);
+
   // Self-heal persisted DM identity once auth UUID is known (replace "me", drop malformed entries).
   useEffect(() => {
     if (!storageReady || !authUserId) return;
@@ -1823,6 +1846,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
                   status: "online" as const,
                   xp: 0,
                   level: 1,
+                  isGuest: authorKey.startsWith("visitor_"),
                 },
               };
         return {
@@ -1876,8 +1900,30 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       setState((s) => {
         const room = s.rooms[channelId];
         if (!room) return s;
-        const members = mergeIrcNamesMembers([], event.members);
-        const users = applyIrcUsersFromMembers(s.users, event.members);
+        const botIds = room.members.filter((id) => s.users[id]?.isBot);
+        const members = mergeIrcNamesSnapshotMembers(
+          room.members,
+          event.members,
+          botIds,
+          guestVisitorId,
+        );
+        let users = applyIrcUsersFromMembers(s.users, event.members);
+        const guestNick = resolveGuestIrcNick({
+          ircNick: lobbyIrcTransport.nick,
+          nickname: guestChat.session?.nickname,
+        });
+        if (guestVisitorId && guestNick) {
+          return applyGuestIrcIdentity(
+            {
+              ...s,
+              users,
+              rooms: { ...s.rooms, [channelId]: { ...room, members } },
+            },
+            guestVisitorId,
+            guestNick,
+            usesIrcLive,
+          );
+        }
         return {
           ...s,
           users,
@@ -1889,7 +1935,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       });
       rtLog("msg", "irc-names", `${channelId} · ${event.members.length} members`);
     };
-  }, []);
+  }, [guestVisitorId, guestChat.session?.nickname, guestChat.session?.ircNick]);
 
   const handleLobbyIrcPresenceRef = useRef<(event: LobbyIrcPresenceEvent) => void>(() => {});
   useEffect(() => {
@@ -2003,7 +2049,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       });
       rtLog("msg", "irc-presence", `${channelId || "*"} · ${text}`);
     };
-  }, []);
+  }, [authUserId, guestVisitorId]);
 
   const handleLobbyIrcPmRef = useRef<(incoming: LobbyIrcIncomingPm) => void>(() => {});
   useEffect(() => {
@@ -2114,6 +2160,9 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
             const assignedNick = lobbyIrcTransport.nick;
             if (assignedNick && guestVisitorId) {
               updateGuestChatIrcNick(assignedNick);
+              setState((s) =>
+                applyGuestIrcIdentity(s, guestVisitorId, assignedNick, usesIrcLive),
+              );
             }
             const ch = ircJoinChannelRef.current;
             if (ch) lobbyIrcTransport.join(ch);
@@ -2889,7 +2938,21 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
   const joinRoom = useCallback((roomId: string) => {
     setState(s => {
       const room = s.rooms[roomId];
-      if (!room || room.members.includes("me")) return { ...s, activeChannel: roomId };
+      if (!room) return { ...s, activeChannel: roomId };
+      if (usesIrcLive(roomId)) {
+        const nick = resolveGuestIrcNick({
+          ircNick: guestChat.session?.ircNick || lobbyIrcTransport.nick,
+          nickname: guestChat.session?.nickname,
+        });
+        if (guestVisitorId && nick) {
+          return {
+            ...applyGuestIrcIdentity(s, guestVisitorId, nick, usesIrcLive),
+            activeChannel: roomId,
+          };
+        }
+        return { ...s, activeChannel: roomId };
+      }
+      if (room.members.includes("me")) return { ...s, activeChannel: roomId };
       const next: State = {
         ...s,
         rooms: { ...s.rooms, [roomId]: { ...room, members: [...room.members, "me"] } },
@@ -2901,7 +2964,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       }
       return badged.state;
     });
-  }, []);
+  }, [guestVisitorId, guestChat.session?.nickname, guestChat.session?.ircNick]);
 
   const createRoom = useCallback((name: string, topic: string) => {
     setState(s => {
@@ -3149,18 +3212,29 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
             topic: c.topic || existing.topic || "",
             kind,
             game: kind === "game" ? normalizeRoomGameConfig(c.game) : undefined,
-            members: sanitizeRoomMembers(
-              c.id,
-              Array.isArray(existing.members) ? existing.members : ["me"],
-            ),
+            members: usesIrcLive(c.id)
+              ? sanitizeRoomMembers(
+                  c.id,
+                  stripPlaceholderMeFromMembers(
+                    Array.isArray(existing.members) ? existing.members : [],
+                    guestVisitorId,
+                  ),
+                )
+              : sanitizeRoomMembers(
+                  c.id,
+                  Array.isArray(existing.members) ? existing.members : ["me"],
+                ),
           };
         } else {
+          const ircLive = usesIrcLive(c.id);
+          const initialMembers =
+            ircLive && guestVisitorId ? [guestVisitorId] : ircLive ? [] : ["me"];
           rooms[c.id] = {
             id: c.id,
             name,
             topic: c.topic || "",
-            members: ["me"],
-            roles: { me: "member" },
+            members: initialMembers,
+            roles: ircLive ? {} : { me: "member" },
             isPublic: true,
             kind,
             game: kind === "game" ? normalizeRoomGameConfig(c.game) : undefined,
@@ -3196,7 +3270,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
 
       return { ...s, rooms, messages, roomOrder, activeChannel };
     });
-  }, [authUserId]);
+  }, [authUserId, guestVisitorId]);
 
   const logIrcDebug = useCallback((label: string, detail: Record<string, unknown>) => {
     if (typeof window === "undefined") return;

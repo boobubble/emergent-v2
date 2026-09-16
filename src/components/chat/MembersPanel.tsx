@@ -11,6 +11,7 @@ import { useRemoteProfiles } from "@/lib/use-remote-profiles";
 import { useGuestLobbyPresence } from "@/lib/use-guest-lobby-presence";
 import { GUEST_LOBBY_CHANNEL_ID } from "@/lib/guest-chat-config";
 import { usesIrcLive } from "@/lib/lobby-irc-transport";
+import { useGuestChat } from "@/lib/guest-chat-context";
 import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Avatar } from "./Avatar";
@@ -139,6 +140,7 @@ export function MembersPanel({
   forceDesktopColumn?: boolean;
 }) {
   const { state, startDM, openDmTab, closeDM, dmChannelFor, isDmUnread, dmUnreadCount } = useChat();
+  const guestChat = useGuestChat();
   const { user: authUser } = useAuth();
   const { requireAuth } = useAuthGate();
   const { profiles } = useRemoteProfiles();
@@ -154,8 +156,7 @@ export function MembersPanel({
 
   const openDM = (id: string) => {
     if (!id || id === "me") return;
-    if (id.startsWith("visitor_") && !isIrcPublicRoom) return;
-    if (id.startsWith("irc:")) {
+    if (id.startsWith("irc:") || id.startsWith("visitor_")) {
       startDM(id);
       return;
     }
@@ -235,20 +236,26 @@ export function MembersPanel({
     roomId === GUEST_LOBBY_CHANNEL_ID && !isIrcPublicRoom,
   );
 
-  // Merge bots/me from local seed with remote profiles (skip our own remote profile — "me" represents us).
+  // IRC rooms: membership comes only from IRC NAMES/presence (no Supabase guest merge).
   const usersById: Record<string, User> = { ...state.users };
-  Object.entries(profiles).forEach(([id, u]) => {
-    if (authUser && id === authUser.id) return;
-    usersById[id] = u;
-  });
-  if (!isIrcPublicRoom) {
+  if (isIrcPublicRoom) {
+    for (const id of room?.members ?? []) {
+      if (profiles[id]) usersById[id] = profiles[id];
+    }
+  } else {
+    Object.entries(profiles).forEach(([id, u]) => {
+      if (authUser && id === authUser.id) return;
+      usersById[id] = u;
+    });
     for (const guest of lobbyGuestPresence.guests) {
       usersById[guest.id] = guest;
     }
   }
 
-  const localIds = room?.members ?? [];
-  const remoteIds = Object.keys(profiles).filter((id) => !authUser || id !== authUser.id);
+  const localIds = (room?.members ?? []).filter((id) => id !== "me");
+  const remoteIds = isIrcPublicRoom
+    ? []
+    : Object.keys(profiles).filter((id) => !authUser || id !== authUser.id);
   const allIds = Array.from(new Set([...localIds, ...remoteIds]));
 
   // Bots are room-scoped via members (lobby = social/moderation; games = game bots).

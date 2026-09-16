@@ -15,7 +15,8 @@ describe("IRC-only public room membership guardrails", () => {
     const panel = read("src/components/chat/MembersPanel.tsx");
     expect(panel).toContain("const isIrcPublicRoom = usesIrcLive(roomId)");
     expect(panel).toContain("roomId === GUEST_LOBBY_CHANNEL_ID && !isIrcPublicRoom");
-    expect(panel).toContain("if (!isIrcPublicRoom) {");
+    expect(panel).toContain("if (isIrcPublicRoom) {");
+    expect(panel).toContain("const remoteIds = isIrcPublicRoom");
     expect(panel).toContain("isIrcPublicRoom || roomId !== GUEST_LOBBY_CHANNEL_ID");
   });
 
@@ -46,6 +47,14 @@ describe("IRC-only public room membership guardrails", () => {
   it("assigned IRC nick is stored on guest session", () => {
     expect(read("src/lib/visitor-session.ts")).toContain("updateGuestChatIrcNick");
     expect(read("src/lib/chat-store.tsx")).toContain("updateGuestChatIrcNick");
+    expect(read("src/lib/chat-store.tsx")).toContain("applyGuestIrcIdentity");
+  });
+
+  it("UserMenu exposes profile and DM actions for registered users", () => {
+    const menu = read("src/components/chat/UserMenu.tsx");
+    expect(menu).toContain("View Profile");
+    expect(menu).toContain("Send Direct Message");
+    expect(menu).toContain("canViewRegisteredProfile");
   });
 
   it("NAMES lines parse Kiwi users for immediate membership", () => {

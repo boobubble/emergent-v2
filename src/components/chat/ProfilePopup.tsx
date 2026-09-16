@@ -27,6 +27,7 @@ import { isPublicIrcRoomChannel } from "@/lib/dm-utils";
 import { toIrcNick } from "@/lib/irc-moderation-client";
 import { lobbyIrcTransport } from "@/lib/lobby-irc-transport";
 import { useAuthGate } from "@/lib/auth-gate";
+import { canViewRegisteredProfile } from "@/lib/chat-user-actions";
 import type { Role } from "@/lib/chat-types";
 import type { ProfileCloseReason } from "@/lib/profile-popup-context";
 
@@ -86,6 +87,11 @@ export function ProfilePopup({
   const realId = userId === "me" ? authUser?.id ?? "me" : userId;
   const user = state.users[userId] || profiles[realId] || state.users[realId];
   const isMe = userId === "me" || (authUser && realId === authUser.id);
+  const isGuestOrIrcPeer =
+    !isMe &&
+    (userId.startsWith("visitor_") ||
+      userId.startsWith("irc:") ||
+      Boolean(user?.isGuest && !canViewRegisteredProfile(userId)));
   const relation = !isMe && realId ? social.getRelation(realId) : "self";
   const blocked = relation === "blocked_out" || relation === "blocked_in";
   const room = state.rooms[state.activeChannel];
@@ -156,6 +162,38 @@ export function ProfilePopup({
       <Dialog open={open} onOpenChange={handleDialogOpenChange}>
         <DialogContent className="max-w-sm">
           <p className="text-sm text-muted-foreground">User not found.</p>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  if (isGuestOrIrcPeer) {
+    return (
+      <Dialog open={open} onOpenChange={handleDialogOpenChange}>
+        <DialogContent className="max-w-sm rounded-3xl border-border bg-card p-0">
+          <div className="px-6 py-8 text-center">
+            <Avatar user={user} size={72} square={false} />
+            <h2 className="mt-3 text-lg font-bold">{user.name}</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {userId.startsWith("irc:") ? "IRC user" : "Guest"}
+            </p>
+          </div>
+          <div className="border-t border-border px-4 py-3">
+            <button
+              type="button"
+              onClick={() => {
+                const isMobile =
+                  typeof window !== "undefined" &&
+                  window.matchMedia("(max-width: 767px)").matches;
+                if (isMobile) startDM(userId);
+                else openDmTab(userId);
+                closeNow("action");
+              }}
+              className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-full bg-primary px-3 text-xs font-bold text-primary-foreground hover:opacity-90"
+            >
+              <MessageCircle className="h-4 w-4 shrink-0" /> Send Direct Message
+            </button>
+          </div>
         </DialogContent>
       </Dialog>
     );
