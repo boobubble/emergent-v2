@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth-store";
 import { useAuthGate } from "@/lib/auth-gate";
 import { useGuestChat } from "@/lib/guest-chat-context";
 import { GUEST_LOBBY_CHANNEL_ID } from "@/lib/guest-chat-config";
+import { GAMES_CHANNEL_ID } from "@/lib/chat-bot-channels";
 import { useMyRoles } from "@/lib/use-my-role";
 import { useRoomOnlineCounts } from "@/lib/use-room-online-counts";
 import { BrandText, useBrandingMap } from "@/components/BrandMark";
@@ -98,11 +99,11 @@ export function Sidebar({ onCollapse, onSelectDiscoveryChannel }: Props) {
   };
 
   const localRoomIds = useMemo(() => {
-    return uniqueRoomOrder.filter((id) => matchesSearch(id) && matchesFilter(id));
+    return uniqueRoomOrder.filter((id) => id !== GAMES_CHANNEL_ID && matchesSearch(id) && matchesFilter(id));
   }, [uniqueRoomOrder, searchQuery, roomFilter, state.rooms]);
 
   const joinedLocalIds = useMemo(
-    () => uniqueRoomOrder.filter((id) => state.rooms[id]?.members?.includes("me") && matchesSearch(id)),
+    () => uniqueRoomOrder.filter((id) => id !== GAMES_CHANNEL_ID && state.rooms[id]?.members?.includes("me") && matchesSearch(id)),
     [uniqueRoomOrder, state.rooms, searchQuery],
   );
 
@@ -492,3 +493,5 @@ function SectionLabel({
 }
 
 export { SectionLabel };
+
+
