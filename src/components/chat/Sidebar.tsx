@@ -70,7 +70,10 @@ export function Sidebar({ onCollapse, onSelectDiscoveryChannel }: Props) {
 
   const uniqueRoomOrder = useMemo(() => {
     const seen = new Set<string>();
-    return state.roomOrder.filter((id) => {
+    return [...state.roomOrder].sort((a, b) => {
+      const rank = (id: string) => id === GUEST_LOBBY_CHANNEL_ID ? 0 : id === GAMES_CHANNEL_ID ? 1 : 2;
+      return rank(a) - rank(b);
+    }).filter((id) => {
       if (!state.rooms[id] || seen.has(id)) return false;
       seen.add(id);
       return true;
@@ -99,11 +102,11 @@ export function Sidebar({ onCollapse, onSelectDiscoveryChannel }: Props) {
   };
 
   const localRoomIds = useMemo(() => {
-    return uniqueRoomOrder.filter((id) => id !== GAMES_CHANNEL_ID && matchesSearch(id) && matchesFilter(id));
+    return uniqueRoomOrder.filter((id) => matchesSearch(id) && matchesFilter(id));
   }, [uniqueRoomOrder, searchQuery, roomFilter, state.rooms]);
 
   const joinedLocalIds = useMemo(
-    () => uniqueRoomOrder.filter((id) => id !== GAMES_CHANNEL_ID && state.rooms[id]?.members?.includes("me") && matchesSearch(id)),
+    () => uniqueRoomOrder.filter((id) => state.rooms[id]?.members?.includes("me") && matchesSearch(id)),
     [uniqueRoomOrder, state.rooms, searchQuery],
   );
 

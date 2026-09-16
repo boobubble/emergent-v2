@@ -2095,7 +2095,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
         guestAuth;
 
       if (!auth && authUserId) {
-        const { data } = await supabase.auth.getSession();
+        const { data } = await supabase.auth.refreshSession();
         if (cancelled) return;
         const token = data.session?.access_token;
         if (!token) return;
