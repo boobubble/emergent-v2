@@ -1374,44 +1374,6 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     };
   }, [authUserId]);
 
-  // IRC `/rooms` is authoritative for public chatrooms — sync after hydration, then poll.
-  useEffect(() => {
-    if (!storageReady || typeof window === "undefined") return;
-    let cancelled = false;
-
-    const syncFromGateway = async () => {
-      try {
-        const res = await fetch(IRC_ROOMS_GATEWAY_URL);
-        if (!res.ok) throw new Error(`IRC rooms HTTP ${res.status}`);
-        const payload = await res.json();
-        if (cancelled) return;
-        const { channels, meta } = parseGatewayRoomsPayload(payload);
-        const list = channels.map((r) => ({
-          id: r.id,
-          name: r.name,
-          topic: r.topic,
-          memberCount: r.memberCount,
-        }));
-        syncAdminChannels(list, meta);
-      } catch (err) {
-        console.error("Failed to sync IRC room list:", err);
-      }
-    };
-
-    void syncFromGateway();
-    const timer = window.setInterval(syncFromGateway, IRC_ROOMS_POLL_MS);
-    const onVisible = () => {
-      if (document.visibilityState === "visible") void syncFromGateway();
-    };
-    document.addEventListener("visibilitychange", onVisible);
-
-    return () => {
-      cancelled = true;
-      window.clearInterval(timer);
-      document.removeEventListener("visibilitychange", onVisible);
-    };
-  }, [storageReady, syncAdminChannels]);
-
   // Keep remote-channel registry aligned with persisted db-backed rooms.
   useEffect(() => {
     for (const [id, room] of Object.entries(state.rooms)) {
@@ -2804,6 +2766,44 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       return { ...s, rooms, messages, roomOrder, activeChannel };
     });
   }, [authUserId]);
+
+  // IRC `/rooms` is authoritative for public chatrooms — sync after hydration, then poll.
+  useEffect(() => {
+    if (!storageReady || typeof window === "undefined") return;
+    let cancelled = false;
+
+    const syncFromGateway = async () => {
+      try {
+        const res = await fetch(IRC_ROOMS_GATEWAY_URL);
+        if (!res.ok) throw new Error(`IRC rooms HTTP ${res.status}`);
+        const payload = await res.json();
+        if (cancelled) return;
+        const { channels, meta } = parseGatewayRoomsPayload(payload);
+        const list = channels.map((r) => ({
+          id: r.id,
+          name: r.name,
+          topic: r.topic,
+          memberCount: r.memberCount,
+        }));
+        syncAdminChannels(list, meta);
+      } catch (err) {
+        console.error("Failed to sync IRC room list:", err);
+      }
+    };
+
+    void syncFromGateway();
+    const timer = window.setInterval(syncFromGateway, IRC_ROOMS_POLL_MS);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void syncFromGateway();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [storageReady, syncAdminChannels]);
 
   const registerCommunityRoom = useCallback((room: CommunityRoomInput) => {
     dbBackedRemoteChannels.add(room.id);

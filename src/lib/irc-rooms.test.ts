@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { isActiveDmSelection } from "./dm-utils";
 import {
@@ -176,6 +178,16 @@ describe("IRC gateway room sync lifecycle", () => {
     for (const id of roomOrder) {
       expect(rooms[id]?.isPublic).toBe(true);
     }
+  });
+});
+
+describe("chat-store IRC sync hook safety", () => {
+  it("declares gateway sync effect after syncAdminChannels (no TDZ crash)", () => {
+    const store = readFileSync(resolve(process.cwd(), "src/lib/chat-store.tsx"), "utf8");
+    const syncDef = store.indexOf("const syncAdminChannels = useCallback");
+    const ircEffect = store.indexOf("IRC `/rooms` is authoritative");
+    expect(syncDef).toBeGreaterThan(0);
+    expect(ircEffect).toBeGreaterThan(syncDef);
   });
 });
 
