@@ -1,3 +1,4 @@
+import { isGatewayIrcLiveChannel } from "./irc-rooms";
 import { parseIrcPresenceLine } from "./irc-presence";
 import {
   buildModerationFrame,
@@ -41,7 +42,7 @@ export function usesIrcLive(channelId: string): boolean {
   const value = channelId.trim();
 
   if (!value) return false;
-  if (value === LOBBY_IRC_CHANNEL || value === "yaarzo-global") return true;
+  if (isGatewayIrcLiveChannel(value)) return true;
 
   return isValidUuid(value);
 }

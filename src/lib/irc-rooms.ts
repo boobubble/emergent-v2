@@ -37,6 +37,27 @@ export const IRC_ROOMS_GATEWAY_URL = "https://ws.yaarzo.com/rooms";
 /** Poll interval for live IRC room discovery while chatroom is open. */
 export const IRC_ROOMS_POLL_MS = 30_000;
 
+/** Gateway `/rooms` ids eligible for live IRC transport (updated on each sync). */
+const gatewayIrcLiveRoomIds = new Set<string>([
+  YAARZO_GLOBAL_ROOM_ID,
+  LEGACY_LOBBY_ROOM_ID,
+]);
+
+/** Refresh live IRC transport room ids from the latest gateway `/rooms` sync. */
+export function setGatewayIrcLiveRoomIds(ids: Iterable<string>): void {
+  gatewayIrcLiveRoomIds.clear();
+  gatewayIrcLiveRoomIds.add(YAARZO_GLOBAL_ROOM_ID);
+  gatewayIrcLiveRoomIds.add(LEGACY_LOBBY_ROOM_ID);
+  for (const id of ids) {
+    if (typeof id === "string" && id.trim()) gatewayIrcLiveRoomIds.add(id.trim());
+  }
+}
+
+export function isGatewayIrcLiveChannel(channelId: string): boolean {
+  const value = channelId.trim();
+  return !!value && gatewayIrcLiveRoomIds.has(value);
+}
+
 /**
  * IRC-managed public slug rooms (yaarzo-global, games, music, …).
  * Not persisted — always re-hydrated from gateway `/rooms`.

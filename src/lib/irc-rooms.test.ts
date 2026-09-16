@@ -5,10 +5,12 @@ import { isActiveDmSelection } from "./dm-utils";
 import {
   applyIrcGatewayRoomSync,
   buildIrcReconciledRoomOrder,
+  isGatewayIrcLiveChannel,
   isGatewayIrcPublicRoom,
   parseGatewayRoomsPayload,
   pruneStaleIrcSidebarRooms,
   resolvePrimaryActiveRoom,
+  setGatewayIrcLiveRoomIds,
   stripGatewayIrcRoomsFromPersistedState,
 } from "./irc-rooms";
 import type { Room } from "./chat-types";
@@ -189,6 +191,23 @@ describe("chat-store IRC sync hook safety", () => {
     expect(syncDef).toBeGreaterThan(0);
     expect(ircEffect).toBeGreaterThan(syncDef);
   });
+
+  it("re-syncs gateway rooms when username changes (storage key hydration)", () => {
+    const store = readFileSync(resolve(process.cwd(), "src/lib/chat-store.tsx"), "utf8");
+    expect(store).toMatch(
+      /IRC `\/rooms` is authoritative[\s\S]*?\[\s*storageReady,\s*syncAdminChannels,\s*username\s*\]/,
+    );
+  });
+});
+
+describe("gateway IRC live transport registry", () => {
+  it("registers arbitrary /rooms ids for live IRC transport", () => {
+    setGatewayIrcLiveRoomIds(["yaarzo-global", "games", "music"]);
+    expect(isGatewayIrcLiveChannel("yaarzo-global")).toBe(true);
+    expect(isGatewayIrcLiveChannel("games")).toBe(true);
+    expect(isGatewayIrcLiveChannel("music")).toBe(true);
+    expect(isGatewayIrcLiveChannel("my-local-room-abc1")).toBe(false);
+  });
 });
 
 describe("persisted IRC room stripping", () => {
@@ -221,5 +240,97 @@ describe("persisted IRC room stripping", () => {
     expect(stripped.rooms["yaarzo-global"]).toBeUndefined();
     expect(stripped.roomOrder).toEqual([]);
     expect(stripped.activeChannel).toBe("yaarzo-global");
+  });
+});
+
+describe("hydration -> gateway sync lifecycle", () => {
+  const yaarzo: Room = {
+    id: "yaarzo-global",
+    name: "yaarzo-global",
+    topic: "",
+    members: ["me"],
+    roles: { me: "member" },
+    isPublic: true,
+  };
+
+  const gatewayPayload = {
+    ok: true,
+    source: "irc",
+    primaryRoom: "yaarzo-global",
+    rooms: [
+      { room: "yaarzo-global", users: 2, topic: "" },
+      { room: "games", users: 1, topic: "" },
+    ],
+  };
+
+  it("stale yaarzo-global cache -> strip -> gateway restores yaarzo-global + games", () => {
+    const cached = {
+      rooms: { "yaarzo-global": yaarzo },
+      roomOrder: ["yaarzo-global"],
+      activeChannel: "yaarzo-global",
+    };
+    const stripped = stripGatewayIrcRoomsFromPersistedState(cached);
+    expect(stripped.rooms).toEqual({});
+    expect(stripped.roomOrder).toEqual([]);
+    expect(stripped.activeChannel).toBe("yaarzo-global");
+
+    const { channels, meta } = parseGatewayRoomsPayload(gatewayPayload);
+    const synced = applyIrcGatewayRoomSync(stripped.rooms, stripped.roomOrder, channels);
+    setGatewayIrcLiveRoomIds(channels.map((c) => c.id));
+
+    expect(synced.roomOrder).toEqual(["yaarzo-global", "games"]);
+    expect(synced.rooms["yaarzo-global"]).toBeTruthy();
+    expect(synced.rooms.games).toBeTruthy();
+    expect(resolvePrimaryActiveRoom(synced.roomOrder, synced.rooms, meta.primaryRoom)).toBe(
+      "yaarzo-global",
+    );
+    expect(isGatewayIrcLiveChannel("games")).toBe(true);
+  });
+
+  it("preserves in-memory IRC rooms across username/storage-key re-hydration", () => {
+    const { channels } = parseGatewayRoomsPayload(gatewayPayload);
+    const synced = applyIrcGatewayRoomSync({}, [], channels);
+    const prev = {
+      rooms: synced.rooms,
+      roomOrder: synced.roomOrder,
+      activeChannel: "yaarzo-global",
+    };
+    const strippedReload = stripGatewayIrcRoomsFromPersistedState({
+      rooms: {},
+      roomOrder: [],
+      activeChannel: "yaarzo-global",
+    });
+    const prevIrcIds = Object.keys(prev.rooms).filter((id) =>
+      isGatewayIrcPublicRoom(id, prev.rooms[id]),
+    );
+    const rooms = { ...strippedReload.rooms };
+    let roomOrder = [...strippedReload.roomOrder];
+    for (const id of prevIrcIds) {
+      rooms[id] = prev.rooms[id];
+      if (!roomOrder.includes(id)) roomOrder.push(id);
+    }
+    const ircIds = new Set(prevIrcIds);
+    roomOrder = buildIrcReconciledRoomOrder(prevIrcIds, roomOrder, rooms, ircIds);
+    const activeChannel = resolvePrimaryActiveRoom(
+      roomOrder,
+      rooms,
+      "yaarzo-global",
+    );
+    expect(roomOrder).toEqual(["yaarzo-global", "games"]);
+    expect(activeChannel).toBe("yaarzo-global");
+    expect(rooms.games).toBeTruthy();
+  });
+
+  it("persist slice strips IRC rooms while in-memory sync keeps them", () => {
+    const { channels } = parseGatewayRoomsPayload(gatewayPayload);
+    const synced = applyIrcGatewayRoomSync({}, [], channels);
+    const persisted = stripGatewayIrcRoomsFromPersistedState({
+      rooms: synced.rooms,
+      roomOrder: synced.roomOrder,
+      activeChannel: "yaarzo-global",
+    });
+    expect(persisted.rooms).toEqual({});
+    expect(persisted.roomOrder).toEqual([]);
+    expect(synced.rooms.games).toBeTruthy();
   });
 });

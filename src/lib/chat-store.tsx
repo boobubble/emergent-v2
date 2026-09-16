@@ -12,7 +12,9 @@ import {
   buildIrcReconciledRoomOrder,
   IRC_ROOMS_GATEWAY_URL,
   IRC_ROOMS_POLL_MS,
+  isGatewayIrcPublicRoom,
   parseGatewayRoomsPayload,
+  setGatewayIrcLiveRoomIds,
   stripGatewayIrcRoomsFromPersistedState,
   pruneStaleIrcSidebarRooms,
   resolvePrimaryActiveRoom,
@@ -892,6 +894,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     return MAIN_IRC_ROOM_ID;
   });
   const ircPresenceDedupRef = useRef<Map<string, number>>(new Map());
+  const ircJoinChannelRef = useRef<string | null>(null);
   const listGuestDmForGuestFn = useServerFn(listGuestDmConversationsForGuest);
   const markGuestDmReadServerFn = useServerFn(markGuestDmReadFn);
   const startDmForWatchInviteRef = useRef<(peerId: string) => void>(() => {});
@@ -926,7 +929,27 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
         pendingFreshPrimaryRef.current = true;
         activeChannel = MAIN_IRC_ROOM_ID;
       }
-      setState({ ...loaded, me, users: { ...loaded.users, me }, activeChannel });
+      setState((prev) => {
+        const merged: State = { ...loaded, me, users: { ...loaded.users, me }, activeChannel };
+        const prevIrcIds = Object.keys(prev.rooms).filter((id) =>
+          isGatewayIrcPublicRoom(id, prev.rooms[id]),
+        );
+        if (!prevIrcIds.length) return merged;
+
+        const rooms = { ...merged.rooms };
+        let roomOrder = [...merged.roomOrder];
+        for (const id of prevIrcIds) {
+          rooms[id] = prev.rooms[id];
+          if (!roomOrder.includes(id)) roomOrder.push(id);
+        }
+        const ircIds = new Set(prevIrcIds);
+        roomOrder = buildIrcReconciledRoomOrder(prevIrcIds, roomOrder, rooms, ircIds);
+        let nextActive = merged.activeChannel;
+        if (!rooms[nextActive]) {
+          nextActive = resolvePrimaryActiveRoom(roomOrder, rooms, primaryRoomRef.current);
+        }
+        return { ...merged, rooms, roomOrder, activeChannel: nextActive };
+      });
       if (requestedRoom || freshEntry) setRoomTabChannel(activeChannel);
     } catch (err) {
       if (import.meta.env.DEV) console.warn("[chat-store] Hydration failed; resetting chat state.", err);
@@ -1034,7 +1057,8 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
 
   useEffect(() => {
     if (!storageReady) return;
-    pendingPersistRef.current = authUserId ? sanitizeChatState(state, authUserId) : state;
+    const slice = authUserId ? sanitizeChatState(state, authUserId, primaryRoomRef.current) : state;
+    pendingPersistRef.current = stripGatewayIrcRoomsFromPersistedState(slice);
     if (persistTimerRef.current) clearTimeout(persistTimerRef.current);
     persistTimerRef.current = setTimeout(() => {
       persistTimerRef.current = null;
@@ -1819,7 +1843,13 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
         "wss://ws.yaarzo.com",
         token,
         (incoming) => handleLobbyIrcMessageRef.current(incoming),
-        (status, detail) => rtLog("ws", status, detail ? `lobby-irc · ${detail}` : "lobby-irc"),
+        (status, detail) => {
+          rtLog("ws", status, detail ? `lobby-irc · ${detail}` : "lobby-irc");
+          if (status === "authenticated") {
+            const ch = ircJoinChannelRef.current;
+            if (ch) lobbyIrcTransport.join(ch);
+          }
+        },
         (presence) => handleLobbyIrcPresenceRef.current(presence),
       );
     })();
@@ -1829,6 +1859,20 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       lobbyIrcTransport.disconnect();
     };
   }, [authUserId, isGuest]);
+
+  useEffect(() => {
+    if (isGuest || !authUserId) {
+      ircJoinChannelRef.current = null;
+      return;
+    }
+    const channelId = state.activeChannel;
+    if (!usesIrcLive(channelId)) {
+      ircJoinChannelRef.current = null;
+      return;
+    }
+    ircJoinChannelRef.current = channelId;
+    lobbyIrcTransport.join(channelId);
+  }, [authUserId, isGuest, state.activeChannel]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -2700,6 +2744,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     const validIds = new Set(
       channels.map((c) => c?.id).filter((id): id is string => typeof id === "string" && !!id),
     );
+    setGatewayIrcLiveRoomIds(validIds);
     const ircOrder = channels.map((c) => c.id).filter((id) => validIds.has(id));
 
     setState(s => {
@@ -2803,7 +2848,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       window.clearInterval(timer);
       document.removeEventListener("visibilitychange", onVisible);
     };
-  }, [storageReady, syncAdminChannels]);
+  }, [storageReady, syncAdminChannels, username]);
 
   const registerCommunityRoom = useCallback((room: CommunityRoomInput) => {
     dbBackedRemoteChannels.add(room.id);
