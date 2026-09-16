@@ -136,9 +136,13 @@ export function GuestChatProvider({ children }: { children: ReactNode }) {
     setSession(null);
   }, [config.enabled, session]);
 
-  // Ephemeral lobby presence while a guest session is active.
+  // Supabase guest presence only when IRC gateway is unavailable.
   useEffect(() => {
     if (user || !session || !config.enabled) {
+      void untrackGuestLobbyPresence();
+      return;
+    }
+    if (session.gatewayToken) {
       void untrackGuestLobbyPresence();
       return;
     }
@@ -146,7 +150,7 @@ export function GuestChatProvider({ children }: { children: ReactNode }) {
     return () => {
       void untrackGuestLobbyPresence();
     };
-  }, [user, session, config.enabled]);
+  }, [user, session, config.enabled, session?.gatewayToken]);
 
   const openNicknameDialog = useCallback((opts?: OpenGuestNicknameOptions) => {
     setError(null);
@@ -176,6 +180,9 @@ export function GuestChatProvider({ children }: { children: ReactNode }) {
         nickname: res.nickname,
         displayName: res.displayName,
         startedAt: Date.now(),
+        expiresAt: res.expiresAt,
+        gatewayToken: res.gatewayToken,
+        ircNick: undefined,
       };
       writeGuestChatSession(next);
       setSession(next);

@@ -1,7 +1,7 @@
 /** Ephemeral IRC membership lines in the chat timeline (not persisted). */
 export const IRC_PRESENCE_AUTHOR = "__irc_presence__";
 
-export type IrcPresenceEventKind = "join" | "part" | "quit" | "kick";
+export type IrcPresenceEventKind = "join" | "part" | "quit" | "kick" | "nick";
 
 export type ParsedIrcPresence = {
   event: IrcPresenceEventKind;
@@ -9,6 +9,7 @@ export type ParsedIrcPresence = {
   /** Channel name without leading # (when present on the IRC line). */
   room?: string;
   reason?: string;
+  newNick?: string;
 };
 
 const NICK_PREFIX = /^:([^!\s]+)!/;
@@ -16,6 +17,7 @@ const JOIN_RE = /^:([^!]+)!.* JOIN (#\S+)/i;
 const PART_RE = /^:([^!]+)!.* PART (#\S+)(?:\s:(.*))?$/i;
 const QUIT_RE = /^:([^!]+)!.* QUIT(?:\s:(.*))?$/i;
 const KICK_RE = /^:([^!]+)!.* KICK (#\S+) (\S+)(?:\s:(.*))?$/i;
+const NICK_RE = /^:([^!]+)!.* NICK :(\S+)/i;
 
 /** Gateway service nicks — never show as membership events. */
 const IGNORE_NICKS = new Set(["yaarzogateway", "yaarzo-gateway"]);
@@ -70,6 +72,16 @@ export function parseIrcPresenceLine(line: string): ParsedIrcPresence | null {
     };
   }
 
+  const nickChange = NICK_RE.exec(trimmed);
+  if (nickChange) {
+    const oldNick = nickChange[1];
+    const newNick = nickChange[2];
+    if (IGNORE_NICKS.has(oldNick.toLowerCase()) || IGNORE_NICKS.has(newNick.toLowerCase())) {
+      return null;
+    }
+    return { event: "nick", nick: oldNick, newNick };
+  }
+
   return null;
 }
 
@@ -88,6 +100,8 @@ export function formatIrcPresenceText(
       return reason ? `${name} quit (${reason})` : `${name} quit`;
     case "kick":
       return reason ? `${name} was kicked (${reason})` : `${name} was kicked`;
+    case "nick":
+      return `${name} changed nick`;
     default:
       return name;
   }

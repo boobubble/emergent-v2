@@ -46,6 +46,8 @@ import {
 } from "@/lib/use-guest-dm-feed";
 import { isGuestDmComposeChannel, parseGuestDmComposeRecipient } from "@/lib/guest-dm-utils";
 import { isRemoteDmChannel, parseDmChannel } from "@/lib/dm-utils";
+import { lobbyIrcTransport, usesIrcLive } from "@/lib/lobby-irc-transport";
+import { isIrcPmChannel, parseIrcPmChannel } from "@/lib/irc-pm-utils";
 import {
   WatchTogetherComposerButton,
   WatchTogetherComposerShell,
@@ -549,6 +551,47 @@ export function MessageInput({
       requireAuth();
       return;
     }
+
+    if (
+      usesIrcLive(GUEST_LOBBY_CHANNEL_ID) &&
+      lobbyIrcTransport.connected
+    ) {
+      const messageId =
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : String(Date.now());
+      appendGuestOptimistic({
+        id: `opt-${messageId}`,
+        channelId: GUEST_LOBBY_CHANNEL_ID,
+        visitorId: guestChat.session.visitorId,
+        displayName: guestChat.session.displayName,
+        text: plain,
+        createdAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 60 * 60_000).toISOString(),
+        sendStatus: "sending",
+      });
+      setText("");
+      setAttachment(null);
+      setAttachError("");
+      setReplyingTo(null);
+      scheduleComposerAutosize();
+      if (!lobbyIrcTransport.send(messageId, plain, GUEST_LOBBY_CHANNEL_ID)) {
+        failGuestOptimistic(`opt-${messageId}`, "IRC send failed");
+        toast.error("Could not send message. Try again.");
+      } else {
+        confirmGuestOptimistic(`opt-${messageId}`, {
+          id: messageId,
+          channelId: GUEST_LOBBY_CHANNEL_ID,
+          visitorId: guestChat.session.visitorId,
+          displayName: guestChat.session.displayName,
+          text: plain,
+          createdAt: new Date().toISOString(),
+          expiresAt: new Date(Date.now() + 60 * 60_000).toISOString(),
+        });
+      }
+      return;
+    }
+
     const optId = `opt-${typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : String(Date.now())}`;
     const nowIso = new Date().toISOString();
     appendGuestOptimistic({

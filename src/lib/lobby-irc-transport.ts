@@ -53,11 +53,41 @@ export type LobbyIrcIncomingMessage = {
   text: string;
 };
 
+export type LobbyIrcIncomingPm = {
+  messageId: string;
+  nick: string;
+  text: string;
+};
+
+export type GuestGatewayAuth = {
+  visitorId: string;
+  displayName: string;
+  nickname: string;
+  expiresAt: string;
+  token: string;
+};
+
+export type LobbyIrcRoomMember = {
+  nick: string;
+  userId: string;
+  isGuest?: boolean;
+};
+
+export type LobbyIrcRoomNamesEvent = {
+  room: string;
+  members: LobbyIrcRoomMember[];
+};
+
+export type LobbyIrcAuth =
+  | { kind: "registered"; token: string }
+  | { kind: "guest"; guest: GuestGatewayAuth };
+
 export type LobbyIrcPresenceEvent = {
   room: string;
-  event: "join" | "part" | "quit" | "kick";
+  event: "join" | "part" | "quit" | "kick" | "nick";
   nick: string;
   reason?: string;
+  newNick?: string;
 };
 
 export type LobbyIrcStatus =
@@ -72,9 +102,18 @@ export type LobbyIrcStatusHandler = (
   detail?: string,
 ) => void;
 
-type GatewayOutgoingAuth = {
-  type: "auth";
-  token: string;
+type GatewayOutgoingAuth =
+  | { type: "auth"; token: string }
+  | {
+      type: "auth";
+      guest: GuestGatewayAuth;
+    };
+
+type GatewayOutgoingPm = {
+  type: "pm.send";
+  recipientNick: string;
+  messageId: string;
+  text: string;
 };
 
 type GatewayOutgoingSend = {
@@ -121,17 +160,34 @@ function asNonEmptyString(value: unknown): string {
  *
  * Singleton export avoids duplicate sockets across React remounts.
  */
+function isValidIrcUserId(value: string): boolean {
+  if (!value) return false;
+  if (isValidUuid(value)) return true;
+  if (value.startsWith("visitor_")) return true;
+  if (value.startsWith("irc:")) return true;
+  return false;
+}
+
 export class LobbyIrcTransport {
   private ws: WebSocket | null = null;
   private wsUrl: string | null = null;
-  private token: string | null = null;
+  private auth: LobbyIrcAuth | null = null;
+  private ircNick: string | null = null;
 
   private onMessage:
     | ((message: LobbyIrcIncomingMessage) => void)
     | null = null;
 
+  private onPm:
+    | ((message: LobbyIrcIncomingPm) => void)
+    | null = null;
+
   private onPresence:
     | ((event: LobbyIrcPresenceEvent) => void)
+    | null = null;
+
+  private onRoomNames:
+    | ((event: LobbyIrcRoomNamesEvent) => void)
     | null = null;
 
   private onStatus: LobbyIrcStatusHandler | null = null;
@@ -155,12 +211,19 @@ export class LobbyIrcTransport {
     return this.open && this.authenticated;
   }
 
+  /** Resolved IRC nick after gateway authentication. */
+  get nick(): string | null {
+    return this.ircNick;
+  }
+
   connect(
     url: string,
-    token: string,
+    auth: LobbyIrcAuth | string,
     onMessage: (message: LobbyIrcIncomingMessage) => void,
     onStatus?: LobbyIrcStatusHandler,
     onPresence?: (event: LobbyIrcPresenceEvent) => void,
+    onPm?: (message: LobbyIrcIncomingPm) => void,
+    onRoomNames?: (event: LobbyIrcRoomNamesEvent) => void,
   ): void {
     if (!url.startsWith("wss://")) {
       this.emitStatus(
@@ -170,7 +233,15 @@ export class LobbyIrcTransport {
       return;
     }
 
-    if (!token) {
+    const resolvedAuth: LobbyIrcAuth =
+      typeof auth === "string"
+        ? { kind: "registered", token: auth }
+        : auth;
+
+    if (
+      resolvedAuth.kind === "registered" &&
+      !resolvedAuth.token
+    ) {
       this.emitStatus(
         "error",
         "IRC transport requires an auth token",
@@ -178,11 +249,24 @@ export class LobbyIrcTransport {
       return;
     }
 
+    if (
+      resolvedAuth.kind === "guest" &&
+      (!resolvedAuth.guest.token || !resolvedAuth.guest.visitorId)
+    ) {
+      this.emitStatus(
+        "error",
+        "IRC transport requires a guest gateway token",
+      );
+      return;
+    }
+
     this.manualDisconnect = false;
     this.wsUrl = url;
-    this.token = token;
+    this.auth = resolvedAuth;
     this.onMessage = onMessage;
+    this.onPm = onPm ?? null;
     this.onPresence = onPresence ?? null;
+    this.onRoomNames = onRoomNames ?? null;
     this.onStatus = onStatus ?? null;
 
     this.bindLifecycleListeners();
@@ -280,6 +364,31 @@ export class LobbyIrcTransport {
     });
   }
 
+  sendPm(
+    recipientNick: string,
+    messageId: string,
+    text: string,
+  ): boolean {
+    if (!isValidUuid(messageId)) return false;
+    const trimmed = text.trim();
+    const nick = recipientNick.trim();
+    if (!trimmed || !nick || !this.connected || !this.ws) return false;
+
+    const frame: GatewayOutgoingPm = {
+      type: "pm.send",
+      recipientNick: nick,
+      messageId: messageId.trim(),
+      text: trimmed,
+    };
+
+    try {
+      this.ws.send(JSON.stringify(frame));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   send(
     messageId: string,
     text: string,
@@ -325,7 +434,7 @@ export class LobbyIrcTransport {
   private openSocket(): void {
     if (
       !this.wsUrl ||
-      !this.token ||
+      !this.auth ||
       this.manualDisconnect
     ) {
       return;
@@ -382,7 +491,55 @@ export class LobbyIrcTransport {
     ) {
       this.authenticated = true;
       this.reconnectAttempt = 0;
+      const nick = asNonEmptyString(
+        (frame as { ircNick?: string }).ircNick,
+      );
+      if (nick) this.ircNick = nick;
       this.emitStatus("authenticated");
+      return;
+    }
+
+    if (frame.type === "pm.message") {
+      const messageId =
+        typeof frame.messageId === "string"
+          ? frame.messageId.trim()
+          : "";
+      const nick = asNonEmptyString(frame.nick);
+      if (
+        !messageId ||
+        !nick ||
+        typeof frame.text !== "string"
+      ) {
+        return;
+      }
+      const text = frame.text.trim();
+      if (!text) return;
+      this.onPm?.({ messageId, nick, text });
+      return;
+    }
+
+    if (frame.type === "pm.sent") {
+      return;
+    }
+
+    if (frame.type === "room.names") {
+      const room = asNonEmptyString(frame.room);
+      const members = (frame as { members?: unknown }).members;
+      if (!room || !Array.isArray(members)) return;
+      const parsed: LobbyIrcRoomMember[] = [];
+      for (const row of members) {
+        if (!row || typeof row !== "object") continue;
+        const entry = row as LobbyIrcRoomMember;
+        const nick = asNonEmptyString(entry.nick);
+        const userId = asNonEmptyString(entry.userId);
+        if (!nick || !userId) continue;
+        parsed.push({
+          nick,
+          userId,
+          isGuest: Boolean(entry.isGuest),
+        });
+      }
+      this.onRoomNames?.({ room, members: parsed });
       return;
     }
 
@@ -412,7 +569,7 @@ export class LobbyIrcTransport {
       if (
         typeof frame.text !== "string" ||
         !nick ||
-        !userId
+        !isValidIrcUserId(userId)
       ) {
         return;
       }
@@ -467,6 +624,7 @@ export class LobbyIrcTransport {
         event: parsed.event,
         nick: parsed.nick,
         reason: parsed.reason,
+        newNick: parsed.newNick,
       });
       return;
     }
@@ -507,15 +665,15 @@ export class LobbyIrcTransport {
     if (
       !this.ws ||
       this.ws.readyState !== WebSocket.OPEN ||
-      !this.token
+      !this.auth
     ) {
       return;
     }
 
-    const frame: GatewayOutgoingAuth = {
-      type: "auth",
-      token: this.token,
-    };
+    const frame: GatewayOutgoingAuth =
+      this.auth.kind === "guest"
+        ? { type: "auth", guest: this.auth.guest }
+        : { type: "auth", token: this.auth.token };
 
     try {
       this.ws.send(JSON.stringify(frame));
@@ -531,7 +689,7 @@ export class LobbyIrcTransport {
     if (
       this.manualDisconnect ||
       !this.wsUrl ||
-      !this.token
+      !this.auth
     ) {
       return;
     }
@@ -638,7 +796,7 @@ export class LobbyIrcTransport {
     if (
       this.manualDisconnect ||
       !this.wsUrl ||
-      !this.token
+      !this.auth
     ) {
       return;
     }

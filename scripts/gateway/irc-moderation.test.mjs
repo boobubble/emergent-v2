@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
 import {
   buildModerationCommand,
   parseModerationPayload,
@@ -9,65 +10,64 @@ import {
 
 describe("irc-moderation validation", () => {
   it("accepts slug and uuid rooms", () => {
-    expect(validateRoomId("yaarzo-global")).toBe("yaarzo-global");
-    expect(validateRoomId("games")).toBe("games");
-    expect(validateRoomId("dm:abc")).toBeNull();
-    expect(validateRoomId("")).toBeNull();
+    assert.equal(validateRoomId("yaarzo-global"), "yaarzo-global");
+    assert.equal(validateRoomId("games"), "games");
+    assert.equal(validateRoomId("dm:abc"), null);
+    assert.equal(validateRoomId(""), null);
   });
 
   it("validates IRC nicks", () => {
-    expect(validateIrcNick("mohit")).toBe("mohit");
-    expect(validateIrcNick("bad nick")).toBeNull();
-    expect(validateIrcNick("")).toBeNull();
+    assert.equal(validateIrcNick("mohit"), "mohit");
+    assert.equal(validateIrcNick("bad nick"), null);
+    assert.equal(validateIrcNick(""), null);
   });
 
   it("strips CR/LF from reasons", () => {
-    expect(sanitizeReason("hello\r\nworld")).toBe("hello world");
-    expect(sanitizeReason("x".repeat(200)).length).toBe(120);
+    assert.equal(sanitizeReason("hello\r\nworld"), "hello world");
+    assert.equal(sanitizeReason("x".repeat(200)).length, 120);
   });
 });
 
 describe("Ergo IRC moderation commands", () => {
   it("builds KICK", () => {
-    expect(buildModerationCommand("kick", "yaarzo-global", "bob", "spam")).toBe(
+    assert.equal(
+      buildModerationCommand("kick", "yaarzo-global", "bob", "spam"),
       "KICK #yaarzo-global bob :spam\r\n",
     );
   });
 
   it("uses Ergo mute extban m: not MODE +q", () => {
     const cmd = buildModerationCommand("mute", "yaarzo-global", "bob");
-    expect(cmd).toBe("MODE #yaarzo-global +b m:bob!*@*\r\n");
-    expect(cmd).not.toContain("+q");
+    assert.equal(cmd, "MODE #yaarzo-global +b m:bob!*@*\r\n");
+    assert.ok(!cmd.includes("+q"));
   });
 
   it("builds channel ban and unban", () => {
-    expect(buildModerationCommand("ban", "games", "bob")).toBe(
-      "MODE #games +b bob!*@*\r\n",
-    );
-    expect(buildModerationCommand("unban", "games", "bob")).toBe(
-      "MODE #games -b bob!*@*\r\n",
-    );
+    assert.equal(buildModerationCommand("ban", "games", "bob"), "MODE #games +b bob!*@*\r\n");
+    assert.equal(buildModerationCommand("unban", "games", "bob"), "MODE #games -b bob!*@*\r\n");
   });
 
   it("builds unmute via -b m:", () => {
-    expect(buildModerationCommand("unmute", "yaarzo-global", "bob")).toBe(
+    assert.equal(
+      buildModerationCommand("unmute", "yaarzo-global", "bob"),
       "MODE #yaarzo-global -b m:bob!*@*\r\n",
     );
   });
 
   it("parses moderation WS payloads", () => {
-    expect(
+    assert.deepEqual(
       parseModerationPayload({
         type: "moderation.kick",
         room: "yaarzo-global",
         targetNick: "ada",
         reason: "test",
       }),
-    ).toEqual({
-      action: "kick",
-      room: "yaarzo-global",
-      targetNick: "ada",
-      reason: "test",
-    });
+      {
+        action: "kick",
+        room: "yaarzo-global",
+        targetNick: "ada",
+        reason: "test",
+      },
+    );
   });
 });

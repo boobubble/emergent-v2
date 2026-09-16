@@ -10,6 +10,7 @@ import { useAuthGate } from "@/lib/auth-gate";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
 import { useGuestLobbyPresence } from "@/lib/use-guest-lobby-presence";
 import { GUEST_LOBBY_CHANNEL_ID } from "@/lib/guest-chat-config";
+import { usesIrcLive } from "@/lib/lobby-irc-transport";
 import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Avatar } from "./Avatar";
@@ -153,7 +154,11 @@ export function MembersPanel({
 
   const openDM = (id: string) => {
     if (!id || id === "me") return;
-    if (id.startsWith("visitor_")) return;
+    if (id.startsWith("visitor_") && !isIrcPublicRoom) return;
+    if (id.startsWith("irc:")) {
+      startDM(id);
+      return;
+    }
     requireAuth(() => {
       if (isMobile) {
         startDM(id);
@@ -225,20 +230,27 @@ export function MembersPanel({
   }
 
   const room = state.rooms[roomId];
-  const lobbyGuestPresence = useGuestLobbyPresence(roomId === GUEST_LOBBY_CHANNEL_ID);
+  const isIrcPublicRoom = usesIrcLive(roomId);
+  const lobbyGuestPresence = useGuestLobbyPresence(
+    roomId === GUEST_LOBBY_CHANNEL_ID && !isIrcPublicRoom,
+  );
 
   // Merge bots/me from local seed with remote profiles (skip our own remote profile — "me" represents us).
   const usersById: Record<string, User> = { ...state.users };
-  Object.entries(profiles).forEach(([id, u]) => {
-    if (authUser && id === authUser.id) return;
-    usersById[id] = u;
-  });
-  for (const guest of lobbyGuestPresence.guests) {
-    usersById[guest.id] = guest;
+  if (!isIrcPublicRoom) {
+    Object.entries(profiles).forEach(([id, u]) => {
+      if (authUser && id === authUser.id) return;
+      usersById[id] = u;
+    });
+    for (const guest of lobbyGuestPresence.guests) {
+      usersById[guest.id] = guest;
+    }
   }
 
   const localIds = room?.members ?? [];
-  const remoteIds = Object.keys(profiles).filter(id => !authUser || id !== authUser.id);
+  const remoteIds = isIrcPublicRoom
+    ? []
+    : Object.keys(profiles).filter((id) => !authUser || id !== authUser.id);
   const allIds = Array.from(new Set([...localIds, ...remoteIds]));
 
   // Bots are room-scoped via members (lobby = social/moderation; games = game bots).
@@ -265,7 +277,7 @@ export function MembersPanel({
   };
 
   const online = allIds
-    .filter(id => isOnline(id) && !usersById[id]?.isGuest && matchesQuery(id))
+    .filter((id) => isOnline(id) && (!usersById[id]?.isGuest || isIrcPublicRoom) && matchesQuery(id))
     .sort((a, b) => {
       const ra = roleOrder[(room?.roles[a]) || "member"];
       const rb = roleOrder[(room?.roles[b]) || "member"];
@@ -276,7 +288,7 @@ export function MembersPanel({
 
   // Offline sorted by most-recently-seen first (latest at top).
   const offlineSorted = allIds
-    .filter(id => !isOnline(id) && !usersById[id]?.isGuest && matchesQuery(id))
+    .filter((id) => !isOnline(id) && (!usersById[id]?.isGuest || isIrcPublicRoom) && matchesQuery(id))
     .sort((a, b) => (usersById[b]?.lastSeen ?? 0) - (usersById[a]?.lastSeen ?? 0));
 
   // When searching, show all matching offline users; otherwise keep the collapsible cap.
@@ -293,7 +305,7 @@ export function MembersPanel({
   };
   const onlineUsers = useMemo(() => online.filter(id => !isBot(id)), [online]);
   const onlineGuestIds = useMemo(() => {
-    if (roomId !== GUEST_LOBBY_CHANNEL_ID) return [];
+    if (isIrcPublicRoom || roomId !== GUEST_LOBBY_CHANNEL_ID) return [];
     return lobbyGuestPresence.guests
       .map((g) => g.id)
       .filter((id) => matchesQuery(id))
@@ -303,7 +315,9 @@ export function MembersPanel({
   const offlineUsers = useMemo(() => offline.filter(id => !isBot(id)), [offline]);
   const offlineSortedUsers = useMemo(() => offlineSorted.filter(id => !isBot(id)), [offlineSorted]);
   const hiddenOfflineUsers = offlineSortedUsers.length - offlineUsers.length;
-  const totalUsersCount = allIds.filter(id => !isBot(id) && !usersById[id]?.isGuest).length;
+  const totalUsersCount = allIds.filter(
+    (id) => !isBot(id) && (!usersById[id]?.isGuest || isIrcPublicRoom),
+  ).length;
   const totalBotsCount = allIds.filter(id => isRoomBot(id)).length;
 
   const effectiveMode: "split" | "merged" =
@@ -311,7 +325,7 @@ export function MembersPanel({
 
   const onlineWithGuests = useMemo(() => {
     const base = effectiveMode === "split" ? onlineUsers : online;
-    if (roomId !== GUEST_LOBBY_CHANNEL_ID) return base;
+    if (isIrcPublicRoom || roomId !== GUEST_LOBBY_CHANNEL_ID) return base;
     const merged = [...base];
     for (const id of onlineGuestIds) {
       if (!merged.includes(id)) merged.push(id);

@@ -172,8 +172,31 @@ import {
   lobbyIrcTransport,
   usesIrcLive,
   type LobbyIrcIncomingMessage,
+  type LobbyIrcIncomingPm,
   type LobbyIrcPresenceEvent,
+  type LobbyIrcRoomNamesEvent,
 } from "./lobby-irc-transport";
+import { useGuestChat } from "./guest-chat-context";
+import { updateGuestChatIrcNick } from "./visitor-session";
+import {
+  addIrcMember,
+  buildIrcMemberUser,
+  memberIdForIrcEntry,
+  mergeIrcNamesMembers,
+  removeIrcMember,
+  removeIrcMemberFromAllRooms,
+  renameIrcMemberInRoom,
+  type IrcRoomMember,
+} from "./irc-members";
+import {
+  ircPmChannelForNick,
+  ircPmPeerId,
+  isIrcPmChannel,
+  isIrcPmPeer,
+  parseIrcPmChannel,
+  parseIrcPmPeer,
+  shouldUseIrcPm,
+} from "./irc-pm-utils";
 import {
   formatIrcPresenceText,
   IRC_PRESENCE_AUTHOR,
@@ -867,7 +890,43 @@ function pickBotReply(text: string): string {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
+function ircLiveRoomIds(rooms: Record<string, Room | undefined>): Set<string> {
+  const ids = new Set<string>();
+  for (const roomId of Object.keys(rooms)) {
+    if (usesIrcLive(roomId)) ids.add(roomId);
+  }
+  return ids;
+}
+
+function applyIrcUsersFromMembers(
+  users: Record<string, User>,
+  members: IrcRoomMember[],
+): Record<string, User> {
+  const next = { ...users };
+  for (const entry of members) {
+    const memberId = memberIdForIrcEntry(entry);
+    next[memberId] = buildIrcMemberUser(entry, memberId);
+  }
+  return next;
+}
+
+function resolveIrcMemberIdForNick(
+  nick: string,
+  users: Record<string, User>,
+  self: { authUserId: string | null; guestVisitorId: string | null; ircNick: string | null },
+): string {
+  if (self.ircNick && nick.toLowerCase() === self.ircNick.toLowerCase()) {
+    return self.authUserId || self.guestVisitorId || ircPmPeerId(nick);
+  }
+  for (const [id, user] of Object.entries(users)) {
+    if (user?.name?.toLowerCase() === nick.toLowerCase()) return id;
+  }
+  return ircPmPeerId(nick);
+}
+
 function ChatProviderInner({ username, authUserId = null, isGuest = false, children }: { username: string; authUserId?: string | null; isGuest?: boolean; children: ReactNode }) {
+  const guestChat = useGuestChat();
+  const guestVisitorId = guestChat.session?.visitorId ?? null;
   const [state, setState] = useState<State>(() => seed(username));
   const stateRef = useRef(state);
   useEffect(() => { stateRef.current = state; }, [state]);
@@ -1729,7 +1788,8 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
   const handleLobbyIrcMessageRef = useRef<(incoming: LobbyIrcIncomingMessage) => void>(() => {});
   useEffect(() => {
     handleLobbyIrcMessageRef.current = (incoming) => {
-      if (!authUserId || incoming.userId === authUserId) return;
+      const selfId = authUserId ?? guestVisitorId;
+      if (!selfId || incoming.userId === selfId) return;
       const channelId = incoming.room;
 
       const msg: Message = {
@@ -1805,7 +1865,31 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       }
       rtLog("msg", "irc-in", `${channelId} · ${msg.text.slice(0, 30)}`);
     };
-  }, [authUserId, username]);
+  }, [authUserId, guestVisitorId, username]);
+
+  const handleLobbyIrcNamesRef = useRef<(event: LobbyIrcRoomNamesEvent) => void>(() => {});
+  useEffect(() => {
+    handleLobbyIrcNamesRef.current = (event) => {
+      const channelId = event.room;
+      if (!channelId || !usesIrcLive(channelId)) return;
+
+      setState((s) => {
+        const room = s.rooms[channelId];
+        if (!room) return s;
+        const members = mergeIrcNamesMembers([], event.members);
+        const users = applyIrcUsersFromMembers(s.users, event.members);
+        return {
+          ...s,
+          users,
+          rooms: {
+            ...s.rooms,
+            [channelId]: { ...room, members },
+          },
+        };
+      });
+      rtLog("msg", "irc-names", `${channelId} · ${event.members.length} members`);
+    };
+  }, []);
 
   const handleLobbyIrcPresenceRef = useRef<(event: LobbyIrcPresenceEvent) => void>(() => {});
   useEffect(() => {
@@ -1814,57 +1898,230 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       if (!channelId || !usesIrcLive(channelId)) {
         const active = stateRef.current.activeChannel;
         if (usesIrcLive(active)) channelId = active;
-        else return;
+        else if (event.event !== "quit" && event.event !== "nick") return;
       }
-      if (!channelId || !usesIrcLive(channelId)) return;
 
-      const dedupKey = `${channelId}:${event.event}:${event.nick}`;
+      const dedupKey = `${channelId || "*"}:${event.event}:${event.nick}:${event.newNick || ""}`;
       const now = Date.now();
       const last = ircPresenceDedupRef.current.get(dedupKey) ?? 0;
       if (now - last < 1500) return;
       ircPresenceDedupRef.current.set(dedupKey, now);
 
-      const text = formatIrcPresenceText(event.event, event.nick, event.reason);
-      setState((s) => ({
-        ...s,
-        messages: appendChannelMessage(s.messages, channelId, {
-          id: `irc-presence-${uid()}`,
-          channelId,
-          authorId: IRC_PRESENCE_AUTHOR,
-          text,
-          ts: now,
-          kind: "irc-presence",
-        }),
-      }));
-      rtLog("msg", "irc-presence", `${channelId} · ${text}`);
+      const selfIrcNick = lobbyIrcTransport.nick;
+      const memberId = resolveIrcMemberIdForNick(event.nick, stateRef.current.users, {
+        authUserId,
+        guestVisitorId,
+        ircNick: selfIrcNick,
+      });
+      const entry: IrcRoomMember = {
+        nick: event.nick,
+        userId: memberId,
+        isGuest: memberId.startsWith("visitor_"),
+      };
+      const text = formatIrcPresenceText(
+        event.event === "nick" ? "nick" : event.event,
+        event.nick,
+        event.reason,
+      );
+
+      setState((s) => {
+        const liveRooms = ircLiveRoomIds(s.rooms);
+        let users = { ...s.users };
+        let rooms = { ...s.rooms };
+
+        if (event.event === "nick" && event.newNick) {
+          const oldId = memberId;
+          const newEntry: IrcRoomMember = {
+            nick: event.newNick,
+            userId: oldId.startsWith("visitor_") ? oldId : ircPmPeerId(event.newNick),
+          };
+          const newId = memberIdForIrcEntry(newEntry);
+          users[newId] = buildIrcMemberUser(newEntry, newId);
+          if (users[oldId]) delete users[oldId];
+          for (const roomId of liveRooms) {
+            const room = rooms[roomId];
+            if (!room) continue;
+            rooms[roomId] = {
+              ...room,
+              members: renameIrcMemberInRoom(room.members, oldId, newId),
+            };
+          }
+          return { ...s, users, rooms };
+        }
+
+        if (event.event === "quit") {
+          rooms = removeIrcMemberFromAllRooms(rooms, memberId, liveRooms);
+          if (users[memberId]) {
+            users[memberId] = { ...users[memberId], status: "offline" };
+          }
+          const timelineRoom =
+            channelId && usesIrcLive(channelId) ? channelId : MAIN_IRC_ROOM_ID;
+          if (!usesIrcLive(timelineRoom)) return { ...s, users, rooms };
+          return {
+            ...s,
+            users,
+            rooms,
+            messages: appendChannelMessage(s.messages, timelineRoom, {
+              id: `irc-presence-${uid()}`,
+              channelId: timelineRoom,
+              authorId: IRC_PRESENCE_AUTHOR,
+              text,
+              ts: now,
+              kind: "irc-presence",
+            }),
+          };
+        }
+
+        if (!channelId || !usesIrcLive(channelId)) return s;
+        const room = rooms[channelId];
+        if (!room) return s;
+
+        let members = room.members;
+        if (event.event === "join") {
+          members = addIrcMember(members, memberId);
+          users[memberId] = users[memberId] ?? buildIrcMemberUser(entry, memberId);
+        } else if (event.event === "part" || event.event === "kick") {
+          members = removeIrcMember(members, memberId);
+          if (users[memberId]) {
+            users[memberId] = { ...users[memberId], status: "offline" };
+          }
+        }
+
+        return {
+          ...s,
+          users,
+          rooms: { ...rooms, [channelId]: { ...room, members } },
+          messages: appendChannelMessage(s.messages, channelId, {
+            id: `irc-presence-${uid()}`,
+            channelId,
+            authorId: IRC_PRESENCE_AUTHOR,
+            text,
+            ts: now,
+            kind: "irc-presence",
+          }),
+        };
+      });
+      rtLog("msg", "irc-presence", `${channelId || "*"} · ${text}`);
     };
   }, []);
 
+  const handleLobbyIrcPmRef = useRef<(incoming: LobbyIrcIncomingPm) => void>(() => {});
   useEffect(() => {
-    if (isGuest || !authUserId) {
+    handleLobbyIrcPmRef.current = (incoming) => {
+      const peerId = ircPmPeerId(incoming.nick);
+      if (isUserLocallyIgnored(peerId)) return;
+
+      const channelId = ircPmChannelForNick(incoming.nick);
+      const msg: Message = {
+        id: incoming.messageId,
+        channelId,
+        authorId: peerId,
+        text: incoming.text,
+        ts: Date.now(),
+        kind: "text",
+      };
+
+      setState((s) => {
+        const existing = s.messages[channelId] || [];
+        if (existing.some((m) => m.id === incoming.messageId)) return s;
+        const users = s.users[peerId]
+          ? s.users
+          : {
+              ...s.users,
+              [peerId]: {
+                id: peerId,
+                name: incoming.nick,
+                avatarColor:
+                  AVATAR_COLORS[
+                    Math.abs(
+                      peerId.split("").reduce((acc, ch) => acc + ch.charCodeAt(0), 0),
+                    ) % AVATAR_COLORS.length
+                  ],
+                status: "online" as const,
+                xp: 0,
+                level: 1,
+              },
+            };
+        return {
+          ...s,
+          users,
+          messages: {
+            ...s.messages,
+            [channelId]: [...existing, msg].sort((a, b) => a.ts - b.ts),
+          },
+        };
+      });
+
+      if (!isDesktopDmTabStrip()) return;
+      if (shouldAutoOpenIncomingDmTab(stateRef.current.activeChannel, channelId)) {
+        revealIncomingDmTab(peerId, channelId);
+      } else {
+        setOpenDmPeerIds((prev) =>
+          prev.includes(peerId) ? prev : [...prev, peerId],
+        );
+      }
+      playDmPing();
+    };
+  }, [revealIncomingDmTab]);
+
+  useEffect(() => {
+    const guestSession = guestChat.session;
+    const guestAuth =
+      isGuest &&
+      guestSession?.gatewayToken &&
+      guestSession.expiresAt &&
+      guestSession.visitorId
+        ? {
+            kind: "guest" as const,
+            guest: {
+              visitorId: guestSession.visitorId,
+              displayName: guestSession.displayName,
+              nickname: guestSession.nickname,
+              expiresAt: guestSession.expiresAt,
+              token: guestSession.gatewayToken,
+            },
+          }
+        : null;
+
+    if (!authUserId && !guestAuth) {
       lobbyIrcTransport.disconnect();
       return;
     }
 
     let cancelled = false;
+
     void (async () => {
-      const { data } = await supabase.auth.getSession();
-      if (cancelled) return;
-      const token = data.session?.access_token;
-      if (!token) return;
+      let auth: typeof guestAuth | { kind: "registered"; token: string } | null =
+        guestAuth;
+
+      if (!auth && authUserId) {
+        const { data } = await supabase.auth.getSession();
+        if (cancelled) return;
+        const token = data.session?.access_token;
+        if (!token) return;
+        auth = { kind: "registered", token };
+      }
+
+      if (!auth) return;
 
       lobbyIrcTransport.connect(
         "wss://ws.yaarzo.com",
-        token,
+        auth,
         (incoming) => handleLobbyIrcMessageRef.current(incoming),
         (status, detail) => {
           rtLog("ws", status, detail ? `lobby-irc · ${detail}` : "lobby-irc");
           if (status === "authenticated") {
+            const assignedNick = lobbyIrcTransport.nick;
+            if (assignedNick && guestVisitorId) {
+              updateGuestChatIrcNick(assignedNick);
+            }
             const ch = ircJoinChannelRef.current;
             if (ch) lobbyIrcTransport.join(ch);
           }
         },
         (presence) => handleLobbyIrcPresenceRef.current(presence),
+        (pm) => handleLobbyIrcPmRef.current(pm),
+        (names) => handleLobbyIrcNamesRef.current(names),
       );
     })();
 
@@ -1872,21 +2129,32 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       cancelled = true;
       lobbyIrcTransport.disconnect();
     };
-  }, [authUserId, isGuest]);
+  }, [
+    authUserId,
+    isGuest,
+    guestChat.session?.visitorId,
+    guestChat.session?.gatewayToken,
+    guestChat.session?.expiresAt,
+    guestChat.session?.displayName,
+  ]);
 
   useEffect(() => {
-    if (isGuest || !authUserId) {
+    if (!authUserId && !guestChat.session?.visitorId) {
       ircJoinChannelRef.current = null;
       return;
     }
     const channelId = state.activeChannel;
-    if (!usesIrcLive(channelId)) {
+    if (!usesIrcLive(channelId) || isIrcPmChannel(channelId)) {
       ircJoinChannelRef.current = null;
       return;
     }
     ircJoinChannelRef.current = channelId;
     lobbyIrcTransport.join(channelId);
-  }, [authUserId, isGuest, state.activeChannel]);
+  }, [
+    authUserId,
+    guestChat.session?.visitorId,
+    state.activeChannel,
+  ]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -1930,7 +2198,8 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     const isDmChannel =
       channelId.startsWith("dm:") ||
       isGuestDmChannel(channelId) ||
-      isGuestDmComposeChannel(channelId);
+      isGuestDmComposeChannel(channelId) ||
+      isIrcPmChannel(channelId);
     if (!isDmChannel) {
       setRoomTabChannel(channelId);
     }
@@ -1976,9 +2245,44 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
         return;
       }
     }
-    if (isGuest) {
+    if (isGuest && !guestVisitorId) {
       // Public browse mode: never create local or remote messages.
-      // MessageInput / AuthGate must open sign-in instead.
+      return;
+    }
+
+    const activeCh = channelOverride || stateRef.current.activeChannel;
+    if (isIrcPmChannel(activeCh)) {
+      const recipientNick = parseIrcPmChannel(activeCh);
+      if (!recipientNick || !trimmed) return;
+      const messageId = newUuid();
+      const peerId = ircPmPeerId(recipientNick);
+      const msg: Message = {
+        id: messageId,
+        channelId: activeCh,
+        authorId: guestVisitorId || authUserId || "me",
+        text: trimmed,
+        ts: Date.now(),
+        kind: "text",
+        sendStatus: lobbyIrcTransport.connected ? "sending" : "failed",
+      };
+      setState((s) => ({
+        ...s,
+        messages: {
+          ...s.messages,
+          [activeCh]: [...(s.messages[activeCh] || []), msg],
+        },
+      }));
+      if (lobbyIrcTransport.sendPm(recipientNick, messageId, trimmed)) {
+        setState((s) => ({
+          ...s,
+          messages: confirmMessages(s.messages, [messageId], { [messageId]: msg.ts }).messages,
+        }));
+      }
+      setReplyingTo(null);
+      return;
+    }
+
+    if (isGuest) {
       return;
     }
     type Outgoing = AuthenticatedOutgoing;
@@ -2411,9 +2715,71 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     });
   }, [authUserId]);
 
+  const startIrcPm = useCallback((nick: string) => {
+    const trimmed = nick.trim();
+    if (!trimmed) return;
+    const peerId = ircPmPeerId(trimmed);
+    const channelId = ircPmChannelForNick(trimmed);
+    setState((s) => ({
+      ...s,
+      dmOrder: s.dmOrder.includes(peerId) ? s.dmOrder : [...s.dmOrder, peerId],
+      activeChannel: channelId,
+      users: s.users[peerId]
+        ? s.users
+        : {
+            ...s.users,
+            [peerId]: {
+              id: peerId,
+              name: trimmed,
+              avatarColor: "oklch(0.62 0.02 250)",
+              status: "online",
+              xp: 0,
+              level: 1,
+            },
+          },
+    }));
+  }, []);
+
   const startDM = useCallback((userId: string) => {
+    const ircNick = parseIrcPmPeer(userId);
+    if (ircNick) {
+      startIrcPm(ircNick);
+      return;
+    }
+
+    if (isIrcPmPeer(userId)) {
+      startIrcPm(parseIrcPmPeer(userId) || userId.slice(4));
+      return;
+    }
+
+    if (userId.startsWith("visitor_")) {
+      const guestName = stateRef.current.users[userId]?.name;
+      if (guestName) {
+        startIrcPm(guestName);
+        return;
+      }
+    }
+
+    const peerIsGuest = isGuestDmPeer(userId) || userId.startsWith("visitor_");
+    const peerIsRegisteredUuid = isUuid(userId);
+    const useIrc = shouldUseIrcPm({
+      selfIsGuest: isGuest || Boolean(guestVisitorId),
+      peerIsGuest,
+      peerIsIrcOnly: userId.startsWith("irc:"),
+      peerIsRegisteredUuid,
+    });
+
+    if (useIrc && !peerIsRegisteredUuid) {
+      const name = stateRef.current.users[userId]?.name || userId;
+      startIrcPm(name);
+      return;
+    }
+
     if (isGuest || !authUserId) {
-      // Public browse / unauthenticated: UI must open AuthGate — never start a DM session.
+      if (guestVisitorId && peerIsRegisteredUuid) {
+        startIrcPm(stateRef.current.users[userId]?.name || userId);
+        return;
+      }
       return;
     }
     if (isGuestDmPeer(userId)) {
@@ -2472,7 +2838,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       return badged.state;
     });
     void markDmRead(channelId);
-  }, [authUserId, isGuest, markDmRead, guestDmConvByPeer, markGuestDmRead]);
+  }, [authUserId, isGuest, guestVisitorId, markDmRead, guestDmConvByPeer, markGuestDmRead, startIrcPm]);
 
   useEffect(() => {
     startDmForWatchInviteRef.current = startDM;
@@ -2971,7 +3337,12 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       }
       return state.rooms[id]?.name || id;
     },
-    isDM: (id) => typeof id === "string" && (id.startsWith("dm:") || isGuestDmChannel(id) || isGuestDmComposeChannel(id)),
+    isDM: (id) =>
+      typeof id === "string" &&
+      (id.startsWith("dm:") ||
+        isGuestDmChannel(id) ||
+        isGuestDmComposeChannel(id) ||
+        isIrcPmChannel(id)),
     dmUser: (id) => {
       if (typeof id !== "string" || !id.startsWith("dm:")) return undefined;
       const { peerId } = parseDmChannel(id, authUserId);

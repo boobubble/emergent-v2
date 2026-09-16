@@ -7,6 +7,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { createHash } from "node:crypto";
+import {
+  gatewayGuestSecret,
+  signGuestGatewayToken,
+} from "@/lib/gateway-guest-auth.server";
 import { withRateLimit } from "./rate-limit-middleware";
 import { enforceRateLimit } from "./rate-limit.server";
 import {
@@ -128,7 +132,18 @@ export const startGuestChatSession = createServerFn({ method: "POST" })
     } as never);
     if (error) throw new Error(error.message || "Could not start guest session.");
 
-    return { visitorId, nickname: nick.nickname, displayName, expiresAt };
+    const secret = gatewayGuestSecret();
+    const gatewayToken = secret
+      ? signGuestGatewayToken(visitorId, nick.nickname, expiresAt, secret)
+      : "";
+
+    return {
+      visitorId,
+      nickname: nick.nickname,
+      displayName,
+      expiresAt,
+      gatewayToken,
+    };
   });
 
 export const sendGuestLobbyMessage = createServerFn({ method: "POST" })

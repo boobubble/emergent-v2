@@ -49,6 +49,16 @@ describe("parseIrcPresenceLine", () => {
       parseIrcPresenceLine(":mohit!mohit@irc.yaarzo.com PRIVMSG #yaarzo-global :hello"),
     ).toBeNull();
   });
+
+  it("parses NICK", () => {
+    expect(
+      parseIrcPresenceLine(":mohit!mohit@irc.yaarzo.com NICK :mohit2"),
+    ).toEqual({
+      event: "nick",
+      nick: "mohit",
+      newNick: "mohit2",
+    });
+  });
 });
 
 describe("formatIrcPresenceText", () => {

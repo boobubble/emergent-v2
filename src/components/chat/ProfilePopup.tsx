@@ -321,21 +321,26 @@ export function ProfilePopup({
         </div>
 
         {/* Footer actions - fixed sizes */}
-        {!isMe && !user?.isGuest && !userId.startsWith("visitor_") && (
+        {!isMe && !user?.isBot && (
           <div className="flex items-center gap-2 border-t border-border bg-card px-4 py-3">
             <button
               onClick={() => {
-                if (guestChat.isGuestChatting && !isMe && !user?.isBot && realId && realId !== "me" && !user?.isGuest) {
+                if (guestChat.isGuestChatting && !isMe && realId && realId !== "me" && !user?.isGuest && !realId.startsWith("irc:")) {
                   void startGuestDm(realId).then(() => closeNow("action"));
                   return;
                 }
-                if (user?.isGuest || userId.startsWith("visitor_") || userId.startsWith("guest:")) return;
-                requireAuth(() => {
-                  const isMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches;
+                const isMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches;
+                const openPm = () => {
                   if (isMobile) startDM(userId);
                   else openDmTab(userId);
                   closeNow("action");
-                });
+                };
+                if (guestChat.isGuestChatting || userId.startsWith("irc:") || userId.startsWith("visitor_")) {
+                  openPm();
+                  return;
+                }
+                if (user?.isGuest || userId.startsWith("guest:")) return;
+                requireAuth(openPm);
               }}
               className="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-full bg-primary px-3 text-xs font-bold text-primary-foreground hover:opacity-90"
             >

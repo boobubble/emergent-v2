@@ -3,6 +3,7 @@ require("dotenv").config();
 const express = require("express");
 const http = require("http");
 const tls = require("tls");
+const { randomUUID } = require("node:crypto");
 const { WebSocketServer } = require("ws");
 const { createRemoteJWKSet, jwtVerify } = require("jose");
 const {
@@ -23,6 +24,13 @@ const {
   parseModerationPayload,
   validateRoomId,
 } = require("./lib/irc-moderation.cjs");
+const {
+  nickFromRegisteredUser,
+  nickFromGuestNickname,
+} = require("./lib/irc-nick.cjs");
+const { verifyGuestGatewayToken } = require("./lib/irc-guest-auth.cjs");
+const { validatePmSendPayload, isValidUuid } = require("./lib/irc-pm.cjs");
+const { createIrcSessionManager } = require("./lib/irc-user-session.cjs");
 
 const PORT = Number(process.env.PORT || 3000);
 const IRC_HOST = process.env.IRC_HOST || "yaarzo-ergo";
@@ -30,15 +38,10 @@ const IRC_PORT = Number(process.env.IRC_PORT || 6697);
 const IRC_SERVERNAME = process.env.IRC_SERVERNAME || "irc.yaarzo.com";
 const IRC_NICK = process.env.IRC_NICK || "YaarzoGateway";
 const IRC_PRIMARY_ROOM = String(process.env.IRC_PRIMARY_ROOM || "yaarzo-global").trim();
+const GATEWAY_GUEST_SECRET = process.env.GATEWAY_GUEST_SECRET || "";
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY;
-
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-function isValidUuid(value) {
-  return typeof value === "string" && UUID_RE.test(value.trim());
-}
 
 const SUPABASE_JWKS = SUPABASE_URL
   ? createRemoteJWKSet(
@@ -50,19 +53,6 @@ const supabaseEnv = {
   supabaseUrl: SUPABASE_URL,
   publishableKey: SUPABASE_PUBLISHABLE_KEY,
 };
-
-function getUserNick(user) {
-  const raw =
-    user?.user_metadata?.username ||
-    user?.user_metadata?.user_name ||
-    user?.username ||
-    `user_${String(user?.sub || "").slice(0, 8)}`;
-
-  return String(raw)
-    .trim()
-    .replace(/[^A-Za-z0-9_\-]/g, "_")
-    .slice(0, 30) || `user_${String(user?.sub || "").slice(0, 8)}`;
-}
 
 async function verifySupabaseToken(token) {
   if (!token || !SUPABASE_JWKS || !SUPABASE_URL) return null;
@@ -207,31 +197,7 @@ function handleIrcLine(line) {
   }
 }
 
-app.get("/rooms", (req, res) => {
-  res.json(buildRoomsPayload(ircRoomList, IRC_PRIMARY_ROOM));
-});
-
-app.get("/health", (req, res) => {
-  res.json({
-    ok: true,
-    service: "yaarzo-chat-gateway",
-    irc: {
-      host: IRC_HOST,
-      port: IRC_PORT,
-      connected: !!ircSocket && !ircSocket.destroyed,
-      registered: ircRegistered,
-      joinedRooms: [...joinedIrcRooms],
-      discoveredRooms: ircRoomList.size,
-      listInProgress,
-    },
-    timestamp: new Date().toISOString()
-  });
-});
-
-const server = http.createServer(app);
-const wss = new WebSocketServer({ server });
-
-function broadcastToAuthenticatedClients(payload) {
+function broadcastToAuthenticatedClients(wss, payload) {
   const data = JSON.stringify(payload);
 
   for (const client of wss.clients) {
@@ -241,13 +207,86 @@ function broadcastToAuthenticatedClients(payload) {
   }
 }
 
+function broadcastIrcLine(wss, line) {
+  const data = JSON.stringify({ type: "irc", line });
+  for (const client of wss.clients) {
+    if (client.readyState !== 1 || !client.authenticated) continue;
+    client.send(data);
+  }
+}
+
+function broadcastChannelMessage(wss, payload) {
+  broadcastToAuthenticatedClients(wss, {
+    type: "message",
+    room: payload.room,
+    messageId: payload.messageId,
+    nick: payload.nick,
+    userId: payload.userId,
+    text: payload.text,
+  });
+}
+
+let sessionManager = null;
+
+function initSessionManager(wss) {
+  sessionManager = createIrcSessionManager({
+  host: IRC_HOST,
+  port: IRC_PORT,
+  servername: IRC_SERVERNAME,
+  onSessionChannelPrivmsg: (payload) => {
+    broadcastChannelMessage(wss, payload);
+  },
+  onSharedChannelPrivmsg: (payload) => {
+    broadcastChannelMessage(wss, payload);
+  },
+  onSessionPrivateMessage: ({ nick, targetNick, text, recipientSession }) => {
+    const recipientWs = sessionManager.findWsByNick(targetNick);
+    const messageId = randomUUID();
+    const frame = {
+      type: "pm.message",
+      messageId,
+      nick,
+      text,
+    };
+
+    if (recipientWs && recipientWs.readyState === 1) {
+      recipientWs.send(JSON.stringify(frame));
+      return;
+    }
+
+    // Deliver to sender if they are the target (loopback edge case).
+    if (recipientSession?.nick?.toLowerCase() === targetNick.toLowerCase()) {
+      return;
+    }
+  },
+  onSessionRoomNames: ({ ws, room, members }) => {
+    if (!ws || ws.readyState !== 1) return;
+    ws.send(JSON.stringify({
+      type: "room.names",
+      room,
+      members,
+    }));
+  },
+  onSessionIrcLine: (line) => {
+    broadcastIrcLine(wss, line);
+  },
+  });
+  return sessionManager;
+}
+
+function requestRoomNames(ws, room) {
+  const userSession = sessionManager.getSession(ws);
+  if (!userSession) return false;
+  return userSession.requestNames(room);
+}
+
 function joinIrcRoom(room) {
   const validated = validateRoomId(room);
   if (!validated || !ircSocket || ircSocket.destroyed) return false;
   const channel = toIrcChannel(validated);
   if (!channel) return false;
   ircSocket.write(`JOIN ${channel}\r\n`);
-  console.log(`IRC: JOIN ${channel} sent`);
+  console.log(`IRC: JOIN ${channel} sent (shared bot)`);
   return true;
 }
 
@@ -293,7 +332,7 @@ async function handleModerationRequest(ws, payload) {
   }
 
   ircSocket.write(command);
-  console.log(`IRC moderation ${parsed.action} by ${ws.user?.sub} in ${parsed.room} -> ${parsed.targetNick}`);
+  console.log(`IRC moderation ${parsed.action} by ${ws.user?.sub || ws.visitorId} in ${parsed.room} -> ${parsed.targetNick}`);
 
   ws.send(JSON.stringify({
     type: "moderation.ok",
@@ -302,6 +341,38 @@ async function handleModerationRequest(ws, payload) {
     targetNick: parsed.targetNick,
     source: auth.source,
   }));
+}
+
+async function attachUserIrcSession(ws) {
+  const desiredNick = ws.desiredNick;
+  const userId = ws.userId;
+  const identityType = ws.identityType;
+
+  try {
+    const result = await sessionManager.attachSession(ws, {
+      desiredNick,
+      userId,
+      identityType,
+    });
+    ws.ircNick = result.nick;
+    ws.nick = result.nick;
+
+    const primary = IRC_PRIMARY_ROOM;
+    if (primary) {
+      result.session.joinRoom(primary);
+      requestRoomNames(ws, primary);
+    }
+
+    return result;
+  } catch (err) {
+    console.error("Failed to attach IRC session:", err?.message || err);
+    ws.send(JSON.stringify({
+      type: "error",
+      code: "IRC_SESSION_FAILED",
+      message: "Could not establish IRC session",
+    }));
+    return null;
+  }
 }
 
 function connectIRC() {
@@ -320,7 +391,7 @@ function connectIRC() {
   ircSocket.setEncoding("utf8");
 
   ircSocket.on("secureConnect", () => {
-    console.log("IRC TLS connected");
+    console.log("IRC TLS connected (shared gateway bot)");
     ircSocket.write(`NICK ${IRC_NICK}\r\n`);
     ircSocket.write(`USER yaarzogateway 0 * :Yaarzo Chat Gateway\r\n`);
   });
@@ -338,26 +409,12 @@ function connectIRC() {
       handleIrcLine(line);
 
       const privmsgMatch = line.match(/^:([^!]+)!.* PRIVMSG (#\S+) :([\s\S]*)$/);
-
-      for (const client of wss.clients) {
-        if (client.readyState !== 1 || !client.authenticated) continue;
-
-        if (privmsgMatch) {
-          const room = fromIrcChannel(privmsgMatch[2]) || privmsgMatch[2].slice(1);
-
-          client.send(JSON.stringify({
-            type: "message",
-            room,
-            nick: privmsgMatch[1],
-            text: privmsgMatch[3]
-          }));
-        } else {
-          client.send(JSON.stringify({
-            type: "irc",
-            line
-          }));
-        }
+      if (privmsgMatch) {
+        sessionManager.handleSharedChannelPrivmsg(line);
+        continue;
       }
+
+      broadcastIrcLine(wss, line);
     }
   });
 
@@ -379,6 +436,85 @@ function connectIRC() {
   });
 }
 
+async function handleWsAuth(ws, payload) {
+  if (payload.guest && typeof payload.guest === "object") {
+    const guest = payload.guest;
+    if (!GATEWAY_GUEST_SECRET) {
+      return { ok: false, code: "GUEST_AUTH_DISABLED", message: "Guest IRC auth is not configured" };
+    }
+
+    const nickname = String(guest.nickname || guest.displayName || "").trim();
+    const valid = verifyGuestGatewayToken(
+      {
+        visitorId: guest.visitorId,
+        nickname,
+        expiresAt: guest.expiresAt,
+        token: guest.token,
+      },
+      GATEWAY_GUEST_SECRET,
+    );
+
+    if (!valid) {
+      return { ok: false, code: "AUTH_INVALID", message: "Invalid guest session" };
+    }
+
+    const ircNick = nickFromGuestNickname(nickname);
+    if (!ircNick) {
+      return { ok: false, code: "INVALID_NICK", message: "Invalid guest nickname for IRC" };
+    }
+
+    ws.visitorId = String(guest.visitorId);
+    ws.userId = ws.visitorId;
+    ws.identityType = "guest";
+    ws.desiredNick = ircNick;
+    ws.displayName = String(guest.displayName || nickname);
+    ws.guestNickname = nickname;
+    return { ok: true, userId: ws.userId, identityType: "guest" };
+  }
+
+  if (typeof payload.token !== "string") {
+    return { ok: false, code: "AUTH_REQUIRED", message: "Authentication required" };
+  }
+
+  const user = await verifySupabaseToken(payload.token);
+  if (!user) {
+    return { ok: false, code: "AUTH_INVALID", message: "Invalid authentication token" };
+  }
+
+  ws.user = user;
+  ws.userId = user.sub;
+  ws.accessToken = payload.token;
+  ws.identityType = "registered";
+  ws.desiredNick = nickFromRegisteredUser(user);
+  return { ok: true, userId: user.sub, identityType: "registered" };
+}
+
+const server = http.createServer(app);
+const wss = new WebSocketServer({ server });
+initSessionManager(wss);
+
+app.get("/rooms", (req, res) => {
+  res.json(buildRoomsPayload(ircRoomList, IRC_PRIMARY_ROOM));
+});
+
+app.get("/health", (req, res) => {
+  res.json({
+    ok: true,
+    service: "yaarzo-chat-gateway",
+    irc: {
+      host: IRC_HOST,
+      port: IRC_PORT,
+      connected: !!ircSocket && !ircSocket.destroyed,
+      registered: ircRegistered,
+      joinedRooms: [...joinedIrcRooms],
+      discoveredRooms: ircRoomList.size,
+      listInProgress,
+      userSessions: sessionManager?.sessionCount?.() ?? 0,
+    },
+    timestamp: new Date().toISOString()
+  });
+});
+
 wss.on("connection", async (ws) => {
   let authenticated = false;
 
@@ -386,7 +522,7 @@ wss.on("connection", async (ws) => {
     if (!authenticated) {
       ws.close(1008, "Authentication required");
     }
-  }, 5000);
+  }, 8000);
 
   console.log("WebSocket client connected; awaiting authentication");
 
@@ -413,7 +549,7 @@ wss.on("connection", async (ws) => {
     }
 
     if (!authenticated) {
-      if (payload.type !== "auth" || typeof payload.token !== "string") {
+      if (payload.type !== "auth") {
         ws.send(JSON.stringify({
           type: "error",
           code: "AUTH_REQUIRED",
@@ -423,32 +559,36 @@ wss.on("connection", async (ws) => {
         return;
       }
 
-      const user = await verifySupabaseToken(payload.token);
-
-      if (!user) {
+      const authResult = await handleWsAuth(ws, payload);
+      if (!authResult.ok) {
         ws.send(JSON.stringify({
           type: "error",
-          code: "AUTH_INVALID",
-          message: "Invalid authentication token"
+          code: authResult.code,
+          message: authResult.message,
         }));
-        ws.close(1008, "Invalid authentication token");
+        ws.close(1008, authResult.message);
+        return;
+      }
+
+      const session = await attachUserIrcSession(ws);
+      if (!session) {
+        ws.close(1011, "IRC session failed");
         return;
       }
 
       authenticated = true;
-      ws.user = user;
-      ws.nick = getUserNick(user);
-      ws.accessToken = payload.token;
       ws.authenticated = true;
       clearTimeout(authTimeout);
 
       ws.send(JSON.stringify({
         type: "gateway",
         event: "authenticated",
-        userId: user.sub
+        userId: ws.userId,
+        ircNick: ws.ircNick,
+        identityType: ws.identityType,
       }));
 
-      console.log(`WebSocket authenticated: ${user.sub}`);
+      console.log(`WebSocket authenticated: ${ws.userId} as IRC ${ws.ircNick}`);
       return;
     }
 
@@ -474,7 +614,9 @@ wss.on("connection", async (ws) => {
         }));
         return;
       }
-      if (!joinIrcRoom(room)) {
+
+      const userSession = sessionManager.getSession(ws);
+      if (!userSession || !userSession.joinRoom(room)) {
         ws.send(JSON.stringify({
           type: "error",
           code: "IRC_UNAVAILABLE",
@@ -482,7 +624,40 @@ wss.on("connection", async (ws) => {
         }));
         return;
       }
+
+      joinIrcRoom(room);
+      requestRoomNames(ws, room);
       ws.send(JSON.stringify({ type: "room.joined", room }));
+      return;
+    }
+
+    if (payload.type === "pm.send") {
+      const userSession = sessionManager.getSession(ws);
+      const parsed = validatePmSendPayload(payload, ws.ircNick || ws.nick);
+      if (!parsed || !userSession) {
+        ws.send(JSON.stringify({
+          type: "error",
+          code: "INVALID_PM",
+          message: "Invalid private message request",
+        }));
+        return;
+      }
+
+      if (!userSession.sendPrivateMessage(parsed.recipientNick, parsed.text)) {
+        ws.send(JSON.stringify({
+          type: "error",
+          code: "IRC_UNAVAILABLE",
+          message: "Could not send private message",
+        }));
+        return;
+      }
+
+      ws.send(JSON.stringify({
+        type: "pm.sent",
+        messageId: parsed.messageId,
+        recipientNick: parsed.recipientNick,
+        text: parsed.text,
+      }));
       return;
     }
 
@@ -510,15 +685,6 @@ wss.on("connection", async (ws) => {
       return;
     }
 
-    if (!ircSocket || ircSocket.destroyed) {
-      ws.send(JSON.stringify({
-        type: "error",
-        code: "IRC_UNAVAILABLE",
-        message: "Chat service is temporarily unavailable"
-      }));
-      return;
-    }
-
     const safeText = text.replace(/[\r\n]/g, " ");
     const room = validateRoomId(payload.room);
 
@@ -531,45 +697,48 @@ wss.on("connection", async (ws) => {
       return;
     }
 
-    const channel = toIrcChannel(room);
-    if (!channel) {
+    const userSession = sessionManager.getSession(ws);
+    if (!userSession) {
       ws.send(JSON.stringify({
         type: "error",
-        code: "INVALID_ROOM",
-        message: "Invalid IRC room"
+        code: "IRC_UNAVAILABLE",
+        message: "Chat service is temporarily unavailable"
       }));
       return;
     }
 
-    if (!joinedIrcRooms.has(room)) {
-      joinIrcRoom(room);
-    }
-
-    ircSocket.write(`PRIVMSG ${channel} :${safeText}\r\n`);
-
-    broadcastToAuthenticatedClients({
-      type: "message",
+    sessionManager.trackPending(payload.messageId.trim(), {
+      userId: ws.userId,
+      nick: ws.ircNick || ws.nick,
       room,
-      messageId: payload.messageId.trim(),
-      nick: ws.nick,
-      userId: ws.user.sub,
-      text: safeText
+      text: safeText,
+      ws,
     });
+
+    if (!userSession.sendChannelMessage(room, safeText)) {
+      ws.send(JSON.stringify({
+        type: "error",
+        code: "IRC_UNAVAILABLE",
+        message: "Chat service is temporarily unavailable"
+      }));
+      return;
+    }
 
     ws.send(JSON.stringify({
       type: "message.sent",
       room,
       messageId: payload.messageId.trim(),
-      nick: ws.nick,
-      userId: ws.user.sub,
+      nick: ws.ircNick || ws.nick,
+      userId: ws.userId,
       text: safeText
     }));
 
-    console.log(`IRC: PRIVMSG ${channel} :${safeText}`);
+    console.log(`IRC user PRIVMSG ${room} (${ws.ircNick}): ${safeText}`);
   });
 
   ws.on("close", () => {
     clearTimeout(authTimeout);
+    sessionManager.unregisterWs(ws);
     console.log("WebSocket client disconnected");
   });
 });

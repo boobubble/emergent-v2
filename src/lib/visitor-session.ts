@@ -12,6 +12,10 @@ export interface GuestChatClientSession {
   nickname: string;
   displayName: string;
   startedAt: number;
+  expiresAt?: string;
+  gatewayToken?: string;
+  /** Assigned IRC nick from gateway (authoritative for PM/presence). */
+  ircNick?: string;
 }
 
 function canUseStorage(): boolean {
@@ -37,6 +41,12 @@ export function writeGuestChatSession(session: GuestChatClientSession): void {
   try {
     window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session));
   } catch { /* ignore quota */ }
+}
+
+export function updateGuestChatIrcNick(ircNick: string): void {
+  const session = readGuestChatSession();
+  if (!session || !ircNick.trim()) return;
+  writeGuestChatSession({ ...session, ircNick: ircNick.trim() });
 }
 
 export function clearGuestChatSession(): void {
