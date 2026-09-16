@@ -15,8 +15,10 @@ import {
   GUEST_LOBBY_CHANNEL_ID,
   formatGuestDisplayName,
   mergeGuestChatConfig,
+  normalizeGuestChatChannelId,
   type GuestChatConfig,
 } from "./guest-chat-config";
+import { isValidIrcChannelSlug } from "./irc-rooms";
 import {
   assertGuestLobbyPlainText,
   assertGuestLobbyUrlsAllowed,
@@ -198,11 +200,16 @@ export const sendGuestLobbyMessage = createServerFn({ method: "POST" })
       throw new Error("Duplicate message blocked.");
     }
 
+    const channelId = normalizeGuestChatChannelId(data.channelId);
+    if (!isValidIrcChannelSlug(channelId)) {
+      throw new Error("Invalid guest chat room.");
+    }
+
     const expiresAt = new Date(Date.now() + cfg.messageTtlMinutes * 60_000).toISOString();
     const { data: row, error: iErr } = await sb
       .from("guest_chat_messages")
       .insert({
-        channel_id: GUEST_LOBBY_CHANNEL_ID,
+        channel_id: channelId,
         visitor_id: data.visitorId,
         display_name: session.display_name,
         text,

@@ -12,6 +12,8 @@ import {
   resolvePrimaryActiveRoom,
   setGatewayIrcLiveRoomIds,
   stripGatewayIrcRoomsFromPersistedState,
+  isValidIrcChannelSlug,
+  ircRoomsClientUrl,
 } from "./irc-rooms";
 import type { Room } from "./chat-types";
 
@@ -194,9 +196,42 @@ describe("chat-store IRC sync hook safety", () => {
 
   it("re-syncs gateway rooms when username changes (storage key hydration)", () => {
     const store = readFileSync(resolve(process.cwd(), "src/lib/chat-store.tsx"), "utf8");
+    expect(store).toContain("ircRoomsClientUrl()");
     expect(store).toMatch(
-      /IRC `\/rooms` is authoritative[\s\S]*?\[\s*storageReady,\s*syncAdminChannels,\s*username\s*\]/,
+      /\[storageReady,\s*syncAdminChannels,\s*username,\s*isGuest,\s*logIrcDebug\]/,
     );
+  });
+});
+
+describe("IRC channel slug validation", () => {
+  it("accepts gateway IRC room slugs dynamically", () => {
+    for (const id of ["yaarzo-global", "games", "music", "football", "india"]) {
+      expect(isValidIrcChannelSlug(id)).toBe(true);
+    }
+  });
+
+  it("rejects malformed or unsafe channel ids", () => {
+    for (const id of ["", "Games", "foo/bar", "a--b", "a-", "-foo", "x".repeat(65)]) {
+      expect(isValidIrcChannelSlug(id)).toBe(false);
+    }
+  });
+});
+
+describe("ircRoomsClientUrl", () => {
+  it("uses same-origin proxy in browser contexts", () => {
+    const originalWindow = globalThis.window;
+    Object.defineProperty(globalThis, "window", {
+      value: { location: { href: "https://yaarzo.com/chatroom" } },
+      configurable: true,
+    });
+    try {
+      expect(ircRoomsClientUrl()).toBe("/api/public/irc-rooms");
+    } finally {
+      Object.defineProperty(globalThis, "window", {
+        value: originalWindow,
+        configurable: true,
+      });
+    }
   });
 });
 

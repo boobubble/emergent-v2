@@ -1,7 +1,7 @@
 /**
  * IRC-native public room list — gateway `/rooms` contract and reconciliation helpers.
  */
-import { LEGACY_LOBBY_ROOM_ID, YAARZO_GLOBAL_ROOM_ID } from "./auth-entry";
+import { YAARZO_GLOBAL_ROOM_ID } from "./auth-entry";
 import type { Room } from "./chat-types";
 import { isUuid } from "./dm-utils";
 
@@ -31,23 +31,37 @@ export interface IrcRoomsSyncMeta {
   source?: string;
 }
 
-/** Gateway IRC LIST endpoint — source of truth for public chatroom sidebar. */
-export const IRC_ROOMS_GATEWAY_URL = "https://ws.yaarzo.com/rooms";
+/** Upstream gateway IRC LIST endpoint (server-side proxy target). */
+export const IRC_ROOMS_GATEWAY_ORIGIN_URL = "https://ws.yaarzo.com/rooms";
+
+/** @deprecated Use {@link ircRoomsClientUrl} in browser code. */
+export const IRC_ROOMS_GATEWAY_URL = IRC_ROOMS_GATEWAY_ORIGIN_URL;
+
+/** Client fetch URL — same-origin proxy avoids cross-origin gateway CORS blocks. */
+export function ircRoomsClientUrl(): string {
+  if (typeof window === "undefined") return IRC_ROOMS_GATEWAY_ORIGIN_URL;
+  return "/api/public/irc-rooms";
+}
+
+/** Safe IRC public room slug (gateway `/rooms` ids). Not an enumerated room list. */
+export function isValidIrcChannelSlug(slug: string): boolean {
+  const value = slug.trim();
+  if (!value || value.length > 64) return false;
+  if (!/^[a-z][a-z0-9-]*$/.test(value)) return false;
+  if (value.includes("--") || value.endsWith("-")) return false;
+  return true;
+}
 
 /** Poll interval for live IRC room discovery while chatroom is open. */
 export const IRC_ROOMS_POLL_MS = 30_000;
 
 /** Gateway `/rooms` ids eligible for live IRC transport (updated on each sync). */
-const gatewayIrcLiveRoomIds = new Set<string>([
-  YAARZO_GLOBAL_ROOM_ID,
-  LEGACY_LOBBY_ROOM_ID,
-]);
+const gatewayIrcLiveRoomIds = new Set<string>([YAARZO_GLOBAL_ROOM_ID]);
 
 /** Refresh live IRC transport room ids from the latest gateway `/rooms` sync. */
 export function setGatewayIrcLiveRoomIds(ids: Iterable<string>): void {
   gatewayIrcLiveRoomIds.clear();
   gatewayIrcLiveRoomIds.add(YAARZO_GLOBAL_ROOM_ID);
-  gatewayIrcLiveRoomIds.add(LEGACY_LOBBY_ROOM_ID);
   for (const id of ids) {
     if (typeof id === "string" && id.trim()) gatewayIrcLiveRoomIds.add(id.trim());
   }
@@ -227,7 +241,6 @@ export function resolvePrimaryActiveRoom(
 ): string {
   if (primaryRoom && rooms[primaryRoom]) return primaryRoom;
   if (rooms[YAARZO_GLOBAL_ROOM_ID]) return YAARZO_GLOBAL_ROOM_ID;
-  if (rooms[LEGACY_LOBBY_ROOM_ID]) return LEGACY_LOBBY_ROOM_ID;
   for (const id of roomOrder) {
     if (rooms[id]) return id;
   }

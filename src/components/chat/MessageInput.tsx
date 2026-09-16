@@ -943,7 +943,7 @@ export function MessageInput({
           <span className="text-base">🔇</span>
           <span className="flex-1 text-xs sm:text-sm">
             You're muted in {mutedRoomName} ({muteLabel} left).
-            {channelId === "lobby" && " You can still DM friends from your friends list."}
+            {channelId === GUEST_LOBBY_CHANNEL_ID && " You can still DM friends from your friends list."}
           </span>
         </div>
       ) : (

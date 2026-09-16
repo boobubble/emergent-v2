@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { MessageCircle, X, Bot, BotOff, Users, Palette, Minus, Sparkles, Bell, BellOff } from "lucide-react";
 import { useAuthOptional } from "@/lib/auth-store";
+import { YAARZO_GLOBAL_ROOM_ID } from "@/lib/auth-entry";
 import { useChat } from "@/lib/chat-store";
 import { parseDmChannel } from "@/lib/dm-utils";
 import {
@@ -68,7 +69,7 @@ export function ChatHeader({
       : false;
     const statusLabel = isOnline ? "online" : "offline";
     const leaveToRoom = () => {
-      const fallback = state.roomOrder?.[0] || "lobby";
+      const fallback = state.roomOrder?.[0] || YAARZO_GLOBAL_ROOM_ID;
       setActive(fallback);
     };
     return (

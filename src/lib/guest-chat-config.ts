@@ -15,6 +15,13 @@ export function isGuestLobbyChannel(channelId: string): boolean {
   return isGuestDefaultChatRoom(channelId);
 }
 
+/** Map legacy lobby alias to canonical IRC room id for guest_chat_messages writes. */
+export function normalizeGuestChatChannelId(channelId: string): string {
+  const id = channelId.trim();
+  if (id === LEGACY_LOBBY_ROOM_ID) return YAARZO_GLOBAL_ROOM_ID;
+  return id;
+}
+
 export interface GuestChatConfig {
   /** Master switch — default OFF keeps read-only public browse. */
   enabled: boolean;

@@ -2,13 +2,14 @@ import { Trophy, Users, Eye, Gauge, X } from "lucide-react";
 import type { Room } from "@/lib/chat-types";
 import type { GameDef } from "@/lib/games-registry";
 import { useChat } from "@/lib/chat-store";
+import { YAARZO_GLOBAL_ROOM_ID } from "@/lib/auth-entry";
 
 export function GameHeader({ room, game }: { room: Room; game: GameDef }) {
   const { setActive, state } = useChat();
   const cfg = room.game;
   const spectators = cfg?.spectators ? Math.max(0, room.members.length - 1) : 0;
   const Icon = game.icon;
-  const fallback = state.roomOrder.find(id => state.rooms[id]?.kind !== "game") || "lobby";
+  const fallback = state.roomOrder.find(id => state.rooms[id]?.kind !== "game") || YAARZO_GLOBAL_ROOM_ID;
 
   return (
     <header className="flex flex-wrap items-center gap-2 border-b border-border bg-card/60 px-3 py-2 backdrop-blur sm:px-4">

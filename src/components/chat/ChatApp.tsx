@@ -687,7 +687,7 @@ function ChatChannelBody({ channelId, activeIsDM }: { channelId: string; activeI
   const messages = chat?.channelMessages(channelId) ?? [];
   const room = chat?.state.rooms[channelId];
   const isRemoteChannel =
-    channelId === "lobby" ||
+    channelId === GUEST_LOBBY_CHANNEL_ID ||
     channelId === "games" ||
     channelId.startsWith("dm:") ||
     !!room?.dbBacked || /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(channelId);

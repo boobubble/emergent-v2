@@ -216,6 +216,7 @@ import { Route as ApiPublicBackupRetentionRouteImport } from './routes/api/publi
 import { Route as ApiPublicCommunityBgRouteImport } from './routes/api/public/community-bg'
 import { Route as ApiPublicDemoCleanupRouteImport } from './routes/api/public/demo-cleanup'
 import { Route as ApiPublicFeedbackShowcaseRouteImport } from './routes/api/public/feedback-showcase'
+import { Route as ApiPublicIrcRoomsRouteImport } from './routes/api/public/irc-rooms'
 import { Route as ApiPublicLandingRouteImport } from './routes/api/public/landing'
 import { Route as CommunitySlugIndexRouteImport } from './routes/community.$slug.index'
 import { Route as CommunitySlugCompetitionsRouteImport } from './routes/community.$slug.competitions'
@@ -1286,6 +1287,11 @@ const ApiPublicFeedbackShowcaseRoute =
     path: '/api/public/feedback-showcase',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicIrcRoomsRoute = ApiPublicIrcRoomsRouteImport.update({
+  id: '/api/public/irc-rooms',
+  path: '/api/public/irc-rooms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicLandingRoute = ApiPublicLandingRouteImport.update({
   id: '/api/public/landing',
   path: '/api/public/landing',
@@ -1630,6 +1636,7 @@ export interface FileRoutesByFullPath {
   '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
   '/api/public/demo-cleanup': typeof ApiPublicDemoCleanupRoute
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
+  '/api/public/irc-rooms': typeof ApiPublicIrcRoomsRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
   '/community/$slug/competitions': typeof CommunitySlugCompetitionsRoute
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
@@ -1858,6 +1865,7 @@ export interface FileRoutesByTo {
   '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
   '/api/public/demo-cleanup': typeof ApiPublicDemoCleanupRoute
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
+  '/api/public/irc-rooms': typeof ApiPublicIrcRoomsRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
   '/community/$slug/competitions': typeof CommunitySlugCompetitionsRoute
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
@@ -2093,6 +2101,7 @@ export interface FileRoutesById {
   '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
   '/api/public/demo-cleanup': typeof ApiPublicDemoCleanupRoute
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
+  '/api/public/irc-rooms': typeof ApiPublicIrcRoomsRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
   '/community/$slug/competitions': typeof CommunitySlugCompetitionsRoute
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
@@ -2328,6 +2337,7 @@ export interface FileRouteTypes {
     | '/api/public/community-bg'
     | '/api/public/demo-cleanup'
     | '/api/public/feedback-showcase'
+    | '/api/public/irc-rooms'
     | '/api/public/landing'
     | '/community/$slug/competitions'
     | '/community/$slug/dashboard'
@@ -2556,6 +2566,7 @@ export interface FileRouteTypes {
     | '/api/public/community-bg'
     | '/api/public/demo-cleanup'
     | '/api/public/feedback-showcase'
+    | '/api/public/irc-rooms'
     | '/api/public/landing'
     | '/community/$slug/competitions'
     | '/community/$slug/dashboard'
@@ -2790,6 +2801,7 @@ export interface FileRouteTypes {
     | '/api/public/community-bg'
     | '/api/public/demo-cleanup'
     | '/api/public/feedback-showcase'
+    | '/api/public/irc-rooms'
     | '/api/public/landing'
     | '/community/$slug/competitions'
     | '/community/$slug/dashboard'
@@ -2900,6 +2912,7 @@ export interface RootRouteChildren {
   ApiPublicCommunityBgRoute: typeof ApiPublicCommunityBgRoute
   ApiPublicDemoCleanupRoute: typeof ApiPublicDemoCleanupRoute
   ApiPublicFeedbackShowcaseRoute: typeof ApiPublicFeedbackShowcaseRoute
+  ApiPublicIrcRoomsRoute: typeof ApiPublicIrcRoomsRoute
   ApiPublicLandingRoute: typeof ApiPublicLandingRoute
   MehfilCategorySlugRoute: typeof MehfilCategorySlugRoute
   PoetryCategorySlugRoute: typeof PoetryCategorySlugRoute
@@ -4368,6 +4381,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicFeedbackShowcaseRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/irc-rooms': {
+      id: '/api/public/irc-rooms'
+      path: '/api/public/irc-rooms'
+      fullPath: '/api/public/irc-rooms'
+      preLoaderRoute: typeof ApiPublicIrcRoomsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/landing': {
       id: '/api/public/landing'
       path: '/api/public/landing'
@@ -5004,6 +5024,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicCommunityBgRoute: ApiPublicCommunityBgRoute,
   ApiPublicDemoCleanupRoute: ApiPublicDemoCleanupRoute,
   ApiPublicFeedbackShowcaseRoute: ApiPublicFeedbackShowcaseRoute,
+  ApiPublicIrcRoomsRoute: ApiPublicIrcRoomsRoute,
   ApiPublicLandingRoute: ApiPublicLandingRoute,
   MehfilCategorySlugRoute: MehfilCategorySlugRoute,
   PoetryCategorySlugRoute: PoetryCategorySlugRoute,

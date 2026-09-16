@@ -19,14 +19,12 @@ function isValidUuid(value: unknown): boolean {
   return typeof value === "string" && UUID_RE.test(value.trim());
 }
 
-export const LOBBY_IRC_CHANNEL = "lobby";
+/** @deprecated Legacy alias — canonical IRC room is yaarzo-global. */
+export const LOBBY_IRC_CHANNEL = "yaarzo-global";
 
-/**
- * Legacy lobby-only check.
- * Kept for existing callers while the transport is expanded to public rooms.
- */
+/** @deprecated Use {@link usesIrcLive} — kept for legacy lobby alias callers. */
 export function usesLobbyIrcLive(channelId: string): boolean {
-  return channelId === LOBBY_IRC_CHANNEL;
+  return channelId === LOBBY_IRC_CHANNEL || channelId === "lobby";
 }
 
 /**
@@ -221,9 +219,7 @@ export class LobbyIrcTransport {
   /**
    * Send a message through the IRC gateway.
    *
-   * The caller supplies the application channel ID:
-   * - lobby
-   * - public chatroom UUID
+   * The caller supplies the application channel ID (IRC slug or public chatroom UUID).
    */
   join(room: string): boolean {
     const normalizedRoom = room.trim();

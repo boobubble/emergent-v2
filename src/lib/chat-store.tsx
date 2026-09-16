@@ -10,9 +10,10 @@ import {
 } from "./auth-entry";
 import {
   buildIrcReconciledRoomOrder,
-  IRC_ROOMS_GATEWAY_URL,
   IRC_ROOMS_POLL_MS,
+  ircRoomsClientUrl,
   isGatewayIrcPublicRoom,
+  isValidIrcChannelSlug,
   parseGatewayRoomsPayload,
   setGatewayIrcLiveRoomIds,
   stripGatewayIrcRoomsFromPersistedState,
@@ -211,7 +212,14 @@ function filterVisibleMessages(channelId: string, msgs: Message[]): Message[] {
 function isValidUuid(value: string): boolean { return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value); }
 
 function isRemoteChannel(channelId: string, meId: string | null): boolean {
-  if (channelId === "lobby" || channelId === "games" || channelId === "yaarzo-global" || isValidUuid(channelId)) return true;
+  if (
+    channelId === GAMES_CHANNEL_ID ||
+    channelId === YAARZO_GLOBAL_ROOM_ID ||
+    isValidUuid(channelId) ||
+    isValidIrcChannelSlug(channelId)
+  ) {
+    return true;
+  }
   if (dbBackedRemoteChannels.has(channelId)) return true;
   return isRemoteDmChannel(channelId, meId);
 }
@@ -478,14 +486,17 @@ function enrichGamesRoomMembership(rooms: Record<string, Room>): Record<string, 
 }
 
 function ensureWelcome(state: State, name: string): State {
-  const lobbyMsgs = state.messages?.lobby || [];
-  const hasLobbyWelcome = lobbyMsgs.some(m =>
+  const globalMsgs =
+    state.messages?.[MAIN_IRC_ROOM_ID] ||
+    state.messages?.lobby ||
+    [];
+  const hasGlobalWelcome = globalMsgs.some(m =>
     m.id === "seed-welcome-echo" || m.id === "seed-welcome" || m.id === "seed-nova",
   );
   const dmMsgs = state.messages?.["dm:bot-gamebot"] || [];
   const hasDmWelcome = dmMsgs.some(m => m.id === "seed-dm-welcome");
-  if (hasLobbyWelcome && hasDmWelcome) return state;
-  const welcomeLobby: Message[] = hasLobbyWelcome ? [] : [
+  if (hasGlobalWelcome && hasDmWelcome) return state;
+  const welcomeGlobal: Message[] = hasGlobalWelcome ? [] : [
     { id: "seed-welcome-echo", channelId: MAIN_IRC_ROOM_ID, authorId: "bot-echo", text: `hey @${name} 👋 welcome in!`, ts: SEED_TIME - 40000 },
   ];
   const welcomeDm: Message[] = hasDmWelcome ? [] : [
@@ -497,7 +508,10 @@ function ensureWelcome(state: State, name: string): State {
     dmOrder,
     messages: {
       ...state.messages,
-      lobby: [...welcomeLobby, ...lobbyMsgs.filter(m => m.id !== "seed-welcome" && m.id !== "seed-nova" && m.id !== "seed-ryze")],
+      [MAIN_IRC_ROOM_ID]: [
+        ...welcomeGlobal,
+        ...globalMsgs.filter(m => m.id !== "seed-welcome" && m.id !== "seed-nova" && m.id !== "seed-ryze"),
+      ],
       "dm:bot-gamebot": [...welcomeDm, ...dmMsgs],
     },
   };
@@ -1405,16 +1419,16 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     }
   }, [state.rooms]);
 
-  // Fetch existing remote messages for lobby + the active remote channel.
-  // Public browse (authUserId=null) may read Lobby only (anon SELECT policy).
+  // Fetch existing remote messages for yaarzo-global + active remote channels.
+  // Public browse (authUserId=null) may read yaarzo-global only (anon SELECT policy).
   useEffect(() => {
     let cancelled = false;
     const channelsToFetch = new Set<string>();
     if (!authUserId) {
-      channelsToFetch.add("lobby");
+      channelsToFetch.add(YAARZO_GLOBAL_ROOM_ID);
     } else {
-      channelsToFetch.add("lobby");
-      channelsToFetch.add("games");
+      channelsToFetch.add(YAARZO_GLOBAL_ROOM_ID);
+      channelsToFetch.add(GAMES_CHANNEL_ID);
       if (isRemoteChannel(state.activeChannel, authUserId) && !channelsToFetch.has(state.activeChannel)) {
         channelsToFetch.add(state.activeChannel);
       }
@@ -1477,15 +1491,15 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     return () => { cancelled = true; };
   }, [authUserId, state.activeChannel, resyncTick, watchedRemoteChannels]);
 
-  // Realtime subscription to new messages (RLS scopes us to lobby + our DMs).
-  // Public browse also subscribes to Lobby inserts (anon SELECT policy).
+  // Realtime subscription to new messages (RLS scopes us to yaarzo-global + our DMs).
+  // Public browse also subscribes to yaarzo-global inserts (anon SELECT policy).
   useEffect(() => {
     const channel = supabase
       .channel(`palrgo-messages-${Math.random().toString(36).slice(2)}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (payload) => {
         const row = payload.new as Parameters<typeof rowToMessage>[0];
-        // Public visitors only receive Lobby messages.
-        if (!authUserId && row.channel_id !== "lobby") return;
+        // Public visitors only receive yaarzo-global messages.
+        if (!authUserId && row.channel_id !== YAARZO_GLOBAL_ROOM_ID) return;
         if (seenRemoteMsgIds.current.has(row.id)) {
           // Secondary sync: INSERT settlement already confirms; this only applies the server timestamp.
           const serverTs = new Date(row.created_at).getTime();
@@ -1997,10 +2011,16 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
           messages: { ...s.messages, [channelId]: [...(s.messages[channelId] || []), { id: sysId, channelId, authorId: "bot-gamebot", text: `🚪 You were kicked. Re-entry in ${Math.ceil(secs/60)}m ${secs%60}s.`, ts: now, kind: "system" }] },
         };
       }
-      // If muted in lobby, restrict to DMs with existing friends only
-      const lobbyMod = s.moderation?.["lobby"]?.me;
-      if (lobbyMod?.mutedUntil && lobbyMod.mutedUntil > now && channelId !== "lobby") {
-        const secs = Math.ceil((lobbyMod.mutedUntil - now) / 1000);
+      // If muted in yaarzo-global, restrict to DMs with existing friends only
+      const globalMod =
+        s.moderation?.[MAIN_IRC_ROOM_ID]?.me ??
+        s.moderation?.lobby?.me;
+      if (
+        globalMod?.mutedUntil &&
+        globalMod.mutedUntil > now &&
+        channelId !== MAIN_IRC_ROOM_ID
+      ) {
+        const secs = Math.ceil((globalMod.mutedUntil - now) / 1000);
         const friends = s.me.friends ?? [];
         if (channelId.startsWith("dm:")) {
           const { peerId: otherId } = parseDmChannel(channelId, authUserId);
@@ -2015,7 +2035,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
           const sysId = uid();
           return {
             ...s,
-            messages: { ...s.messages, [channelId]: [...(s.messages[channelId] || []), { id: sysId, channelId, authorId: "bot-spam", text: `🔇 You're muted in the lobby. Public chat is paused — DM a friend instead.`, ts: now, kind: "system" }] },
+            messages: { ...s.messages, [channelId]: [...(s.messages[channelId] || []), { id: sysId, channelId, authorId: "bot-spam", text: `🔇 You're muted in Yaarzo Global. Public chat is paused — DM a friend instead.`, ts: now, kind: "system" }] },
           };
         }
       }
@@ -2812,18 +2832,37 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     });
   }, [authUserId]);
 
+  const logIrcDebug = useCallback((label: string, detail: Record<string, unknown>) => {
+    if (typeof window === "undefined") return;
+    if (!new URLSearchParams(window.location.search).has("debug")) return;
+    const entry = { ...detail, at: Date.now() };
+    console.info("[chat-irc-debug]", label, entry);
+    const w = window as unknown as { __CHAT_IRC_DEBUG__?: Record<string, unknown> };
+    w.__CHAT_IRC_DEBUG__ = { ...(w.__CHAT_IRC_DEBUG__ ?? {}), [label]: entry };
+  }, []);
+
   // IRC `/rooms` is authoritative for public chatrooms — sync after hydration, then poll.
   useEffect(() => {
     if (!storageReady || typeof window === "undefined") return;
     let cancelled = false;
 
     const syncFromGateway = async () => {
+      const url = ircRoomsClientUrl();
       try {
-        const res = await fetch(IRC_ROOMS_GATEWAY_URL);
+        const res = await fetch(url);
         if (!res.ok) throw new Error(`IRC rooms HTTP ${res.status}`);
         const payload = await res.json();
         if (cancelled) return;
         const { channels, meta } = parseGatewayRoomsPayload(payload);
+        logIrcDebug("gateway-sync", {
+          url,
+          httpStatus: res.status,
+          channelIds: channels.map((c) => c.id),
+          primaryRoom: meta.primaryRoom,
+          storageReady,
+          username,
+          isGuest,
+        });
         const list = channels.map((r) => ({
           id: r.id,
           name: r.name,
@@ -2831,7 +2870,23 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
           memberCount: r.memberCount,
         }));
         syncAdminChannels(list, meta);
+        queueMicrotask(() => {
+          if (cancelled) return;
+          const s = stateRef.current;
+          logIrcDebug("store-after-sync", {
+            roomOrder: s.roomOrder,
+            roomIds: Object.keys(s.rooms),
+            activeChannel: s.activeChannel,
+          });
+        });
       } catch (err) {
+        logIrcDebug("gateway-sync-error", {
+          url,
+          message: err instanceof Error ? err.message : String(err),
+          storageReady,
+          username,
+          isGuest,
+        });
         console.error("Failed to sync IRC room list:", err);
       }
     };
@@ -2848,7 +2903,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       window.clearInterval(timer);
       document.removeEventListener("visibilitychange", onVisible);
     };
-  }, [storageReady, syncAdminChannels, username]);
+  }, [storageReady, syncAdminChannels, username, isGuest, logIrcDebug]);
 
   const registerCommunityRoom = useCallback((room: CommunityRoomInput) => {
     dbBackedRemoteChannels.add(room.id);

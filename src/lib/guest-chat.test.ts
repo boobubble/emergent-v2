@@ -7,7 +7,9 @@ import {
   GUEST_LOBBY_CHANNEL_ID,
   formatGuestDisplayName,
   mergeGuestChatConfig,
+  normalizeGuestChatChannelId,
 } from "./guest-chat-config";
+import { isValidIrcChannelSlug } from "./irc-rooms";
 import {
   assertGuestLobbyPlainText,
   assertGuestLobbyUrlsAllowed,
@@ -69,6 +71,19 @@ describe("guest nickname validation", () => {
     expect(validateGuestNickname("<script>", opts).ok).toBe(false);
     expect(validateGuestNickname("admin", opts).ok).toBe(false);
     expect(validateGuestNickname("fuckyou", opts).ok).toBe(false);
+  });
+});
+
+describe("guest IRC channel ids", () => {
+  it("normalizes legacy lobby alias to yaarzo-global for DB writes", () => {
+    expect(normalizeGuestChatChannelId("lobby")).toBe("yaarzo-global");
+    expect(normalizeGuestChatChannelId("yaarzo-global")).toBe("yaarzo-global");
+  });
+
+  it("accepts dynamic IRC slugs required by guest_chat_messages CHECK", () => {
+    for (const id of ["yaarzo-global", "games", "music", "football"]) {
+      expect(isValidIrcChannelSlug(normalizeGuestChatChannelId(id))).toBe(true);
+    }
   });
 });
 
