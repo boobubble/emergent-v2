@@ -237,20 +237,18 @@ export function MembersPanel({
 
   // Merge bots/me from local seed with remote profiles (skip our own remote profile — "me" represents us).
   const usersById: Record<string, User> = { ...state.users };
+  Object.entries(profiles).forEach(([id, u]) => {
+    if (authUser && id === authUser.id) return;
+    usersById[id] = u;
+  });
   if (!isIrcPublicRoom) {
-    Object.entries(profiles).forEach(([id, u]) => {
-      if (authUser && id === authUser.id) return;
-      usersById[id] = u;
-    });
     for (const guest of lobbyGuestPresence.guests) {
       usersById[guest.id] = guest;
     }
   }
 
   const localIds = room?.members ?? [];
-  const remoteIds = isIrcPublicRoom
-    ? []
-    : Object.keys(profiles).filter((id) => !authUser || id !== authUser.id);
+  const remoteIds = Object.keys(profiles).filter((id) => !authUser || id !== authUser.id);
   const allIds = Array.from(new Set([...localIds, ...remoteIds]));
 
   // Bots are room-scoped via members (lobby = social/moderation; games = game bots).
@@ -771,3 +769,4 @@ export function MembersPanel({
     </>
   );
 }
+
