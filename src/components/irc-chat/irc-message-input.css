@@ -1,0 +1,33 @@
+/* IRC chat composer — mobile compact rules aligned with legacy Yaarzo chatroom. */
+
+[data-irc-chat-composer] .chat-composer-input {
+  field-sizing: fixed;
+}
+
+@media (max-width: 767px) {
+  [data-irc-chat-composer].chat-composer-root {
+    overflow-x: hidden;
+    padding-top: 0.4rem;
+    padding-bottom: 0.4rem;
+  }
+
+  [data-irc-chat-composer] .chat-composer-send {
+    display: grid;
+    height: 48px;
+    width: 48px;
+    min-height: 48px;
+    min-width: 48px;
+    flex-shrink: 0;
+    border-radius: 999px;
+    place-items: center;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  [data-irc-chat-composer] .chat-composer-input {
+    min-height: 48px;
+    max-height: 96px;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+}

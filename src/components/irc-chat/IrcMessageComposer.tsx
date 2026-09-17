@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { useIrcChatState } from "@/lib/irc-chat";
 import type { IrcActiveView } from "./irc-chat-types";
 import { dmComposerPlaceholder, roomComposerPlaceholder } from "./irc-chat-ui";
+import "./irc-message-input.css";
 
 type IrcMessageComposerProps = {
   onSend: (text: string) => void;
@@ -22,6 +23,8 @@ export function IrcMessageComposer({ onSend, view, className }: IrcMessageCompos
     view.kind === "room"
       ? (state.rooms[view.roomId]?.name ?? view.roomId)
       : null;
+
+  const composerKind = view.kind === "dm" ? "dm" : "room";
 
   const placeholder = connected
     ? view.kind === "room" && roomName
@@ -41,44 +44,46 @@ export function IrcMessageComposer({ onSend, view, className }: IrcMessageCompos
   return (
     <div
       className={cn(
-        "shrink-0 border-t border-border/60 bg-background px-3 py-2.5 shadow-[0_-4px_24px_-8px_hsl(var(--foreground)/0.06)] sm:px-4",
-        "pb-[max(0.625rem,env(safe-area-inset-bottom))]",
+        "chat-composer-footer shrink-0 border-t border-border/50 px-3 py-2 sm:px-4",
         className,
       )}
     >
       <form
-        className="mx-auto flex max-w-3xl items-end gap-2"
+        data-irc-chat-composer=""
+        data-irc-chat-composer-kind={composerKind}
+        className={cn(
+          "chat-composer-root mx-auto flex max-w-4xl items-end gap-2",
+          "chat-composer-glow rounded-2xl border border-border/60 bg-background/90 p-1.5 shadow-sm backdrop-blur-sm",
+        )}
         onSubmit={(e) => {
           e.preventDefault();
           submit();
         }}
       >
-        <div className="relative min-w-0 flex-1">
-          <Textarea
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                submit();
-              }
-            }}
-            placeholder={placeholder}
-            disabled={!connected}
-            maxLength={2000}
-            rows={1}
-            className={cn(
-              "min-h-[42px] max-h-36 w-full resize-y rounded-xl border-border/70 bg-muted/30 py-2.5 pl-3 pr-3 text-sm shadow-sm",
-              "transition-shadow focus-visible:bg-background focus-visible:ring-2 focus-visible:ring-primary/25",
-              !connected && "opacity-60",
-            )}
-          />
-        </div>
+        <Textarea
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              submit();
+            }
+          }}
+          placeholder={placeholder}
+          disabled={!connected}
+          maxLength={2000}
+          rows={1}
+          className={cn(
+            "chat-composer-input min-h-[42px] max-h-36 min-w-0 flex-1 resize-y rounded-xl border-0 bg-muted/25 py-2.5 pl-3 pr-3 text-sm shadow-none",
+            "focus-visible:bg-background focus-visible:ring-0",
+            !connected && "opacity-60",
+          )}
+        />
         <Button
           type="submit"
           size="icon"
           disabled={!connected || !draft.trim()}
-          className="h-[42px] w-[42px] shrink-0 rounded-xl shadow-sm disabled:opacity-40"
+          className="chat-composer-send h-[42px] w-[42px] shrink-0 rounded-xl shadow-sm disabled:opacity-40"
           aria-label="Send message"
         >
           <Send className="h-4 w-4" />

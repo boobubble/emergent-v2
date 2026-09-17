@@ -1,4 +1,4 @@
-import { ArrowLeft, Hash, User } from "lucide-react";
+import { ArrowLeft, Hash, Minus, User, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useIrcChatState } from "@/lib/irc-chat";
@@ -16,12 +16,21 @@ import {
 type IrcChatHeaderProps = {
   view: IrcActiveView;
   onBack?: () => void;
+  onMinimizeDm?: () => void;
+  onCloseDm?: () => void;
   className?: string;
 };
 
-export function IrcChatHeader({ view, onBack, className }: IrcChatHeaderProps) {
+export function IrcChatHeader({
+  view,
+  onBack,
+  onMinimizeDm,
+  onCloseDm,
+  className,
+}: IrcChatHeaderProps) {
   const state = useIrcChatState();
   const { openProfile } = useProfilePopup();
+  const connected = state.status === "authenticated";
 
   const roomMembers =
     view.kind === "room" ? (state.members[view.roomId] ?? []).length : 0;
@@ -38,7 +47,8 @@ export function IrcChatHeader({ view, onBack, className }: IrcChatHeaderProps) {
   return (
     <header
       className={cn(
-        "flex h-[52px] shrink-0 items-center gap-2.5 border-b border-border/70 bg-background px-3 sm:px-4",
+        "chat-glass sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2.5 px-3 sm:h-16 sm:px-4",
+        onBack ? "pl-2 sm:pl-3" : "pl-3 sm:pl-4",
         className,
       )}
     >
@@ -55,14 +65,14 @@ export function IrcChatHeader({ view, onBack, className }: IrcChatHeaderProps) {
       ) : null}
       {view.kind === "room" ? (
         <span
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted/80 text-muted-foreground ring-1 ring-border/50"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15"
           aria-hidden
         >
-          <Hash className="h-3.5 w-3.5" />
+          <Hash className="h-4 w-4" />
         </span>
       ) : hue !== null ? (
         <span
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white ring-1 ring-border/40"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white ring-1 ring-border/40"
           style={{ backgroundColor: `hsl(${hue} 52% 46%)` }}
           aria-hidden
         >
@@ -70,13 +80,20 @@ export function IrcChatHeader({ view, onBack, className }: IrcChatHeaderProps) {
         </span>
       ) : null}
       <div className="min-w-0 flex-1">
-        <h1 className="truncate text-sm font-semibold leading-tight text-foreground">{title}</h1>
-        <p className="truncate text-[11px] text-muted-foreground">
-          {view.kind === "room"
-            ? roomMembers > 0
-              ? `${roomMembers} online`
-              : "Public room"
-            : "Direct message"}
+        <h1 className="truncate text-sm font-bold leading-tight text-foreground sm:text-[15px]">
+          {title}
+        </h1>
+        <p className="flex items-center gap-1.5 truncate text-[11px] text-muted-foreground">
+          {connected ? (
+            <span className="chat-online-dot shrink-0" aria-hidden style={{ width: "0.45rem", height: "0.45rem" }} />
+          ) : null}
+          <span className="truncate">
+            {view.kind === "room"
+              ? roomMembers > 0
+                ? `${roomMembers} online`
+                : "Public room"
+              : "Direct message"}
+          </span>
         </p>
       </div>
       {view.kind === "dm" && profileId ? (
@@ -91,7 +108,28 @@ export function IrcChatHeader({ view, onBack, className }: IrcChatHeaderProps) {
           Profile
         </Button>
       ) : null}
-      <IrcConnectionBadge compact className="hidden shrink-0 lg:inline-flex" />
+      {view.kind === "dm" && onMinimizeDm ? (
+        <button
+          type="button"
+          onClick={onMinimizeDm}
+          aria-label="Minimize DM"
+          title="Minimize"
+          className="chat-icon-btn lg:hidden"
+        >
+          <Minus className="h-4 w-4" />
+        </button>
+      ) : null}
+      {view.kind === "dm" && onCloseDm ? (
+        <button
+          type="button"
+          onClick={onCloseDm}
+          aria-label="Close DM"
+          className="chat-icon-btn hidden lg:grid"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      ) : null}
+      <IrcConnectionBadge compact className="hidden shrink-0 sm:inline-flex" />
     </header>
   );
 }

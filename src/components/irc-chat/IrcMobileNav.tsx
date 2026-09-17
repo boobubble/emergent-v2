@@ -1,4 +1,4 @@
-import { ArrowLeft, Menu, Users } from "lucide-react";
+import { ArrowLeft, Menu, Minus, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { IrcConnectionBadge } from "./IrcConnectionBadge";
@@ -12,6 +12,7 @@ type IrcMobileNavProps = {
   onOpenRooms: () => void;
   onOpenMembers: () => void;
   onBack?: () => void;
+  onMinimizeDm?: () => void;
   className?: string;
 };
 
@@ -22,15 +23,16 @@ export function IrcMobileNav({
   onOpenRooms,
   onOpenMembers,
   onBack,
+  onMinimizeDm,
   className,
 }: IrcMobileNavProps) {
   const title =
-    view.kind === "dm" ? `@${view.peerNick}` : formatRoomLabel(roomName ?? view.roomId);
+    view.kind === "dm" ? view.peerNick : formatRoomLabel(roomName ?? view.roomId);
 
   return (
     <div
       className={cn(
-        "flex shrink-0 flex-col gap-2 border-b border-border/80 bg-background/95 px-3 py-2 backdrop-blur lg:hidden",
+        "chat-glass flex shrink-0 flex-col gap-2 px-3 py-2 md:hidden",
         className,
       )}
     >
@@ -52,11 +54,21 @@ export function IrcMobileNav({
           </Button>
         )}
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-foreground">{title}</p>
+          <p className="truncate text-sm font-bold text-foreground">{title}</p>
           {selfNick ? (
-            <p className="truncate text-[11px] text-muted-foreground">{selfNick}</p>
+            <p className="truncate text-[11px] text-muted-foreground">You: {selfNick}</p>
           ) : null}
         </div>
+        {view.kind === "dm" && onMinimizeDm ? (
+          <button
+            type="button"
+            onClick={onMinimizeDm}
+            className="chat-icon-btn shrink-0"
+            aria-label="Minimize DM"
+          >
+            <Minus className="h-4 w-4" />
+          </button>
+        ) : null}
         <IrcConnectionBadge className="shrink-0 px-2 py-0.5 text-[10px]" />
         <Button
           type="button"
