@@ -40,6 +40,10 @@ const {
   createIrcSessionManager,
   CONNECT_TIMEOUT_MS,
 } = require("./lib/irc-user-session.cjs");
+const {
+  parseIrcAccountLinksJson,
+  lookupIrcAccountLink,
+} = require("./lib/irc-account-links.cjs");
 
 const PORT = Number(process.env.PORT || 3000);
 const IRC_HOST = process.env.IRC_HOST || "yaarzo-ergo";
@@ -48,6 +52,12 @@ const IRC_SERVERNAME = process.env.IRC_SERVERNAME || "irc.yaarzo.com";
 const IRC_NICK = process.env.IRC_NICK || "YaarzoGateway";
 const IRC_PRIMARY_ROOM = String(process.env.IRC_PRIMARY_ROOM || "yaarzo-global").trim();
 const GATEWAY_GUEST_SECRET = process.env.GATEWAY_GUEST_SECRET || "";
+
+const ircAccountLinksParsed = parseIrcAccountLinksJson(process.env.IRC_ACCOUNT_LINKS_JSON);
+if (!ircAccountLinksParsed.ok) {
+  console.error("IRC_ACCOUNT_LINKS_JSON is invalid; registered account links disabled");
+}
+const ircAccountLinks = ircAccountLinksParsed.links;
 
 /** Time to receive the first WS auth frame after connect. */
 const WS_PRE_AUTH_TIMEOUT_MS = Number(process.env.WS_PRE_AUTH_TIMEOUT_MS || 30_000);
@@ -363,12 +373,19 @@ async function attachUserIrcSession(ws) {
   const desiredNick = ws.desiredNick;
   const userId = ws.userId;
   const identityType = ws.identityType;
+  const sasl =
+    identityType === "registered"
+      ? lookupIrcAccountLink(ircAccountLinks, userId, "registered")
+      : null;
 
   try {
     const result = await sessionManager.attachSession(ws, {
-      desiredNick,
+      desiredNick: sasl ? sasl.account : desiredNick,
       userId,
       identityType,
+      sasl: sasl
+        ? { account: sasl.account, password: sasl.password }
+        : null,
     });
     ws.ircNick = result.nick;
     ws.nick = result.nick;
@@ -546,7 +563,8 @@ async function handleWsAuth(ws, payload) {
   ws.userId = user.sub;
   ws.accessToken = payload.token;
   ws.identityType = "registered";
-  ws.desiredNick = nickFromRegisteredUser(user);
+  const linked = lookupIrcAccountLink(ircAccountLinks, user.sub, "registered");
+  ws.desiredNick = linked ? linked.account : nickFromRegisteredUser(user);
   return { ok: true, userId: user.sub, identityType: "registered" };
 }
 

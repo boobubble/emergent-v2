@@ -5,6 +5,7 @@ import {
   isProtectedNick,
   resolveNickCollision,
   nickFromRegisteredUser,
+  nickFallbackFromUserId,
   nickFromGuestDisplayName,
   nickFromGuestNickname,
 } from "./irc-nick.cjs";
@@ -33,6 +34,13 @@ describe("irc-nick", () => {
     assert.equal(
       nickFromRegisteredUser({ sub: "abc", user_metadata: { username: "JD" } }),
       "JD",
+    );
+  });
+
+  it("builds deterministic UUID fallback nick", () => {
+    assert.equal(
+      nickFallbackFromUserId("a0eebc99-9c0d-4ef0-8123-456789abcdef"),
+      "user_a0eebc99",
     );
   });
 

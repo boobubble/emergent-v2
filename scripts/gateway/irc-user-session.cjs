@@ -15,6 +15,8 @@ const { validateRoomId } = require("./irc-moderation.cjs");
 const {
   resolveNickCollision,
   isValidIrcNick,
+  normalizeIrcNick,
+  nickFallbackFromUserId,
 } = require("./irc-nick.cjs");
 const { createNamesAccumulator } = require("./irc-names.cjs");
 
@@ -33,6 +35,13 @@ const REGISTRATION_ERROR_NUMERICS = new Set([
   484, // ERR_DENIED
 ]);
 
+const SASL_FAIL_NUMERICS = new Set([
+  902, // ERR_NICKLOCKED
+  904, // ERR_SASLFAIL
+  905, // ERR_SASLTOOLONG
+  906, // ERR_SASLABORTED
+  907, // ERR_SASLALREADY
+]);
 const CHANNEL_PRIVMSG_RE = /^:([^!]+)!.* PRIVMSG (#\S+) :([\s\S]*)$/;
 const USER_PRIVMSG_RE = /^:([^!]+)!.* PRIVMSG ([^#\s][^\s]*) :([\s\S]*)$/;
 
@@ -83,14 +92,52 @@ function parseRegistrationErrorLine(line) {
   };
 }
 
+/**
+ * SASL PLAIN payload (IRCv3): base64("\0account\0password").
+ * Exported for tests; never log the return value in production paths.
+ */
+function encodeSaslPlain(account, password) {
+  return Buffer.from(`\0${account}\0${password}`, "utf8").toString("base64");
+}
+
+function parseSaslFailLine(line) {
+  const numeric = parseIrcNumeric(String(line || "").trim());
+  if (!numeric || !SASL_FAIL_NUMERICS.has(numeric)) return null;
+  return numeric;
+}
+
+function isCapLsLine(line) {
+  return /\bCAP\s+\S+\s+LS\b/i.test(line);
+}
+
+function isCapAckSasl(line) {
+  return /\bCAP\s+\S+\s+ACK\b/i.test(line) && /\bsasl\b/i.test(line);
+}
+
+function isCapNakSasl(line) {
+  return /\bCAP\s+\S+\s+NAK\b/i.test(line) && /\bsasl\b/i.test(line);
+}
+
+function isAuthenticatePlus(line) {
+  return /(?:^|\s)AUTHENTICATE \+$/i.test(String(line || "").trim());
+}
+
+function isSaslSuccessNumeric(line) {
+  const numeric = parseIrcNumeric(String(line || "").trim());
+  return numeric === 900 || numeric === 903;
+}
+
 function createIrcUserSession(options) {
   const {
     host,
     port,
     servername,
-    nick,
+    nick: initialNick,
     userId,
     identityType,
+    ergoAccount = null,
+    ergoPassword = null,
+    allowUnmappedReservedFallback = false,
     onRegistered,
     onLine,
     onNamesComplete,
@@ -103,7 +150,12 @@ function createIrcUserSession(options) {
   } = options;
 
   const connectTlsFn = connectTls || tls.connect.bind(tls);
+  const saslAccount = String(ergoAccount || "").trim();
+  const saslPassword = typeof ergoPassword === "string" ? ergoPassword : "";
+  const useSasl = Boolean(saslAccount && saslPassword);
+  const fallbackNick = nickFallbackFromUserId(userId);
 
+  let currentNick = initialNick;
   let socket = null;
   let buffer = "";
   let registered = false;
@@ -112,9 +164,92 @@ function createIrcUserSession(options) {
   let connectTimer = null;
   let connectSettled = false;
   let settleConnect = null;
+  let saslState = useSasl ? "cap_ls" : "none";
+  let saslOk = false;
+  let nickFallbackUsed = false;
   const joinedRooms = new Set();
   const namesAccumulator = createNamesAccumulator();
   const userIdent = sanitizeUserIdent(userId);
+
+  function failRegistration(message) {
+    settleConnect?.(new Error(message));
+  }
+
+  function sendMappedRegistration() {
+    writeLine(`NICK ${currentNick}`);
+    writeLine(`USER ${userIdent} 0 * :Yaarzo User`);
+    writeLine("CAP END");
+    saslState = "register";
+  }
+
+  function handleSaslLine(line) {
+    if (isCapNakSasl(line)) {
+      failRegistration("IRC SASL failed (CAP NAK)");
+      return true;
+    }
+
+    const saslFail = parseSaslFailLine(line);
+    if (saslFail) {
+      failRegistration(`IRC SASL failed (${saslFail})`);
+      return true;
+    }
+
+    if (saslState === "cap_ls" && isCapLsLine(line)) {
+      writeLine("CAP REQ :sasl");
+      saslState = "cap_req";
+      return true;
+    }
+
+    if (saslState === "cap_req") {
+      if (isCapAckSasl(line)) {
+        writeLine("AUTHENTICATE PLAIN");
+        saslState = "wait_plus";
+        return true;
+      }
+      if (/\bCAP\s+\S+\s+ACK\b/i.test(line)) {
+        failRegistration("IRC SASL failed (CAP ACK without sasl)");
+        return true;
+      }
+    }
+
+    if (saslState === "wait_plus" && isAuthenticatePlus(line)) {
+      writeLine(`AUTHENTICATE ${encodeSaslPlain(saslAccount, saslPassword)}`);
+      saslState = "wait_result";
+      return true;
+    }
+
+    if (
+      (saslState === "wait_plus" || saslState === "wait_result") &&
+      isSaslSuccessNumeric(line)
+    ) {
+      if (!saslOk) {
+        saslOk = true;
+        sendMappedRegistration();
+      }
+      return true;
+    }
+
+    if (!saslOk && isWelcomeNumeric(line)) {
+      failRegistration("IRC SASL failed (premature welcome)");
+      return true;
+    }
+
+    return false;
+  }
+
+  function handleUnmappedReserved433() {
+    if (useSasl) return false;
+    if (identityType !== "registered") return false;
+    if (!allowUnmappedReservedFallback) return false;
+    if (nickFallbackUsed) return false;
+    if (!fallbackNick || fallbackNick.toLowerCase() === currentNick.toLowerCase()) {
+      return false;
+    }
+    nickFallbackUsed = true;
+    currentNick = fallbackNick;
+    writeLine(`NICK ${currentNick}`);
+    return true;
+  }
 
   function clearTimers() {
     if (regTimer) {
@@ -145,20 +280,29 @@ function createIrcUserSession(options) {
       return;
     }
 
+    if (useSasl && !registered) {
+      if (handleSaslLine(line)) return;
+    }
+
     if (!registered) {
       const regErr = parseRegistrationErrorLine(line);
       if (regErr) {
+        if (regErr.code === "433" && handleUnmappedReserved433()) {
+          return;
+        }
         logger.warn?.(
-          `IRC registration rejected for ${nick} (${regErr.code}): ${regErr.message}`,
+          `IRC registration rejected for ${currentNick} (${regErr.code}): ${regErr.message}`,
         );
-        settleConnect?.(
-          new Error(`IRC registration failed (${regErr.code}): ${regErr.message}`),
-        );
+        failRegistration(`IRC registration failed (${regErr.code}): ${regErr.message}`);
         return;
       }
     }
 
     if (!registered && isWelcomeNumeric(line)) {
+      if (useSasl && !saslOk) {
+        failRegistration("IRC SASL failed (premature welcome)");
+        return;
+      }
       registered = true;
       onRegistered?.();
       settleConnect?.(null);
@@ -183,6 +327,10 @@ function createIrcUserSession(options) {
 
     return new Promise((resolve, reject) => {
       connectSettled = false;
+      saslState = useSasl ? "cap_ls" : "none";
+      saslOk = false;
+      nickFallbackUsed = false;
+      currentNick = initialNick;
 
       const finishConnect = (err) => {
         if (connectSettled) return;
@@ -216,7 +364,11 @@ function createIrcUserSession(options) {
       socket.setEncoding("utf8");
 
       socket.on("secureConnect", () => {
-        writeLine(`NICK ${nick}`);
+        if (useSasl) {
+          writeLine("CAP LS 302");
+          return;
+        }
+        writeLine(`NICK ${currentNick}`);
         writeLine(`USER ${userIdent} 0 * :Yaarzo User`);
       });
 
@@ -324,7 +476,9 @@ function createIrcUserSession(options) {
   }
 
   return {
-    nick,
+    get nick() {
+      return currentNick;
+    },
     userId,
     identityType,
     get registered() {
@@ -502,7 +656,22 @@ function createIrcSessionManager(options) {
   async function attachSession(ws, params) {
     unregisterWs(ws);
 
-    const resolvedNick = resolveNick(params.desiredNick);
+    const saslAccount = String(params.sasl?.account || "").trim();
+    const saslPassword = typeof params.sasl?.password === "string" ? params.sasl.password : "";
+    const useSasl = Boolean(saslAccount && saslPassword && params.identityType === "registered");
+
+    let resolvedNick;
+    if (useSasl) {
+      resolvedNick = normalizeIrcNick(saslAccount);
+      if (!resolvedNick || resolvedNick.toLowerCase() !== saslAccount.toLowerCase()) {
+        throw new Error("Could not allocate IRC nick");
+      }
+      if (occupiedNicks().has(resolvedNick.toLowerCase())) {
+        throw new Error("Could not allocate IRC nick");
+      }
+    } else {
+      resolvedNick = resolveNick(params.desiredNick);
+    }
     if (!resolvedNick) {
       throw new Error("Could not allocate IRC nick");
     }
@@ -520,9 +689,13 @@ function createIrcSessionManager(options) {
       nick: resolvedNick,
       userId: params.userId,
       identityType: params.identityType,
+      ergoAccount: useSasl ? saslAccount : null,
+      ergoPassword: useSasl ? saslPassword : null,
+      allowUnmappedReservedFallback:
+        params.identityType === "registered" && !useSasl,
       logger,
       onRegistered: () => {
-        logger.log?.(`IRC session registered: ${resolvedNick} (${params.identityType})`);
+        logger.log?.(`IRC session registered: ${session.nick} (${params.identityType})`);
       },
       onNamesComplete: (room, nicks) => handleSessionNames(ws, room, nicks),
       onLine: (line) => handleSessionLine(session, ws, line),
@@ -532,14 +705,15 @@ function createIrcSessionManager(options) {
         }
       },
       onError: (err) => {
-        logger.error?.(`IRC session error (${resolvedNick}):`, err?.message || err);
+        logger.error?.(`IRC session error (${session.nick}):`, err?.message || err);
       },
     });
 
     await session.connect();
+    identity.nick = session.nick;
     byWs.set(ws, session);
-    registerNick(ws, resolvedNick, identity);
-    return { session, nick: resolvedNick, userId: params.userId };
+    registerNick(ws, session.nick, identity);
+    return { session, nick: session.nick, userId: params.userId };
   }
 
   function getSession(ws) {
@@ -585,6 +759,7 @@ module.exports = {
   createIrcSessionManager,
   sanitizeUserIdent,
   parseRegistrationErrorLine,
+  encodeSaslPlain,
   REG_TIMEOUT_MS,
   CONNECT_TIMEOUT_MS,
   CHANNEL_PRIVMSG_RE,

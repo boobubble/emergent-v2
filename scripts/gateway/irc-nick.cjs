@@ -81,7 +81,19 @@ function nickFromRegisteredUser(user) {
 
   const normalized = normalizeIrcNick(raw);
   if (normalized) return normalized;
-  return normalizeIrcNick(`user_${String(user?.sub || "").slice(0, 8)}`) || "user_unknown";
+  return nickFallbackFromUserId(user?.sub);
+}
+
+/**
+ * Deterministic non-reserved nick from a user UUID (unmapped 433 fallback).
+ * @param {unknown} userId
+ */
+function nickFallbackFromUserId(userId) {
+  const hex = String(userId || "")
+    .replace(/-/g, "")
+    .replace(/[^A-Za-z0-9]/g, "")
+    .slice(0, 8);
+  return normalizeIrcNick(`user_${hex || "unknown"}`) || "user_unknown";
 }
 
 /**
@@ -141,6 +153,7 @@ module.exports = {
   isProtectedNick,
   isValidIrcNick,
   nickFromRegisteredUser,
+  nickFallbackFromUserId,
   nickFromGuestDisplayName,
   nickFromGuestNickname,
   resolveNickCollision,
