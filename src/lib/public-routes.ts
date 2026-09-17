@@ -74,6 +74,11 @@ export function isReadOnlyPublicAppPath(pathname: string): boolean {
   );
 }
 
+/** IRC-first /chatroom route — uses IrcChatCore instead of legacy ChatProvider. */
+export function isIrcChatroomPath(pathname: string): boolean {
+  return pathname === "/chatroom" || pathname.startsWith("/chatroom/");
+}
+
 /**
  * Guest surfaces that need GuestChatProvider. Content pages (blog, poetry, CMS)
  * must SSR without the lazy chat shell so crawlers see H1/body markup.

@@ -30,7 +30,10 @@ const {
 } = require("./lib/irc-nick.cjs");
 const { verifyGuestGatewayToken } = require("./lib/irc-guest-auth.cjs");
 const { validatePmSendPayload, isValidUuid } = require("./lib/irc-pm.cjs");
-const { createIrcSessionManager } = require("./lib/irc-user-session.cjs");
+const {
+  createIrcSessionManager,
+  CONNECT_TIMEOUT_MS,
+} = require("./lib/irc-user-session.cjs");
 
 const PORT = Number(process.env.PORT || 3000);
 const IRC_HOST = process.env.IRC_HOST || "yaarzo-ergo";
@@ -39,6 +42,13 @@ const IRC_SERVERNAME = process.env.IRC_SERVERNAME || "irc.yaarzo.com";
 const IRC_NICK = process.env.IRC_NICK || "YaarzoGateway";
 const IRC_PRIMARY_ROOM = String(process.env.IRC_PRIMARY_ROOM || "yaarzo-global").trim();
 const GATEWAY_GUEST_SECRET = process.env.GATEWAY_GUEST_SECRET || "";
+
+/** Time to receive the first WS auth frame after connect. */
+const WS_PRE_AUTH_TIMEOUT_MS = Number(process.env.WS_PRE_AUTH_TIMEOUT_MS || 30_000);
+/** Time allowed for per-user IRC TLS + 001 after auth validates (covers REG_TIMEOUT_MS). */
+const WS_IRC_ATTACH_TIMEOUT_MS = Number(
+  process.env.WS_IRC_ATTACH_TIMEOUT_MS || CONNECT_TIMEOUT_MS + 5_000,
+);
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY;
@@ -517,12 +527,25 @@ app.get("/health", (req, res) => {
 
 wss.on("connection", async (ws) => {
   let authenticated = false;
+  let authTimeout = null;
+  let ircAttachTimeout = null;
 
-  const authTimeout = setTimeout(() => {
+  function clearAuthTimeouts() {
+    if (authTimeout) {
+      clearTimeout(authTimeout);
+      authTimeout = null;
+    }
+    if (ircAttachTimeout) {
+      clearTimeout(ircAttachTimeout);
+      ircAttachTimeout = null;
+    }
+  }
+
+  authTimeout = setTimeout(() => {
     if (!authenticated) {
       ws.close(1008, "Authentication required");
     }
-  }, 8000);
+  }, WS_PRE_AUTH_TIMEOUT_MS);
 
   console.log("WebSocket client connected; awaiting authentication");
 
@@ -570,7 +593,20 @@ wss.on("connection", async (ws) => {
         return;
       }
 
+      clearTimeout(authTimeout);
+      authTimeout = null;
+
+      ircAttachTimeout = setTimeout(() => {
+        if (!authenticated) {
+          ws.close(1011, "IRC session timeout");
+        }
+      }, WS_IRC_ATTACH_TIMEOUT_MS);
+
       const session = await attachUserIrcSession(ws);
+
+      clearTimeout(ircAttachTimeout);
+      ircAttachTimeout = null;
+
       if (!session) {
         ws.close(1011, "IRC session failed");
         return;
@@ -578,7 +614,7 @@ wss.on("connection", async (ws) => {
 
       authenticated = true;
       ws.authenticated = true;
-      clearTimeout(authTimeout);
+      clearAuthTimeouts();
 
       ws.send(JSON.stringify({
         type: "gateway",
@@ -737,7 +773,7 @@ wss.on("connection", async (ws) => {
   });
 
   ws.on("close", () => {
-    clearTimeout(authTimeout);
+    clearAuthTimeouts();
     sessionManager.unregisterWs(ws);
     console.log("WebSocket client disconnected");
   });

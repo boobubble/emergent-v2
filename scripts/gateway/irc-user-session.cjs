@@ -7,6 +7,7 @@ const tls = require("tls");
 const { randomUUID } = require("node:crypto");
 const {
   isWelcomeNumeric,
+  parseIrcNumeric,
   toIrcChannel,
   fromIrcChannel,
 } = require("./irc-room-discovery.cjs");
@@ -19,9 +20,68 @@ const { createNamesAccumulator } = require("./irc-names.cjs");
 
 const REG_TIMEOUT_MS = 15_000;
 const CONNECT_TIMEOUT_MS = 20_000;
+const USER_IDENT_MAX_LEN = 20;
+
+/** IRC numerics that mean registration cannot complete (fail fast instead of 15s wait). */
+const REGISTRATION_ERROR_NUMERICS = new Set([
+  432, // ERR_ERRONEUSNICKNAME
+  433, // ERR_NICKNAMEINUSE
+  436, // ERR_NICKCOLLISION
+  437, // ERR_UNAVAILRESOURCE
+  461, // ERR_NEEDMOREPARAMS
+  464, // ERR_PASSWDMISMATCH
+  484, // ERR_DENIED
+]);
 
 const CHANNEL_PRIVMSG_RE = /^:([^!]+)!.* PRIVMSG (#\S+) :([\s\S]*)$/;
 const USER_PRIVMSG_RE = /^:([^!]+)!.* PRIVMSG ([^#\s][^\s]*) :([\s\S]*)$/;
+
+/**
+ * IRC USER username field — printable ASCII, no spaces/CRLF.
+ * Strip punctuation (e.g. UUID hyphens) so Ergo accepts the ident.
+ * @param {string} userId
+ */
+function sanitizeUserIdent(userId) {
+  const cleaned = String(userId || "unknown")
+    .replace(/[\r\n]/g, "")
+    .replace(/[^A-Za-z0-9]/g, "")
+    .slice(0, 12);
+  const suffix = cleaned || "user";
+  return `yaarzo_${suffix}`.slice(0, USER_IDENT_MAX_LEN);
+}
+
+/**
+ * @param {string} line
+ * @returns {{ code: string, message: string } | null}
+ */
+function parseRegistrationErrorLine(line) {
+  const value = String(line || "").trim();
+  if (!value) return null;
+
+  if (value.startsWith("ERROR")) {
+    const message =
+      value.includes(":")
+        ? value.slice(value.indexOf(":") + 1).trim()
+        : value.replace(/^ERROR\s*/i, "").trim();
+    return {
+      code: "ERROR",
+      message: message || "IRC connection rejected",
+    };
+  }
+
+  const numeric = parseIrcNumeric(value);
+  if (!numeric || !REGISTRATION_ERROR_NUMERICS.has(numeric)) return null;
+
+  const message =
+    value.includes(":")
+      ? value.slice(value.lastIndexOf(":") + 1).trim()
+      : value;
+
+  return {
+    code: String(numeric),
+    message: message || `IRC registration error ${numeric}`,
+  };
+}
 
 function createIrcUserSession(options) {
   const {
@@ -37,7 +97,12 @@ function createIrcUserSession(options) {
     onClose,
     onError,
     logger = console,
+    connectTls,
+    regTimeoutMs = REG_TIMEOUT_MS,
+    connectTimeoutMs = CONNECT_TIMEOUT_MS,
   } = options;
+
+  const connectTlsFn = connectTls || tls.connect.bind(tls);
 
   let socket = null;
   let buffer = "";
@@ -45,8 +110,11 @@ function createIrcUserSession(options) {
   let destroyed = false;
   let regTimer = null;
   let connectTimer = null;
+  let connectSettled = false;
+  let settleConnect = null;
   const joinedRooms = new Set();
   const namesAccumulator = createNamesAccumulator();
+  const userIdent = sanitizeUserIdent(userId);
 
   function clearTimers() {
     if (regTimer) {
@@ -77,10 +145,23 @@ function createIrcUserSession(options) {
       return;
     }
 
+    if (!registered) {
+      const regErr = parseRegistrationErrorLine(line);
+      if (regErr) {
+        logger.warn?.(
+          `IRC registration rejected for ${nick} (${regErr.code}): ${regErr.message}`,
+        );
+        settleConnect?.(
+          new Error(`IRC registration failed (${regErr.code}): ${regErr.message}`),
+        );
+        return;
+      }
+    }
+
     if (!registered && isWelcomeNumeric(line)) {
       registered = true;
-      clearTimers();
       onRegistered?.();
+      settleConnect?.(null);
       return;
     }
 
@@ -101,17 +182,31 @@ function createIrcUserSession(options) {
     if (socket && !socket.destroyed) return Promise.resolve();
 
     return new Promise((resolve, reject) => {
+      connectSettled = false;
+
+      const finishConnect = (err) => {
+        if (connectSettled) return;
+        connectSettled = true;
+        clearTimers();
+        if (err) {
+          destroy(err.message || "connect failed");
+          reject(err instanceof Error ? err : new Error(String(err)));
+          return;
+        }
+        resolve();
+      };
+
+      settleConnect = finishConnect;
+
       connectTimer = setTimeout(() => {
-        destroy("connect timeout");
-        reject(new Error("IRC connect timeout"));
-      }, CONNECT_TIMEOUT_MS);
+        finishConnect(new Error("IRC connect timeout"));
+      }, connectTimeoutMs);
 
       regTimer = setTimeout(() => {
-        destroy("registration timeout");
-        reject(new Error("IRC registration timeout"));
-      }, REG_TIMEOUT_MS);
+        finishConnect(new Error("IRC registration timeout"));
+      }, regTimeoutMs);
 
-      socket = tls.connect({
+      socket = connectTlsFn({
         host,
         port,
         servername,
@@ -122,7 +217,7 @@ function createIrcUserSession(options) {
 
       socket.on("secureConnect", () => {
         writeLine(`NICK ${nick}`);
-        writeLine(`USER yaarzo_${String(userId).slice(0, 12)} 0 * :Yaarzo User`);
+        writeLine(`USER ${userIdent} 0 * :Yaarzo User`);
       });
 
       socket.on("data", (data) => {
@@ -131,27 +226,25 @@ function createIrcUserSession(options) {
         buffer = lines.pop() || "";
         for (const line of lines) {
           handleLine(line);
-          if (registered && connectTimer) {
-            clearTimeout(connectTimer);
-            connectTimer = null;
-            resolve();
-          }
         }
       });
 
       socket.on("error", (err) => {
         onError?.(err);
         if (!registered) {
-          clearTimers();
-          reject(err);
+          finishConnect(err);
         }
       });
 
       socket.on("close", () => {
+        const wasRegistered = registered;
         socket = null;
         registered = false;
         joinedRooms.clear();
         clearTimers();
+        if (!wasRegistered && !connectSettled) {
+          finishConnect(new Error("IRC connection closed before registration"));
+        }
         onClose?.();
       });
     });
@@ -490,6 +583,10 @@ function createIrcSessionManager(options) {
 module.exports = {
   createIrcUserSession,
   createIrcSessionManager,
+  sanitizeUserIdent,
+  parseRegistrationErrorLine,
+  REG_TIMEOUT_MS,
+  CONNECT_TIMEOUT_MS,
   CHANNEL_PRIVMSG_RE,
   USER_PRIVMSG_RE,
 };
