@@ -47,6 +47,11 @@ export class IrcChatCore {
 
   private state: IrcChatState = createInitialIrcChatState();
 
+  /** IRC-confirmed public channel membership (single active room). */
+  private joinedPublicRoom: string | null = null;
+  /** Latest UI/core switch target; used to ignore stale room.joined acks. */
+  private desiredPublicRoom: string | null = null;
+
   constructor(options: IrcChatCoreOptions) {
     this.wsUrl = options.wsUrl ?? IRC_CHAT_DEFAULT_WS_URL;
     this.roomsUrl = options.roomsUrl ?? null;
@@ -79,6 +84,7 @@ export class IrcChatCore {
 
   disconnect(): void {
     this.transport.disconnect();
+    this.resetPublicRoomSwitchState();
     this.patchState({
       status: "closed",
       statusDetail: undefined,
@@ -97,6 +103,11 @@ export class IrcChatCore {
   joinRoom(roomId: string): boolean {
     const normalized = roomId.trim();
     if (!normalized) return false;
+
+    this.desiredPublicRoom = normalized;
+    if (normalized === this.joinedPublicRoom) {
+      return true;
+    }
     return this.transport.join(normalized);
   }
 
@@ -180,13 +191,21 @@ export class IrcChatCore {
     if (status === "authenticated") {
       const userId = this.transport.authenticatedUserId;
       const ircNick = this.transport.nick;
+      this.resetPublicRoomSwitchState();
       this.patchState({
         status: "authenticated",
         statusDetail: detail,
         userId,
         ircNick,
+        members: {},
       });
-      this.transport.join(IRC_CHAT_PRODUCT_ROOM);
+      this.joinRoom(IRC_CHAT_PRODUCT_ROOM);
+      return;
+    }
+
+    if (status === "closed" || status === "error") {
+      this.resetPublicRoomSwitchState();
+      this.patchState({ status, statusDetail: detail, members: {} });
       return;
     }
 
@@ -195,6 +214,14 @@ export class IrcChatCore {
 
   private handleGatewayEvent(event: ParsedGatewayEvent): void {
     switch (event.kind) {
+      case "room_joined": {
+        this.handleRoomJoined(event.room);
+        break;
+      }
+      case "room_parted": {
+        this.handleRoomParted(event.room);
+        break;
+      }
       case "room_names": {
         const members = applyRoomNamesSnapshot(
           this.state.members[event.room] ?? [],
@@ -283,6 +310,46 @@ export class IrcChatCore {
       default:
         break;
     }
+  }
+
+  private handleRoomJoined(room: string): void {
+    const normalized = room.trim();
+    if (!normalized) return;
+
+    if (this.desiredPublicRoom && normalized !== this.desiredPublicRoom) {
+      this.transport.part(normalized);
+      return;
+    }
+
+    const previous = this.joinedPublicRoom;
+    this.joinedPublicRoom = normalized;
+
+    if (previous && previous !== normalized) {
+      this.transport.part(previous);
+      this.clearLiveMembersForRoom(previous);
+    }
+  }
+
+  private handleRoomParted(room: string): void {
+    const normalized = room.trim();
+    if (!normalized) return;
+    this.clearLiveMembersForRoom(normalized);
+    if (this.joinedPublicRoom === normalized) {
+      this.joinedPublicRoom = null;
+    }
+  }
+
+  private clearLiveMembersForRoom(roomId: string): void {
+    if (!this.state.members[roomId]) return;
+    const nextMembers = { ...this.state.members };
+    delete nextMembers[roomId];
+    this.patchState({ members: nextMembers });
+  }
+
+  private resetPublicRoomSwitchState(): void {
+    this.joinedPublicRoom = null;
+    this.desiredPublicRoom = null;
+    this.presenceDedup.clear();
   }
 
   private patchState(patch: Partial<IrcChatState>): void {

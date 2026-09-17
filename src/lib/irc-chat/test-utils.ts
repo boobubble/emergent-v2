@@ -92,6 +92,18 @@ export function namesFrame(
   return JSON.stringify({ type: "room.names", room, members });
 }
 
+export function roomJoinedFrame(room: string): string {
+  return JSON.stringify({ type: "room.joined", room });
+}
+
+export function roomPartedFrame(room: string): string {
+  return JSON.stringify({ type: "room.parted", room });
+}
+
+export function parseRoomSwitchFrame(raw: string) {
+  return JSON.parse(raw) as { type?: string; room?: string };
+}
+
 export function publicMessageFrame(opts: {
   room: string;
   messageId: string;

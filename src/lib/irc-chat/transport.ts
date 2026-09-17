@@ -2,6 +2,7 @@ import type { IrcChatAuth } from "./auth";
 import {
   buildAuthFrame,
   buildJoinFrame,
+  buildPartFrame,
   buildPmSendFrame,
   buildPublicSendFrame,
   isValidMessageId,
@@ -118,6 +119,18 @@ export class IrcChatTransport {
     if (!isIrcChatLiveRoom(normalizedRoom, this.knownRoomIds)) return false;
     try {
       this.ws.send(JSON.stringify(buildJoinFrame(normalizedRoom)));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  part(room: string): boolean {
+    const normalizedRoom = room.trim();
+    if (!normalizedRoom || !this.connected || !this.ws) return false;
+    if (!isIrcChatLiveRoom(normalizedRoom, this.knownRoomIds)) return false;
+    try {
+      this.ws.send(JSON.stringify(buildPartFrame(normalizedRoom)));
       return true;
     } catch {
       return false;

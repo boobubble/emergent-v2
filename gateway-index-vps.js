@@ -718,6 +718,31 @@ wss.on("connection", async (ws) => {
       return;
     }
 
+    if (payload.type === "room.part") {
+      const room = validateRoomId(payload.room);
+      if (!room) {
+        ws.send(JSON.stringify({
+          type: "error",
+          code: "INVALID_ROOM",
+          message: "Invalid IRC room",
+        }));
+        return;
+      }
+
+      const userSession = sessionManager.getSession(ws);
+      if (!userSession || !userSession.partRoom(room)) {
+        ws.send(JSON.stringify({
+          type: "error",
+          code: "IRC_UNAVAILABLE",
+          message: "Chat service is temporarily unavailable",
+        }));
+        return;
+      }
+
+      ws.send(JSON.stringify({ type: "room.parted", room }));
+      return;
+    }
+
     if (payload.type === "pm.send") {
       const userSession = sessionManager.getSession(ws);
       const parsed = validatePmSendPayload(payload, ws.ircNick || ws.nick);

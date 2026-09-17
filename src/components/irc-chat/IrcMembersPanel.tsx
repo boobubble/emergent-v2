@@ -1,10 +1,13 @@
-import { MessageCircle, X } from "lucide-react";
+import { useMemo, useState } from "react";
+import { MessageCircle, Search, User, X } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useIrcChatState } from "@/lib/irc-chat";
-import { nickAvatarHue, nickInitial } from "./irc-chat-ui";
+import { useProfilePopup } from "@/lib/profile-popup-context";
+import { nickAvatarHue, nickInitial, profileUserIdForMember } from "./irc-chat-ui";
 
 type IrcMembersPanelProps = {
   roomId: string;
@@ -22,76 +25,122 @@ export function IrcMembersPanel({
   className,
 }: IrcMembersPanelProps) {
   const state = useIrcChatState();
+  const { openProfile } = useProfilePopup();
+  const [query, setQuery] = useState("");
   const members = state.members[roomId] ?? [];
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return members;
+    return members.filter((m) => m.nick.toLowerCase().includes(q));
+  }, [members, query]);
 
   return (
     <aside
       className={cn(
-        "flex h-full w-[280px] shrink-0 flex-col border-l border-border/80 bg-card/50 shadow-sm",
+        "flex h-full w-[280px] shrink-0 flex-col border-l border-border/70 bg-background",
         className,
       )}
     >
-      <div className="flex items-center justify-between border-b border-border/80 px-4 py-3.5">
+      <div className="flex items-center justify-between border-b border-border/60 px-3 py-2.5">
         <div>
-          <h2 className="text-sm font-semibold text-foreground">Online</h2>
-          <p className="text-[11px] text-muted-foreground">{members.length} in room</p>
+          <h2 className="text-[13px] font-semibold text-foreground">Online users</h2>
+          <p className="text-[10px] text-muted-foreground">{members.length} in room</p>
         </div>
         {onClose ? (
-          <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={onClose}>
+          <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={onClose}>
             <X className="h-4 w-4" />
           </Button>
         ) : null}
       </div>
 
-      <ScrollArea className="min-h-0 flex-1 px-2 py-2">
+      <div className="px-2.5 py-2">
+        <div className="relative">
+          <Search
+            className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/80"
+            aria-hidden
+          />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search nicks…"
+            className="h-8 rounded-lg border-border/60 bg-muted/25 pl-8 text-[13px] shadow-none focus-visible:bg-background"
+          />
+        </div>
+      </div>
+
+      <ScrollArea className="min-h-0 flex-1 px-1.5 pb-2">
         {members.length === 0 ? (
-          <p className="px-3 py-8 text-center text-xs text-muted-foreground">
+          <p className="px-3 py-6 text-center text-[11px] text-muted-foreground">
             Waiting for IRC NAMES…
           </p>
+        ) : filtered.length === 0 ? (
+          <p className="px-3 py-6 text-center text-[11px] text-muted-foreground">
+            No matching nicks.
+          </p>
         ) : (
-          <ul className="space-y-0.5">
-            {members.map((member) => {
+          <ul className="space-y-px">
+            {filtered.map((member) => {
               const isSelf = Boolean(
                 selfNick && member.nick.toLowerCase() === selfNick.toLowerCase(),
               );
               const hue = nickAvatarHue(member.nick);
+              const profileId = profileUserIdForMember(member);
 
               return (
                 <li
                   key={`${member.nick}:${member.userId}`}
-                  className="group flex items-center gap-2.5 rounded-lg px-2 py-2 hover:bg-muted/70"
+                  className="group flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-muted/55"
                 >
-                  <Avatar className="h-9 w-9 border border-border/50 shadow-sm">
+                  <Avatar className="h-7 w-7 border border-border/40">
                     <AvatarFallback
-                      className="text-xs font-semibold text-white"
-                      style={{ backgroundColor: `hsl(${hue} 58% 48%)` }}
+                      className="text-[10px] font-semibold text-white"
+                      style={{ backgroundColor: `hsl(${hue} 52% 46%)` }}
                     >
                       {nickInitial(member.nick)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-foreground">
+                    <p className="truncate text-[13px] font-medium leading-tight text-foreground">
                       {member.nick}
                       {isSelf ? (
-                        <span className="ml-1 text-[11px] font-normal text-muted-foreground">(you)</span>
+                        <span className="ml-1.5 text-[9px] font-semibold uppercase tracking-wide text-primary">
+                          You
+                        </span>
                       ) : null}
                     </p>
                     {member.isGuest ? (
-                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Guest</p>
+                      <p className="text-[9px] font-medium uppercase tracking-wide text-muted-foreground">
+                        Guest
+                      </p>
                     ) : null}
                   </div>
-                  {!isSelf ? (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 shrink-0 gap-1 px-2 text-xs opacity-80 group-hover:opacity-100"
-                      onClick={() => onDm(member.nick)}
-                    >
-                      <MessageCircle className="h-3.5 w-3.5" />
-                      DM
-                    </Button>
-                  ) : null}
+                  <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+                    {profileId ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        aria-label={`View profile for ${member.nick}`}
+                        onClick={() => openProfile(profileId)}
+                      >
+                        <User className="h-3.5 w-3.5" />
+                      </Button>
+                    ) : null}
+                    {!isSelf ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                        aria-label={`Direct message ${member.nick}`}
+                        onClick={() => onDm(member.nick)}
+                      >
+                        <MessageCircle className="h-3.5 w-3.5" />
+                      </Button>
+                    ) : null}
+                  </div>
                 </li>
               );
             })}

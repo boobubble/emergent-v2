@@ -50,6 +50,7 @@ export type ParsedGatewayEvent =
   | { kind: "connected" }
   | { kind: "authenticated"; userId: string; ircNick: string }
   | { kind: "room_joined"; room: string }
+  | { kind: "room_parted"; room: string }
   | { kind: "room_names"; room: string; members: IrcChatMember[] }
   | { kind: "public_message"; room: string; messageId: string; nick: string; userId: string; text: string }
   | { kind: "public_message_sent"; room: string; messageId: string; nick: string; userId: string; text: string }
@@ -75,6 +76,11 @@ export function parseGatewayEvent(frame: GatewayFrame): ParsedGatewayEvent | nul
   if (frame.type === "room.joined") {
     const room = asNonEmptyString(frame.room);
     return room ? { kind: "room_joined", room } : null;
+  }
+
+  if (frame.type === "room.parted") {
+    const room = asNonEmptyString(frame.room);
+    return room ? { kind: "room_parted", room } : null;
   }
 
   if (frame.type === "room.names") {
@@ -184,6 +190,10 @@ export function buildAuthFrame(auth: IrcChatAuth, token: string): OutgoingAuthFr
 
 export function buildJoinFrame(room: string): { type: "room.join"; room: string } {
   return { type: "room.join", room: room.trim() };
+}
+
+export function buildPartFrame(room: string): { type: "room.part"; room: string } {
+  return { type: "room.part", room: room.trim() };
 }
 
 export function buildPublicSendFrame(
