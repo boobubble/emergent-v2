@@ -1,4 +1,4 @@
-import { MessageSquare } from "lucide-react";
+import { Loader2, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GuestNicknameDialog } from "@/components/chat/GuestNicknameDialog";
 import { useGuestChat } from "@/lib/guest-chat-context";
@@ -30,7 +30,14 @@ export function IrcChatGuestGate() {
     );
   }
 
-  if (guest.session?.gatewayToken) return null;
+  if (guest.session?.gatewayToken) {
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-2 text-sm text-muted-foreground">
+        <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
+        Connecting to IRC…
+      </div>
+    );
+  }
 
   return (
     <>

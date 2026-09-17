@@ -5,27 +5,22 @@ import { useAuth } from "@/lib/auth-store";
 import { useGuestChat } from "@/lib/guest-chat-context";
 import type { IrcChatAuth } from "./auth";
 import { IrcChatCoreProvider } from "./context";
+import {
+  computeIrcIdentityKey,
+  type IrcGuestSessionSlice,
+} from "./irc-runtime-identity";
+import { reconcileIrcCore } from "./irc-runtime-lifecycle";
 import { IrcChatCore } from "./store";
 
-function buildAuth(
+function buildAuthForIdentity(
   user: { id: string; isGuest?: boolean } | null,
-  guestSession: {
-    visitorId: string;
-    displayName: string;
-    nickname: string;
-    expiresAt?: string;
-    gatewayToken?: string;
-  } | null,
+  guestSession: IrcGuestSessionSlice | null,
+  resolveToken: () => Promise<string | null>,
 ): IrcChatAuth | null {
   if (user && !user.isGuest) {
     return {
       kind: "registered",
-      resolveToken: async () => {
-        const supabase = await loadBrowserSupabase();
-        const { data, error } = await supabase.auth.refreshSession();
-        if (error) return null;
-        return data.session?.access_token ?? null;
-      },
+      resolveToken,
     };
   }
 
@@ -46,52 +41,75 @@ function buildAuth(
 }
 
 /**
- * Route-level IRC core lifecycle: fresh JWT per socket for registered users,
- * guest HMAC bundle from GuestChatProvider for visitors.
+ * Route-level IRC core lifecycle: one IrcChatCore per stable IRC identity.
+ * Fresh JWT per socket via resolveToken ref (registered guests use HMAC bundle).
  */
 export function IrcChatRuntimeProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const guest = useGuestChat();
   const [core, setCore] = useState<IrcChatCore | null>(null);
   const coreRef = useRef<IrcChatCore | null>(null);
+  const identityKeyRef = useRef<string | null>(null);
 
-  const guestSession = !user && guest.enabled ? guest.session : null;
-  const auth = buildAuth(user, guestSession);
+  const resolveTokenImplRef = useRef<() => Promise<string | null>>(async () => null);
+  resolveTokenImplRef.current = async () => {
+    const supabase = await loadBrowserSupabase();
+    const { data, error } = await supabase.auth.refreshSession();
+    if (error) return null;
+    return data.session?.access_token ?? null;
+  };
+
+  const guestIrcSession: IrcGuestSessionSlice | null =
+    !user && guest.session?.visitorId && guest.session.gatewayToken
+      ? guest.session
+      : null;
+
+  const identityKey = computeIrcIdentityKey(user, guestIrcSession);
+
+  const userRef = useRef(user);
+  const guestIrcSessionRef = useRef(guestIrcSession);
+  userRef.current = user;
+  guestIrcSessionRef.current = guestIrcSession;
 
   useEffect(() => {
-    if (!auth) {
-      coreRef.current?.disconnect();
-      coreRef.current = null;
-      setCore(null);
-      return;
-    }
-
-    const instance = new IrcChatCore({
-      auth,
-      roomsUrl: ircRoomsClientUrl(),
+    const result = reconcileIrcCore({
+      nextIdentityKey: identityKey,
+      prevIdentityKey: identityKeyRef.current,
+      existingCore: coreRef.current,
+      createCore: () => {
+        const auth = buildAuthForIdentity(
+          userRef.current,
+          guestIrcSessionRef.current,
+          () => resolveTokenImplRef.current(),
+        );
+        if (!auth) return null;
+        const instance = new IrcChatCore({
+          auth,
+          roomsUrl: ircRoomsClientUrl(),
+        });
+        instance.connect();
+        void instance.discoverRooms();
+        return instance;
+      },
+      destroyCore: (instance) => {
+        instance.disconnect();
+      },
     });
 
-    coreRef.current?.disconnect();
-    coreRef.current = instance;
-    setCore(instance);
-    instance.connect();
-    void instance.discoverRooms();
+    identityKeyRef.current = result.identityKey;
+    coreRef.current = result.core;
+    setCore(result.core);
+  }, [identityKey]);
 
+  useEffect(() => {
     return () => {
-      instance.disconnect();
-      if (coreRef.current === instance) {
-        coreRef.current = null;
-      }
+      coreRef.current?.disconnect();
+      coreRef.current = null;
+      identityKeyRef.current = null;
     };
-  }, [
-    user?.id,
-    user?.isGuest,
-    guestSession?.visitorId,
-    guestSession?.gatewayToken,
-    auth?.kind,
-  ]);
+  }, []);
 
-  if (!auth || !core) {
+  if (!identityKey || !core) {
     return <>{children}</>;
   }
 
