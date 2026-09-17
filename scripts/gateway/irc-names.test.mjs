@@ -29,4 +29,32 @@ describe("irc-names", () => {
     );
     assert.deepEqual(parsed?.nicks, ["max"]);
   });
+
+  it("parseNames366Line accepts RFC-style End of /NAMES trailing text", () => {
+    const parsed = parseNames366Line(
+      ":irc.yaarzo.com 366 max #yaarzo-global :End of /NAMES",
+    );
+    assert.deepEqual(parsed, { room: "yaarzo-global" });
+  });
+
+  it("parseNames366Line accepts Ergo End of NAMES list trailing text", () => {
+    const parsed = parseNames366Line(
+      ":ergo.test 366 test10 #yaarzo-global :End of NAMES list",
+    );
+    assert.deepEqual(parsed, { room: "yaarzo-global" });
+  });
+
+  it("accumulator completes Ergo 366 after multi-user 353", () => {
+    const acc = createNamesAccumulator();
+    acc.ingest353(
+      ":irc.yaarzo.com 353 test10 = #yaarzo-global :@Arman +maliha test10",
+    );
+    const end = acc.ingest366(
+      ":ergo.test 366 test10 #yaarzo-global :End of NAMES list",
+    );
+    assert.deepEqual(end, {
+      room: "yaarzo-global",
+      nicks: ["Arman", "maliha", "test10"],
+    });
+  });
 });

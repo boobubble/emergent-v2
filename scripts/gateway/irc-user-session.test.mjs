@@ -1,5 +1,8 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { EventEmitter } from "node:events";
 import {
   createIrcUserSession,
@@ -25,15 +28,29 @@ function sessionWithMockSocket(overrides = {}) {
     host: "yaarzo-ergo",
     port: 6697,
     servername: "irc.yaarzo.com",
-    nick: "TestNick",
+    nick: overrides.nick ?? "TestNick",
     userId: overrides.userId ?? "visitor_abc123",
     identityType: "guest",
     connectTls: () => mockSocket,
     regTimeoutMs: overrides.regTimeoutMs ?? 15_000,
     connectTimeoutMs: overrides.connectTimeoutMs ?? 20_000,
     logger: { log() {}, warn() {}, error() {} },
+    onNamesComplete: overrides.onNamesComplete,
+    onLine: overrides.onLine,
   });
   return { session, mockSocket };
+}
+
+function emitIrcLines(mockSocket, lines) {
+  const payload = lines.map((line) => `${line}\r\n`).join("");
+  mockSocket.emit("data", payload);
+}
+
+async function connectRegistered(session, mockSocket) {
+  const pending = session.connect();
+  mockSocket.emit("secureConnect");
+  mockSocket.emit("data", ":irc.yaarzo.com 001 test7 :Welcome to Ergo\r\n");
+  await pending;
 }
 
 describe("sanitizeUserIdent", () => {
@@ -161,5 +178,119 @@ describe("createIrcUserSession connect()", () => {
     session.quit("test done");
     assert.equal(session.registered, false);
     assert.equal(mockSocket.destroyed, true);
+  });
+});
+
+describe("createIrcUserSession JOIN / NAMES lifecycle", () => {
+  const ROOM = "yaarzo-global";
+  const CHANNEL = "#yaarzo-global";
+
+  it("completes NAMES with normalized multi-user snapshot after JOIN", async () => {
+    const namesSnapshots = [];
+    const joinLines = [];
+    const { session, mockSocket } = sessionWithMockSocket({
+      nick: "test7",
+      onNamesComplete: (room, nicks) => {
+        namesSnapshots.push({ room, nicks: [...nicks] });
+      },
+      onLine: (line) => {
+        if (line.includes(" JOIN ")) joinLines.push(line);
+      },
+    });
+
+    const writes = [];
+    mockSocket.write = (chunk) => {
+      writes.push(String(chunk).trim());
+      return true;
+    };
+
+    await connectRegistered(session, mockSocket);
+    assert.equal(session.registered, true);
+
+    assert.equal(session.joinRoom(ROOM), true);
+    assert.ok(
+      writes.some((line) => line === `JOIN ${CHANNEL}`),
+      `expected JOIN ${CHANNEL}, got: ${writes.join(" | ")}`,
+    );
+
+    emitIrcLines(mockSocket, [
+      ":test7!yaarzo_visitorabc@irc.yaarzo.com JOIN :#yaarzo-global",
+    ]);
+    assert.equal(joinLines.length, 1);
+    assert.match(joinLines[0], /JOIN :?#yaarzo-global/i);
+
+    assert.equal(session.requestNames(ROOM), true);
+    assert.ok(writes.some((line) => line === `NAMES ${CHANNEL}`));
+
+    emitIrcLines(mockSocket, [
+      ":irc.yaarzo.com 353 test7 = #yaarzo-global :@Arman +maliha test7",
+      ":irc.yaarzo.com 366 test7 #yaarzo-global :End of /NAMES",
+    ]);
+
+    assert.equal(namesSnapshots.length, 1);
+    assert.equal(namesSnapshots[0].room, ROOM);
+    assert.deepEqual(
+      [...namesSnapshots[0].nicks].sort(),
+      ["Arman", "maliha", "test7"],
+    );
+    for (const nick of namesSnapshots[0].nicks) {
+      assert.doesNotMatch(nick, /^[@+%&~]/);
+    }
+  });
+
+  it("duplicate requestNames before 366 resets accumulator and yields self-only snapshot", async () => {
+    const namesSnapshots = [];
+    const { session, mockSocket } = sessionWithMockSocket({
+      nick: "test7",
+      onNamesComplete: (room, nicks) => {
+        namesSnapshots.push({ room, nicks: [...nicks] });
+      },
+    });
+
+    const writes = [];
+    mockSocket.write = (chunk) => {
+      writes.push(String(chunk).trim());
+      return true;
+    };
+
+    await connectRegistered(session, mockSocket);
+    session.joinRoom(ROOM);
+
+    assert.equal(session.requestNames(ROOM), true);
+    emitIrcLines(mockSocket, [
+      ":irc.yaarzo.com 353 test7 = #yaarzo-global :@Arman +maliha",
+    ]);
+
+    assert.equal(session.requestNames(ROOM), true);
+    assert.equal(
+      writes.filter((line) => line === `NAMES ${CHANNEL}`).length,
+      2,
+      "second requestNames sends another NAMES (documents destructive reset if duplicated)",
+    );
+
+    emitIrcLines(mockSocket, [
+      ":irc.yaarzo.com 353 test7 = #yaarzo-global :test7",
+      ":irc.yaarzo.com 366 test7 #yaarzo-global :End of /NAMES",
+    ]);
+
+    assert.equal(namesSnapshots.length, 1);
+    assert.equal(namesSnapshots[0].room, ROOM);
+    assert.deepEqual(namesSnapshots[0].nicks, ["test7"]);
+  });
+});
+
+describe("gateway attachUserIrcSession NAMES policy", () => {
+  const gatewaySource = readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), "../../gateway-index-vps.js"),
+    "utf8",
+  );
+
+  it("joins primary on attach but does not requestRoomNames (client room.join owns NAMES)", () => {
+    const attachFn = gatewaySource.match(
+      /async function attachUserIrcSession\(ws\)[\s\S]*?\n\}/,
+    );
+    assert.ok(attachFn?.[0], "attachUserIrcSession should exist in gateway-index-vps.js");
+    assert.match(attachFn[0], /result\.session\.joinRoom\(primary\)/);
+    assert.doesNotMatch(attachFn[0], /requestRoomNames\s*\(/);
   });
 });

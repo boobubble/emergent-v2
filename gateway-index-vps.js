@@ -376,7 +376,6 @@ async function attachUserIrcSession(ws) {
     const primary = IRC_PRIMARY_ROOM;
     if (primary) {
       result.session.joinRoom(primary);
-      requestRoomNames(ws, primary);
     }
 
     return result;

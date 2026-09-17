@@ -8,8 +8,8 @@ const IGNORE_NICKS = new Set(["yaarzogateway", "yaarzo-gateway"]);
 
 /** RFC 353 — `:server 353 nick [=|@] #channel :nick1 nick2` */
 const NUMERIC_353_RE = / \d+ \S+ [=@] (#\S+) :(.+)$/i;
-/** RFC 366 — `:server 366 nick #channel :End of /NAMES` */
-const NUMERIC_366_RE = / \d+ \S+ (#\S+) :End of \/NAMES/i;
+/** RFC 366 RPL_ENDOFNAMES — channel param; trailing text varies by IRCd (Ergo: "End of NAMES list"). */
+const NUMERIC_366_RE = / 366 \S+ (#\S+) :/i;
 
 function stripIrcNameToken(token) {
   let t = String(token || "").trim();
