@@ -28,7 +28,13 @@ const {
   nickFromRegisteredUser,
   nickFromGuestNickname,
 } = require("./lib/irc-nick.cjs");
-const { verifyGuestGatewayToken } = require("./lib/irc-guest-auth.cjs");
+const {
+  verifyGuestGatewayToken,
+  diagnoseGuestGatewayToken,
+  fingerprintGatewaySecret,
+  guestAuthFieldMeta,
+  guestAuthExpiryValid,
+} = require("./lib/irc-guest-auth.cjs");
 const { validatePmSendPayload, isValidUuid } = require("./lib/irc-pm.cjs");
 const {
   createIrcSessionManager,
@@ -446,22 +452,68 @@ function connectIRC() {
   });
 }
 
+function resolveGuestWsNickname(guest) {
+  const rawNick = guest.nickname;
+  if (rawNick !== undefined && rawNick !== null && String(rawNick).trim()) {
+    return { nickname: String(rawNick).trim(), nicknameSource: "nickname" };
+  }
+  return {
+    nickname: String(guest.displayName || "").trim(),
+    nicknameSource: "displayName_fallback",
+  };
+}
+
+function logGuestIrcWsAuthDiagnostic(guest, nickname, nicknameSource, verifyResult, verifyReason) {
+  console.log(
+    JSON.stringify({
+      event: "guest_irc_ws_auth",
+      branch: "guest",
+      verifyResult,
+      verifyReason,
+      nicknameSource,
+      secretFingerprint: fingerprintGatewaySecret(GATEWAY_GUEST_SECRET),
+      visitorId: guestAuthFieldMeta(guest.visitorId),
+      nickname: guestAuthFieldMeta(nickname),
+      expiresAt: {
+        ...guestAuthFieldMeta(guest.expiresAt),
+        expiryValid: guestAuthExpiryValid(guest.expiresAt),
+      },
+      token: guestAuthFieldMeta(guest.token),
+    }),
+  );
+}
+
 async function handleWsAuth(ws, payload) {
   if (payload.guest && typeof payload.guest === "object") {
     const guest = payload.guest;
     if (!GATEWAY_GUEST_SECRET) {
+      const { nickname, nicknameSource } = resolveGuestWsNickname(guest);
+      logGuestIrcWsAuthDiagnostic(
+        guest,
+        nickname,
+        nicknameSource,
+        false,
+        "MISSING_SECRET",
+      );
       return { ok: false, code: "GUEST_AUTH_DISABLED", message: "Guest IRC auth is not configured" };
     }
 
-    const nickname = String(guest.nickname || guest.displayName || "").trim();
-    const valid = verifyGuestGatewayToken(
-      {
-        visitorId: guest.visitorId,
-        nickname,
-        expiresAt: guest.expiresAt,
-        token: guest.token,
-      },
-      GATEWAY_GUEST_SECRET,
+    const { nickname, nicknameSource } = resolveGuestWsNickname(guest);
+    const verifyParams = {
+      visitorId: guest.visitorId,
+      nickname,
+      expiresAt: guest.expiresAt,
+      token: guest.token,
+    };
+    const diagnosis = diagnoseGuestGatewayToken(verifyParams, GATEWAY_GUEST_SECRET);
+    const valid = verifyGuestGatewayToken(verifyParams, GATEWAY_GUEST_SECRET);
+
+    logGuestIrcWsAuthDiagnostic(
+      guest,
+      nickname,
+      nicknameSource,
+      valid,
+      diagnosis.reason,
     );
 
     if (!valid) {

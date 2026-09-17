@@ -8,7 +8,10 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { createHash } from "node:crypto";
 import {
-  gatewayGuestSecret,
+  fingerprintGatewaySecret,
+  guestAuthExpiryValid,
+  guestAuthFieldMeta,
+  resolveGatewayGuestSecret,
   signGuestGatewayToken,
 } from "@/lib/gateway-guest-auth.server";
 import { withRateLimit } from "./rate-limit-middleware";
@@ -132,10 +135,25 @@ export const startGuestChatSession = createServerFn({ method: "POST" })
     } as never);
     if (error) throw new Error(error.message || "Could not start guest session.");
 
-    const secret = gatewayGuestSecret();
+    const { secret, source: secretSource } = resolveGatewayGuestSecret();
     const gatewayToken = secret
       ? signGuestGatewayToken(visitorId, nick.nickname, expiresAt, secret)
       : "";
+
+    console.log(
+      JSON.stringify({
+        event: "guest_irc_token_signed",
+        secretSource,
+        secretFingerprint: fingerprintGatewaySecret(secret),
+        visitorId: guestAuthFieldMeta(visitorId),
+        nickname: guestAuthFieldMeta(nick.nickname),
+        expiresAt: {
+          ...guestAuthFieldMeta(expiresAt),
+          expiryValid: guestAuthExpiryValid(expiresAt),
+        },
+        tokenLength: gatewayToken.length,
+      }),
+    );
 
     return {
       visitorId,
