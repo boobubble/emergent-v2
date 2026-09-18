@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { LogIn, MessageSquare, PanelLeftClose, Search, X } from "lucide-react";
+import { LogIn, MessageSquare, Moon, PanelLeftClose, Search, Sun, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { BrandText } from "@/components/BrandMark";
@@ -52,6 +52,19 @@ export function IrcChatSidebar({
   const activeRoomId = activeView.kind === "room" ? activeView.roomId : null;
   const [roomSearch, setRoomSearch] = useState("");
   const [roomFilter, setRoomFilter] = useState<"all">("all");
+  const [theme, setTheme] = useState<"dark" | "light">(() => {
+    if (typeof document === "undefined") return "dark";
+    return document.documentElement.classList.contains("light") ? "light" : "dark";
+  });
+
+  const toggleTheme = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    localStorage.setItem("palrgo-theme", next);
+    document.documentElement.classList.toggle("light", next === "light");
+  };
+
+  const selfHue = selfNick ? nickAvatarHue(selfNick) : 220;
 
   const rooms = useMemo(() => {
     const list = Object.values(state.rooms).sort((a, b) =>
@@ -95,7 +108,7 @@ export function IrcChatSidebar({
             <button
               type="button"
               onClick={onCollapse}
-              className="absolute right-1 top-2 grid h-6 w-6 place-items-center rounded-md text-muted-foreground hover:bg-muted/60 md:hidden"
+              className="absolute right-2 top-1/2 z-10 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-md text-muted-foreground transition hover:bg-white/5 hover:text-foreground md:hidden"
               aria-label="Hide sidebar"
             >
               <PanelLeftClose className="h-3.5 w-3.5" />
@@ -223,7 +236,9 @@ export function IrcChatSidebar({
             )}
           </nav>
 
-          <div className="sidebar-flex-spacer min-h-0 flex-1" />
+          <div className="sidebar-flex-spacer min-h-0 shrink" aria-hidden />
+
+          <div className="mx-2 border-t border-border/50" />
 
         <div className="sidebar-section-label flex items-center gap-1 px-2 pt-2">
           <MessageSquare className="h-3 w-3 opacity-70" aria-hidden />
@@ -254,8 +269,8 @@ export function IrcChatSidebar({
                       type="button"
                       onClick={() => onSelectDm(peerNick)}
                       className={cn(
-                        "irc-room-row w-full",
-                        active && "irc-room-row--active",
+                        "premium-nav-item w-full min-h-9 gap-2 px-2 py-1.5",
+                        active && "premium-nav-item-active sidebar-room-active",
                       )}
                     >
                       <span
@@ -289,11 +304,39 @@ export function IrcChatSidebar({
         </ScrollArea>
         </div>
 
-        <div className="sidebar-bottom-panel shrink-0 border-t border-border/40 bg-card/20 px-2 py-2 backdrop-blur-sm">
-          {user ? (
-            <p className="text-center text-[10px] text-muted-foreground">
-              IRC: <span className="font-semibold text-foreground/80">{selfNick ?? "…"}</span>
+        <div className="sidebar-bottom-panel shrink-0 border-t border-border/40 bg-card/20 px-1.5 pt-1 pb-1.5 backdrop-blur-sm">
+          <div className="mb-1 flex items-center gap-1">
+            <p className="min-w-0 flex-1 truncate px-1 text-[10px] font-medium text-muted-foreground">
+              {rooms.length} channel{rooms.length === 1 ? "" : "s"} · IRC
             </p>
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-muted-foreground transition hover:bg-white/5 hover:text-foreground"
+              aria-label="Toggle theme"
+              title={theme === "dark" ? "Light mode" : "Dark mode"}
+            >
+              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
+          </div>
+          {user ? (
+            <div className="irc-sidebar-profile-card flex items-center gap-2">
+              <span
+                className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white ring-2 ring-background/80"
+                style={{ backgroundColor: `hsl(${selfHue} 48% 42%)` }}
+              >
+                {selfNick ? nickInitial(selfNick) : "?"}
+              </span>
+              <div className="min-w-0 flex-1 leading-tight">
+                <div className="truncate text-[12px] font-bold text-foreground">
+                  {selfNick ?? "Connecting…"}
+                </div>
+                <div className="flex items-center gap-1 text-[10px] text-emerald-500">
+                  <span className="chat-online-dot" style={{ width: "0.35rem", height: "0.35rem" }} aria-hidden />
+                  IRC online
+                </div>
+              </div>
+            </div>
           ) : (
             <div className="rounded-xl border border-border/60 bg-card/70 p-2.5">
               <p className="mb-2 text-[10px] text-muted-foreground">

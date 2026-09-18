@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useIrcChatState } from "@/lib/irc-chat";
 import type { IrcActiveView } from "./irc-chat-types";
 import { dmComposerPlaceholder, roomComposerPlaceholder } from "./irc-chat-ui";
+import "@/components/chat/message-input.css";
 import "./irc-message-input.css";
 
 type IrcMessageComposerProps = {
@@ -94,6 +95,7 @@ export function IrcMessageComposer({
     <form
       data-irc-chat-composer=""
       data-irc-chat-composer-kind={composerKind}
+      data-chat-composer={compact ? "dm" : "room"}
       className={cn(
         "chat-composer-root min-w-0",
         compact

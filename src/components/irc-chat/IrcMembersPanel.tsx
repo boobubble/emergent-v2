@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { MessageCircle, Search, User, UserCheck, Users2, X } from "lucide-react";
+import { MessageCircle, Search, User, UserCheck, UserCog, Users2, X } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -52,7 +52,19 @@ export function IrcMembersPanel({
       style={forceDesktopColumn ? { display: "flex" } : undefined}
     >
       <div className="flex h-full min-h-0 flex-col overflow-hidden">
-        <div className="flex items-center gap-1 px-2 pt-1.5">
+        <div className="irc-members-toolbar flex items-center justify-end gap-1 px-2 py-1.5">
+          <a
+            href="/feed?tab=account"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Profile settings"
+            aria-label="Profile settings"
+            className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
+          >
+            <UserCog className="h-5 w-5" />
+          </a>
+        </div>
+        <div className="flex items-center gap-1 px-2 pt-0.5 pb-1.5">
           {onClose ? (
             <button
               type="button"
@@ -186,16 +198,14 @@ export function IrcMembersPanel({
                         </Button>
                       ) : null}
                       {!isSelf ? (
-                        <Button
+                        <button
                           type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground"
                           aria-label={`Direct message ${member.nick}`}
                           onClick={() => onDm(member.nick)}
+                          className="grid min-h-11 min-w-11 shrink-0 place-items-center self-center rounded-md text-muted-foreground opacity-70 transition-all hover:bg-primary/10 hover:text-primary group-hover:opacity-100 lg:h-7 lg:w-7 lg:min-h-0 lg:min-w-0"
                         >
                           <MessageCircle className="h-3.5 w-3.5" />
-                        </Button>
+                        </button>
                       ) : null}
                     </div>
                   </li>

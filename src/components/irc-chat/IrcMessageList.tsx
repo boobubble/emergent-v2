@@ -143,7 +143,7 @@ export function IrcMessageList({ messages, selfNick, view, className }: IrcMessa
 
   return (
     <ScrollArea
-      className={cn("min-h-0 flex-1", className)}
+      className={cn("irc-message-canvas min-h-0 flex-1", className)}
     >
       <div className="flex-1 px-3 py-3 text-xs sm:px-4 md:text-[15px]">
         {connecting && messages.length === 0 ? (
