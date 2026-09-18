@@ -1,12 +1,20 @@
 import { useMemo, useState } from "react";
-import { MessageCircle, Search, User, UserCheck, UserCog, Users2, X } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { MessageCircle, Search, User, UserCog, Users2, X } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useIrcChatState } from "@/lib/irc-chat";
 import { useProfilePopup } from "@/lib/profile-popup-context";
+import { useRemoteProfileDirectory } from "@/lib/use-remote-profiles";
+import {
+  collectIrcOnlineRegisteredUserIds,
+  filterIrcOnlineMembers,
+  listOfflineRegisteredProfiles,
+  type IrcOfflineDirectoryProfile,
+} from "./irc-offline-directory";
 import { nickAvatarHue, nickInitial, profileUserIdForMember } from "./irc-chat-ui";
+import type { IrcChatMember } from "@/lib/irc-chat";
 
 type IrcMembersPanelProps = {
   roomId: string;
@@ -16,6 +24,131 @@ type IrcMembersPanelProps = {
   forceDesktopColumn?: boolean;
   className?: string;
 };
+
+function MemberAvatar({
+  label,
+  hue,
+  avatarUrl,
+  offline,
+}: {
+  label: string;
+  hue: number;
+  avatarUrl?: string;
+  offline?: boolean;
+}) {
+  return (
+    <div className="relative shrink-0">
+      <Avatar
+        className={cn(
+          "h-8 w-8 border border-border/50 lg:h-7 lg:w-7",
+          offline && "opacity-75 saturate-[0.85]",
+        )}
+      >
+        {avatarUrl ? <AvatarImage src={avatarUrl} alt="" /> : null}
+        <AvatarFallback
+          className="text-[10px] font-semibold text-white"
+          style={{ backgroundColor: `hsl(${hue} 48% 42%)` }}
+        >
+          {nickInitial(label)}
+        </AvatarFallback>
+      </Avatar>
+      {!offline ? (
+        <span
+          className="absolute -bottom-px -right-px h-2 w-2 rounded-full border border-background bg-emerald-500"
+          aria-hidden
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function OnlineMemberRow({
+  member,
+  isSelf,
+  onDm,
+  onProfile,
+}: {
+  member: IrcChatMember;
+  isSelf: boolean;
+  onDm: (nick: string) => void;
+  onProfile: (userId: string) => void;
+}) {
+  const hue = nickAvatarHue(member.nick);
+  const profileId = profileUserIdForMember(member);
+
+  return (
+    <li className="irc-member-row group">
+      <MemberAvatar label={member.nick} hue={hue} />
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[13px] font-semibold leading-tight text-foreground/90 lg:text-[12px]">
+          {member.nick}
+          {isSelf ? (
+            <span className="ml-1.5 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">
+              You
+            </span>
+          ) : null}
+        </p>
+      </div>
+      <div className="flex shrink-0 items-center gap-0.5 opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100 sm:focus-within:opacity-100">
+        {profileId ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 rounded-lg"
+            aria-label={`View profile for ${member.nick}`}
+            onClick={() => onProfile(profileId)}
+          >
+            <User className="h-3.5 w-3.5" />
+          </Button>
+        ) : null}
+        {!isSelf ? (
+          <button
+            type="button"
+            aria-label={`Direct message ${member.nick}`}
+            onClick={() => onDm(member.nick)}
+            className="grid min-h-11 min-w-11 shrink-0 place-items-center self-center rounded-md text-muted-foreground opacity-70 transition-all hover:bg-primary/10 hover:text-primary group-hover:opacity-100 lg:h-7 lg:w-7 lg:min-h-0 lg:min-w-0"
+          >
+            <MessageCircle className="h-3.5 w-3.5" />
+          </button>
+        ) : null}
+      </div>
+    </li>
+  );
+}
+
+function OfflineProfileRow({
+  profile,
+  onProfile,
+}: {
+  profile: IrcOfflineDirectoryProfile;
+  onProfile: (userId: string) => void;
+}) {
+  const hue = nickAvatarHue(profile.username);
+
+  return (
+    <li className="irc-member-row irc-member-row--offline group">
+      <MemberAvatar label={profile.username} hue={hue} avatarUrl={profile.avatarUrl} offline />
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[13px] font-semibold leading-tight text-muted-foreground lg:text-[12px]">
+          {profile.username}
+        </p>
+      </div>
+      <div className="flex shrink-0 items-center opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100 sm:focus-within:opacity-100">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 rounded-lg text-muted-foreground"
+          aria-label={`View profile for ${profile.username}`}
+          onClick={() => onProfile(profile.userId)}
+        >
+          <User className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+    </li>
+  );
+}
 
 export function IrcMembersPanel({
   roomId,
@@ -27,15 +160,25 @@ export function IrcMembersPanel({
 }: IrcMembersPanelProps) {
   const state = useIrcChatState();
   const { openProfile } = useProfilePopup();
+  const { profiles: directoryProfiles, loading: directoryLoading } = useRemoteProfileDirectory();
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(true);
   const members = state.members[roomId] ?? [];
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return members;
-    return members.filter((m) => m.nick.toLowerCase().includes(q));
-  }, [members, query]);
+  const onlineFiltered = useMemo(
+    () => filterIrcOnlineMembers(members, query),
+    [members, query],
+  );
+
+  const ircOnlineRegisteredIds = useMemo(
+    () => collectIrcOnlineRegisteredUserIds(state.members, state.userId),
+    [state.members, state.userId],
+  );
+
+  const offlineProfiles = useMemo(
+    () => listOfflineRegisteredProfiles(directoryProfiles, ircOnlineRegisteredIds, query),
+    [directoryProfiles, ircOnlineRegisteredIds, query],
+  );
 
   const inSheet = Boolean(onClose);
 
@@ -44,9 +187,9 @@ export function IrcMembersPanel({
       data-chatroom-members=""
       data-irc-column="members"
       className={cn(
-        "flex h-full w-60 shrink-0 flex-col border-l border-border bg-card",
+        "irc-members-panel flex h-full w-[240px] max-w-[240px] shrink-0 flex-col border-l border-border/80 bg-card/95 shadow-[inset_1px_0_0_hsl(var(--border)/0.35)]",
         !forceDesktopColumn && !inSheet && "hidden lg:flex",
-        inSheet && "w-full max-w-none border-l-0",
+        inSheet && "w-full max-w-none border-l-0 shadow-none",
         className,
       )}
       style={forceDesktopColumn ? { display: "flex" } : undefined}
@@ -64,7 +207,8 @@ export function IrcMembersPanel({
             <UserCog className="h-5 w-5" />
           </a>
         </div>
-        <div className="flex items-center gap-1 px-2 pt-0.5 pb-1.5">
+
+        <div className="flex items-center gap-1 px-2 pb-1.5 pt-0.5">
           {onClose ? (
             <button
               type="button"
@@ -75,21 +219,10 @@ export function IrcMembersPanel({
               <X className="h-4 w-4" />
             </button>
           ) : null}
-          <div className="flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1 rounded-full bg-primary px-2 py-2 text-[11px] font-semibold text-primary-foreground shadow-sm">
+          <div className="irc-members-tab irc-members-tab--active min-h-10 flex-1">
             <Users2 className="h-3.5 w-3.5 shrink-0" aria-hidden />
             <span className="truncate">Users</span>
-            <span className="text-[10px] tabular-nums opacity-90">{members.length}</span>
           </div>
-          <button
-            type="button"
-            disabled
-            title="Friends (not available for IRC room list)"
-            className="flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1 rounded-full px-2 py-2 text-[11px] font-semibold text-muted-foreground opacity-55"
-          >
-            <UserCheck className="h-3.5 w-3.5 shrink-0" aria-hidden />
-            <span className="truncate">Friends</span>
-            <span className="text-[10px] tabular-nums opacity-70">0</span>
-          </button>
           <button
             type="button"
             onClick={() => setSearchOpen((s) => !s)}
@@ -107,12 +240,8 @@ export function IrcMembersPanel({
           </button>
         </div>
 
-        <div className="sidebar-section-label px-3 pb-1 pt-0.5">
-          ONLINE — {members.length}
-        </div>
-
         {searchOpen ? (
-          <div className="relative mx-3 mt-2">
+          <div className="relative mx-2 mb-1">
             <Search
               className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground"
               aria-hidden
@@ -122,7 +251,7 @@ export function IrcMembersPanel({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search users…"
-              className="min-h-11 w-full rounded-full bg-white/5 py-2 pl-8 pr-8 text-xs text-foreground outline-none ring-1 ring-border placeholder:text-muted-foreground focus:ring-primary"
+              className="sidebar-search-input min-h-9 w-full rounded-full py-1.5 pl-8 pr-8 text-xs"
             />
             {query ? (
               <button
@@ -138,79 +267,56 @@ export function IrcMembersPanel({
         ) : null}
 
         <ScrollArea className="min-h-0 flex-1 px-1 pb-2 pt-0.5">
+          <div className="sidebar-section-label px-2 pb-1 pt-0.5">
+            ONLINE — {members.length}
+          </div>
           {members.length === 0 ? (
-            <p className="px-2 py-8 text-center text-[11px] leading-relaxed text-muted-foreground">
+            <p className="px-2 py-4 text-center text-[11px] leading-relaxed text-muted-foreground">
               Waiting for IRC NAMES…
             </p>
-          ) : filtered.length === 0 ? (
-            <p className="px-2 py-8 text-center text-[11px] text-muted-foreground">
+          ) : onlineFiltered.length === 0 ? (
+            <p className="px-2 py-4 text-center text-[11px] text-muted-foreground">
               No matching nicks.
             </p>
           ) : (
             <ul className="space-y-0.5">
-              {filtered.map((member) => {
+              {onlineFiltered.map((member) => {
                 const isSelf = Boolean(
                   selfNick && member.nick.toLowerCase() === selfNick.toLowerCase(),
                 );
-                const hue = nickAvatarHue(member.nick);
-                const profileId = profileUserIdForMember(member);
-
                 return (
-                  <li
+                  <OnlineMemberRow
                     key={`${member.nick}:${member.userId}`}
-                    className="group flex min-h-[44px] w-full items-center gap-0.5 rounded-md px-1 py-0 transition-colors hover:bg-white/5 lg:h-9 lg:max-h-9 lg:min-h-9 lg:gap-1 lg:px-1.5"
-                  >
-                    <div className="relative shrink-0">
-                      <Avatar className="h-8 w-8 border border-border/50 lg:h-7 lg:w-7">
-                        <AvatarFallback
-                          className="text-[10px] font-semibold text-white"
-                          style={{ backgroundColor: `hsl(${hue} 48% 42%)` }}
-                        >
-                          {nickInitial(member.nick)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span
-                        className="absolute -bottom-px -right-px h-2 w-2 rounded-full border border-background bg-emerald-500"
-                        aria-hidden
-                      />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-[13px] font-semibold leading-tight text-foreground/90 lg:text-[12px]">
-                        {member.nick}
-                        {isSelf ? (
-                          <span className="ml-1.5 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">
-                            You
-                          </span>
-                        ) : null}
-                      </p>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-0.5 opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100 sm:focus-within:opacity-100">
-                      {profileId ? (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 rounded-lg"
-                          aria-label={`View profile for ${member.nick}`}
-                          onClick={() => openProfile(profileId)}
-                        >
-                          <User className="h-3.5 w-3.5" />
-                        </Button>
-                      ) : null}
-                      {!isSelf ? (
-                        <button
-                          type="button"
-                          aria-label={`Direct message ${member.nick}`}
-                          onClick={() => onDm(member.nick)}
-                          className="grid min-h-11 min-w-11 shrink-0 place-items-center self-center rounded-md text-muted-foreground opacity-70 transition-all hover:bg-primary/10 hover:text-primary group-hover:opacity-100 lg:h-7 lg:w-7 lg:min-h-0 lg:min-w-0"
-                        >
-                          <MessageCircle className="h-3.5 w-3.5" />
-                        </button>
-                      ) : null}
-                    </div>
-                  </li>
+                    member={member}
+                    isSelf={isSelf}
+                    onDm={onDm}
+                    onProfile={openProfile}
+                  />
                 );
               })}
+            </ul>
+          )}
+
+          <div className="sidebar-section-label mt-3 px-2 pb-1 pt-1">
+            OFFLINE — {offlineProfiles.length}
+          </div>
+          {directoryLoading && offlineProfiles.length === 0 ? (
+            <p className="px-2 py-3 text-center text-[10px] text-muted-foreground">
+              Loading directory…
+            </p>
+          ) : offlineProfiles.length === 0 ? (
+            <p className="px-2 py-3 text-center text-[10px] leading-relaxed text-muted-foreground">
+              No registered users to show.
+            </p>
+          ) : (
+            <ul className="space-y-0.5 pb-1">
+              {offlineProfiles.map((profile) => (
+                <OfflineProfileRow
+                  key={profile.userId}
+                  profile={profile}
+                  onProfile={openProfile}
+                />
+              ))}
             </ul>
           )}
         </ScrollArea>

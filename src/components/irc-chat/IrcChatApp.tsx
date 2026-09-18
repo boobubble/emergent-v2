@@ -396,8 +396,8 @@ function IrcChatAppShell() {
               />
             </SheetContent>
           </Sheet>
-          <Sheet open={membersOpen} onOpenChange={setMembersOpen}>
-            <SheetContent side="right" className="w-[min(100vw,300px)] p-0">
+            <Sheet open={membersOpen} onOpenChange={setMembersOpen}>
+            <SheetContent side="right" className="w-[min(100vw,260px)] p-0">
               {activeView.kind === "dm" ? (
                 <IrcDmInfoPanel
                   peerNick={activeView.peerNick}
@@ -419,7 +419,7 @@ function IrcChatAppShell() {
         </>
       ) : !isLargeDesktop ? (
         <Sheet open={membersOpen} onOpenChange={setMembersOpen}>
-          <SheetContent side="right" className="w-[min(100vw,300px)] p-0">
+          <SheetContent side="right" className="w-[min(100vw,260px)] p-0">
             {activeView.kind === "dm" ? (
               <IrcDmInfoPanel
                 peerNick={activeView.peerNick}

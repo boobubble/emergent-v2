@@ -75,7 +75,7 @@ export function IrcChatHeader({
       className={cn(
         "chat-glass sticky top-0 z-20 shrink-0",
         isDesktop
-          ? "hidden h-16 items-center justify-between gap-1 px-2 sm:gap-2 sm:px-6 md:flex pl-3"
+          ? "chat-glass irc-center-room-header hidden h-16 items-center justify-between gap-1 px-2 sm:gap-2 sm:px-6 md:flex pl-3"
           : "flex min-h-[3.75rem] items-center gap-3 px-3 py-2.5 sm:min-h-16 sm:px-5",
         onBack && !isDesktop ? "pl-2 sm:pl-3" : !isDesktop ? "pl-3 sm:pl-5" : undefined,
         className,

@@ -194,7 +194,7 @@ export function IrcChatSidebar({
                   <div key={room.id}>
                     <div
                       className={cn(
-                        "premium-nav-item group/room min-h-8 gap-1.5 px-2 py-1",
+                        "premium-nav-item group/room min-h-7 gap-1 px-2 py-0.5",
                         active && "premium-nav-item-active sidebar-room-active",
                       )}
                     >
@@ -240,12 +240,12 @@ export function IrcChatSidebar({
 
           <div className="mx-2 border-t border-border/50" />
 
-        <div className="sidebar-section-label flex items-center gap-1 px-2 pt-2">
-          <MessageSquare className="h-3 w-3 opacity-70" aria-hidden />
+        <div className="sidebar-section-label flex items-center gap-1.5 px-2 pt-1.5 pb-0.5 text-[10px] font-bold uppercase tracking-wide">
+          <MessageSquare className="h-3 w-3 text-primary/70" aria-hidden />
           Direct messages
         </div>
 
-        <ScrollArea className="sidebar-scroll min-h-0 max-h-[38%] shrink-0 px-1.5 pb-2">
+        <ScrollArea className="sidebar-scroll min-h-0 max-h-[32%] shrink-0 px-1.5 pb-1">
           {dmThreads.length === 0 ? (
             <p className="px-2 py-3 text-[11px] leading-relaxed text-muted-foreground">
               No DMs yet. Message someone from the member list.

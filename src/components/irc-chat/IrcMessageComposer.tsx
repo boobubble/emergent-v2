@@ -51,7 +51,7 @@ export function IrcMessageComposer({
   const bar = (
     <div
       className={cn(
-        "chat-composer-glow chat-composer-bar group relative flex min-w-0 items-end gap-0.5 rounded-3xl border border-border bg-card/60 pb-0 pt-2 pr-1 shadow-sm backdrop-blur-md transition-[border-color,box-shadow]",
+        "chat-composer-glow chat-composer-bar group relative flex min-w-0 items-end gap-0.5 rounded-3xl border border-border/80 bg-card/70 pb-0 pt-1.5 pr-1 shadow-md backdrop-blur-md transition-[border-color,box-shadow,transform] duration-150 focus-within:border-primary/30",
         compact
           ? "pl-1 sm:gap-0.5 sm:pl-2 sm:pr-1"
           : "pl-2 sm:gap-1 sm:pl-4 sm:pr-2",
@@ -97,10 +97,10 @@ export function IrcMessageComposer({
       data-irc-chat-composer-kind={composerKind}
       data-chat-composer={compact ? "dm" : "room"}
       className={cn(
-        "chat-composer-root min-w-0",
+        "chat-composer-root irc-composer-shell min-w-0",
         compact
-          ? "overflow-x-auto px-1.5 py-1"
-          : "overflow-x-auto px-2 py-1 sm:px-6 sm:py-0",
+          ? "overflow-x-auto px-1.5 py-1.5"
+          : "overflow-x-auto px-3 py-2 sm:px-6 sm:py-2.5",
         className,
       )}
       onSubmit={(e) => {

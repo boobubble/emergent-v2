@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
-import { Clock, Loader2 } from "lucide-react";
+import { Clock, Hash, Loader2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { ircConnectionLabel, useIrcChatState, type IrcChatMessage } from "@/lib/irc-chat";
@@ -35,7 +35,7 @@ function MessageRow({
   const hue = nickAvatarHue(msg.nick);
 
   return (
-    <div className="group/msg flex max-w-full gap-2.5 py-0.5 sm:gap-3">
+    <div className="group/msg flex max-w-full gap-2 py-0.5 sm:gap-2.5">
       {showMeta ? (
         <div
           className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white ring-1 ring-border/30 sm:h-8 sm:w-8"
@@ -102,18 +102,22 @@ function EmptyConversation({
       : null;
 
   return (
-    <div className="irc-empty-conversation flex flex-col items-center justify-center px-6 py-16 text-center">
+    <div className="irc-empty-conversation flex flex-col items-center justify-center px-6 py-14 text-center">
       <div
-        className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-border/60 bg-card/80 text-3xl shadow-sm"
+        className="irc-empty-icon-shell mb-5 flex h-16 w-16 items-center justify-center text-primary"
         aria-hidden
       >
-        💬
+        {view.kind === "room" ? (
+          <Hash className="h-7 w-7" strokeWidth={2.25} />
+        ) : (
+          <span className="text-2xl">💬</span>
+        )}
       </div>
-      <p className="text-base font-bold tracking-tight text-foreground">
+      <p className="text-lg font-bold tracking-tight text-foreground">
         {view.kind === "room" ? roomTitle : view.peerNick}
       </p>
-      <p className="mt-1.5 text-sm font-medium text-muted-foreground">No messages yet</p>
-      <p className="mt-2 max-w-[18rem] text-xs leading-relaxed text-muted-foreground/90">
+      <p className="mt-1 text-sm font-semibold text-muted-foreground">No messages yet</p>
+      <p className="mt-2 max-w-[20rem] text-xs leading-relaxed text-muted-foreground/90">
         {connected
           ? "Say hello and start the conversation."
           : "Connect to IRC to send messages."}

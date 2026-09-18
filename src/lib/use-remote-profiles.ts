@@ -274,3 +274,12 @@ export function useRemoteProfiles() {
   }
   return { profiles, loading: snap.loading };
 }
+
+/**
+ * Raw profiles_directory rows without Supabase presence-derived online status.
+ * Use for IRC offline registered-user directory (IRC remains online source of truth).
+ */
+export function useRemoteProfileDirectory() {
+  const snap = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+  return { profiles: snap.rawProfiles, loading: snap.loading };
+}
