@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
-import { Clock, Loader2, MessagesSquare } from "lucide-react";
+import { Clock, Loader2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { ircConnectionLabel, useIrcChatState, type IrcChatMessage } from "@/lib/irc-chat";
@@ -12,6 +12,9 @@ import {
   nickInitial,
 } from "./irc-chat-ui";
 import "@/components/chat/message-list.css";
+
+const BUBBLE_SHELL = "w-max max-w-[min(80%,20rem)] shrink-0";
+const MSG_BODY_CLASS = "text-[13px] leading-snug sm:text-sm";
 
 type IrcMessageListProps = {
   messages: IrcChatMessage[];
@@ -32,29 +35,29 @@ function MessageRow({
   const hue = nickAvatarHue(msg.nick);
 
   return (
-    <div className="group/msg flex gap-2 py-1 sm:gap-2.5 sm:py-1.5">
+    <div className="group/msg flex max-w-full gap-2.5 py-0.5 sm:gap-3">
       {showMeta ? (
         <div
-          className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white ring-1 ring-border/30"
+          className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white ring-1 ring-border/30 sm:h-8 sm:w-8"
           style={{ backgroundColor: `hsl(${hue} 48% 42%)` }}
           aria-hidden
         >
           {nickInitial(msg.nick)}
         </div>
       ) : (
-        <div className="w-8 shrink-0" aria-hidden />
+        <div className="w-7 shrink-0 sm:w-8" aria-hidden />
       )}
-      <div className="min-w-0 max-w-[min(100%,32rem)] flex-1">
+      <div className="min-w-0 max-w-full flex-1">
         {showMeta ? (
-          <div className="mb-1 flex items-baseline gap-2 px-0.5">
-            <span className="text-[12px] font-semibold text-foreground">{msg.nick}</span>
+          <div className="mb-1 flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+            <span className="text-[13px] font-semibold text-foreground/95">{msg.nick}</span>
             {own ? (
-              <span className="rounded bg-muted px-1 py-px text-[9px] font-medium uppercase tracking-wide text-muted-foreground">
+              <span className="rounded-md bg-muted px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-tight text-muted-foreground">
                 You
               </span>
             ) : null}
             <time
-              className="text-[10px] tabular-nums text-muted-foreground"
+              className="text-[10px] tabular-nums text-muted-foreground/90"
               dateTime={new Date(msg.ts).toISOString()}
             >
               {formatMessageTime(msg.ts)}
@@ -63,8 +66,9 @@ function MessageRow({
         ) : null}
         <div
           className={cn(
-            "irc-msg-bubble chat-msg-in w-max max-w-full",
-            own ? "irc-msg-bubble--own" : "irc-msg-bubble--other",
+            own
+              ? `msg-mine ${BUBBLE_SHELL} rounded-2xl rounded-tr-md bg-primary px-3 py-2 ${MSG_BODY_CLASS} font-medium text-primary-foreground shadow-lg shadow-primary/20 chat-msg-in`
+              : `${BUBBLE_SHELL} rounded-2xl rounded-tl-md border border-border bg-card/70 px-3 py-2 ${MSG_BODY_CLASS} leading-snug text-foreground/90 shadow-sm backdrop-blur-sm chat-msg-in`,
             msg.pending && "opacity-75",
           )}
         >
@@ -98,18 +102,18 @@ function EmptyConversation({
       : null;
 
   return (
-    <div className="flex flex-col items-center justify-center px-4 py-14 text-center">
+    <div className="irc-empty-conversation flex flex-col items-center justify-center px-6 py-16 text-center">
       <div
-        className="mb-2.5 flex h-9 w-9 items-center justify-center rounded-lg bg-muted/50 text-muted-foreground/80"
+        className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-border/60 bg-card/80 text-3xl shadow-sm"
         aria-hidden
       >
-        <MessagesSquare className="h-4 w-4" strokeWidth={2} />
+        💬
       </div>
-      <p className="text-[15px] font-semibold text-foreground">
+      <p className="text-base font-bold tracking-tight text-foreground">
         {view.kind === "room" ? roomTitle : view.peerNick}
       </p>
-      <p className="mt-1 text-sm text-muted-foreground">No messages yet</p>
-      <p className="mt-1.5 max-w-[16rem] text-xs leading-relaxed text-muted-foreground/90">
+      <p className="mt-1.5 text-sm font-medium text-muted-foreground">No messages yet</p>
+      <p className="mt-2 max-w-[18rem] text-xs leading-relaxed text-muted-foreground/90">
         {connected
           ? "Say hello and start the conversation."
           : "Connect to IRC to send messages."}
@@ -139,12 +143,9 @@ export function IrcMessageList({ messages, selfNick, view, className }: IrcMessa
 
   return (
     <ScrollArea
-      className={cn(
-        "min-h-0 flex-1 bg-[color-mix(in_oklab,var(--muted)_22%,var(--background)_78%)]",
-        className,
-      )}
+      className={cn("min-h-0 flex-1", className)}
     >
-      <div className="mx-auto w-full max-w-3xl px-3 py-3 sm:px-4 sm:py-4">
+      <div className="flex-1 px-3 py-3 text-xs sm:px-4 md:text-[15px]">
         {connecting && messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" aria-hidden />
@@ -158,7 +159,7 @@ export function IrcMessageList({ messages, selfNick, view, className }: IrcMessa
         ) : messages.length === 0 ? (
           <EmptyConversation view={view} connected={connected} />
         ) : (
-          <div className="space-y-0.5">
+          <div className="space-y-3">
             {items.map((item) => {
               if (item.type === "date") {
                 return (

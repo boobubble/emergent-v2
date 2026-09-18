@@ -46,14 +46,17 @@ function IrcChatCenter({
   view,
   onBack,
   showHeader = true,
+  showComposer = true,
   onMinimizeDm,
+  onSend,
 }: {
   view: IrcActiveView;
   onBack?: () => void;
   showHeader?: boolean;
+  showComposer?: boolean;
   onMinimizeDm?: () => void;
+  onSend: (text: string) => void;
 }) {
-  const core = useIrcChatCore();
   const state = useIrcChatState();
   const selfNick = state.ircNick;
 
@@ -62,21 +65,20 @@ function IrcChatCenter({
       ? state.messages[view.roomId] ?? []
       : state.privateMessages[ircPmChannelForNick(view.peerNick)] ?? [];
 
-  function handleSend(text: string) {
-    if (view.kind === "room") {
-      core.sendPublicMessage(text, view.roomId);
-    } else {
-      core.sendPrivateMessage(view.peerNick, text);
-    }
-  }
-
   return (
-    <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background" data-irc-column="center">
+    <div
+      className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background"
+      data-irc-column="center"
+    >
       {showHeader ? (
         <IrcChatHeader view={view} onBack={onBack} onMinimizeDm={onMinimizeDm} />
       ) : null}
-      <IrcMessageList messages={messages} selfNick={selfNick} view={view} />
-      <IrcMessageComposer onSend={handleSend} view={view} />
+      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        <IrcMessageList messages={messages} selfNick={selfNick} view={view} />
+      </div>
+      {showComposer ? (
+        <IrcMessageComposer onSend={onSend} view={view} shell="embedded" />
+      ) : null}
     </div>
   );
 }
@@ -214,6 +216,17 @@ function IrcChatAppShell() {
     setActiveView({ kind: "room", roomId: activeRoomId });
   }
 
+  const handleSend = useCallback(
+    (text: string) => {
+      if (activeView.kind === "room") {
+        core.sendPublicMessage(text, activeView.roomId);
+      } else {
+        core.sendPrivateMessage(activeView.peerNick, text);
+      }
+    },
+    [activeView, core],
+  );
+
   const showMobileNav = !isDesktopShell;
   const showCenterHeader = !isDesktopShell;
   const showDmConversationTabs =
@@ -230,10 +243,10 @@ function IrcChatAppShell() {
       data-chatroom-shell=""
       data-chatroom-layout={chatroomShellLayoutAttr(shellLayout)}
       className={cn(
-        "mx-auto flex h-[calc(100dvh-3.5rem)] w-full flex-col overflow-hidden overscroll-none bg-background text-foreground",
+        "mx-auto flex w-full flex-col overflow-hidden overscroll-none bg-background text-foreground",
         isDesktopShell
-          ? "max-w-none md:rounded-none md:border-0 md:shadow-none"
-          : "max-w-[1840px] lg:h-[calc(100dvh-2rem)] lg:rounded-xl lg:border lg:border-border/70 lg:shadow-[0_8px_32px_-12px_hsl(var(--foreground)/0.1)]",
+          ? "h-dvh max-w-none md:rounded-none md:border-0 md:shadow-none"
+          : "h-[calc(100dvh-3.5rem)] max-w-[1840px] lg:h-[calc(100dvh-2rem)] lg:rounded-xl lg:border lg:border-border/70 lg:shadow-[0_8px_32px_-12px_hsl(var(--foreground)/0.1)]",
       )}
     >
       {chatroomSidebarBackdropVisible(shellLayout, sidebarOpen) ? (
@@ -245,7 +258,7 @@ function IrcChatAppShell() {
         />
       ) : null}
 
-      <div className="relative flex min-h-0 min-w-0 flex-1 overflow-hidden">
+      <div className="relative flex h-full min-h-0 min-w-0 flex-1 overflow-hidden">
         {showInlineSidebar ? (
           <div
             data-chatroom-sidebar=""
@@ -264,7 +277,7 @@ function IrcChatAppShell() {
           </div>
         ) : null}
 
-        <main className="relative flex min-h-0 min-w-0 flex-1 flex-col">
+        <main className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col">
           {chatroomSidebarToggleVisible(shellLayout, sidebarOpen) ? (
             <button
               type="button"
@@ -322,11 +335,12 @@ function IrcChatAppShell() {
             />
           ) : null}
 
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-            <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
-              <IrcChatCenter
+          <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+            <IrcChatCenter
               view={activeView}
               showHeader={showCenterHeader}
+              showComposer={!isDesktopShell}
+              onSend={handleSend}
               onBack={
                 activeView.kind === "dm"
                   ? () => setActiveView({ kind: "room", roomId: activeRoomId })
@@ -338,21 +352,34 @@ function IrcChatAppShell() {
                   : undefined
               }
             />
-
-            {showInlineMembers ? (
-              <IrcMembersPanel
-                roomId={activeView.roomId}
-                selfNick={selfNick}
-                onDm={openDm}
-              />
-            ) : null}
-
-            {showInlineDmPanel ? (
-              <IrcDmInfoPanel peerNick={activeView.peerNick} selfNick={selfNick} />
-            ) : null}
-            </div>
           </div>
+
+          {isDesktopShell ? (
+            <div
+              className="chat-composer-footer shrink-0"
+              style={{ position: "relative", bottom: "auto" }}
+            >
+              <IrcMessageComposer
+                onSend={handleSend}
+                view={activeView}
+                shell="footer"
+              />
+            </div>
+          ) : null}
         </main>
+
+        {showInlineMembers ? (
+          <IrcMembersPanel
+            roomId={activeView.roomId}
+            selfNick={selfNick}
+            onDm={openDm}
+            forceDesktopColumn
+          />
+        ) : null}
+
+        {showInlineDmPanel ? (
+          <IrcDmInfoPanel peerNick={activeView.peerNick} selfNick={selfNick} forceDesktopColumn />
+        ) : null}
       </div>
 
       {!isDesktopShell ? (

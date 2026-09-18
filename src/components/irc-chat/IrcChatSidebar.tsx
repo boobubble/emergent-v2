@@ -74,20 +74,20 @@ export function IrcChatSidebar({
   return (
     <aside
       className={cn(
-        "flex h-full w-[var(--irc-sidebar-w,260px)] max-w-[260px] shrink-0 flex-col",
+        "flex h-full w-[270px] max-w-[290px] shrink-0 flex-col bg-transparent p-1 md:w-[272px]",
         className,
       )}
     >
-      <div className="irc-yaarzo-sidebar-inner">
-        <div className="relative shrink-0 border-b border-border/60 px-2 py-2.5">
-          <div className="flex flex-col items-center gap-0.5 text-center">
+      <div className="flex h-full min-h-0 flex-col overflow-hidden premium-floating-sidebar">
+        <div className="relative h-[48px] max-h-[48px] min-h-[48px] shrink-0 border-b border-border/40">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5 leading-none">
             <BrandText
               slot="chat"
               defaultText="Yaarzo"
               className="sidebar-brand-title"
               alwaysShow
             />
-            <span className="text-[10px] text-muted-foreground">
+            <span className="whitespace-nowrap text-[10px] font-normal leading-none text-muted-foreground">
               Talk. Play. Connect.
             </span>
           </div>
@@ -125,13 +125,13 @@ export function IrcChatSidebar({
             onChange={(e) => setRoomSearch(e.target.value)}
             placeholder="Search rooms…"
             aria-label="Search rooms"
-            className="sidebar-search-input w-full rounded-xl border border-border/70 bg-background py-1.5 pl-8 pr-7 text-[12px] outline-none focus:ring-1 focus:ring-primary/35"
+            className="sidebar-search-input w-full rounded-xl border border-border/60 bg-background/60 py-1.5 pl-8 pr-8 text-[12px] outline-none focus:ring-1 focus:ring-primary/40"
           />
           {roomSearch ? (
             <button
               type="button"
               onClick={() => setRoomSearch("")}
-              className="absolute right-3 top-1/2 grid h-5 w-5 -translate-y-1/2 place-items-center text-muted-foreground"
+              className="absolute right-3 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-muted-foreground hover:text-foreground"
               aria-label="Clear search"
             >
               <X className="h-3 w-3" />
@@ -159,16 +159,16 @@ export function IrcChatSidebar({
           ))}
         </div>
 
-        <div className="sidebar-section-label px-2">Joined Channels</div>
-
-        <ScrollArea className="sidebar-scroll max-h-[42%] min-h-[5rem] shrink-0 px-1.5">
-          {rooms.length === 0 ? (
-            <p className="px-2 py-3 text-center text-[11px] text-muted-foreground">
-              {roomSearch ? "No matching rooms" : "Discovering rooms from IRC…"}
-            </p>
-          ) : (
-            <ul className="space-y-0.5 pb-2">
-              {rooms.map((room) => {
+        <div className="sidebar-middle flex min-h-0 flex-1 flex-col overflow-hidden">
+          <nav className="sidebar-scroll min-h-0 shrink-0 overflow-y-auto px-1.5 pb-1">
+            <div className="sidebar-section-label">Joined Channels</div>
+            {rooms.length === 0 ? (
+              <p className="px-2 py-3 text-center text-[11px] text-muted-foreground">
+                {roomSearch ? "No matching rooms" : "Discovering rooms from IRC…"}
+              </p>
+            ) : (
+              <div className="space-y-0.5 pb-2">
+                {rooms.map((room) => {
                 const active = activeRoomId === room.id;
                 const onlineCount = displayRoomOnlineCount(
                   room.id,
@@ -178,45 +178,59 @@ export function IrcChatSidebar({
                 );
                 const label = formatRoomTitlePlain(room.name);
                 return (
-                  <li key={room.id}>
-                    <button
-                      type="button"
-                      onClick={() => onSelectRoom(room.id)}
+                  <div key={room.id}>
+                    <div
                       className={cn(
-                        "irc-room-row sidebar-room-active",
-                        active && "irc-room-row--active premium-nav-item-active",
+                        "premium-nav-item group/room min-h-8 gap-1.5 px-2 py-1",
+                        active && "premium-nav-item-active sidebar-room-active",
                       )}
                     >
-                      <span
-                        className={cn(
-                          "w-4 shrink-0 text-center text-sm leading-none",
-                          active ? "text-primary" : "text-muted-foreground/70",
-                        )}
+                      <button
+                        type="button"
+                        onClick={() => onSelectRoom(room.id)}
+                        className="flex min-w-0 flex-1 items-center gap-1.5 truncate bg-transparent p-0 text-left"
                       >
-                        #
-                      </span>
-                      <span className="min-w-0 flex-1 truncate text-[12px] font-medium">
-                        {label}
-                      </span>
+                        <span
+                          className={cn(
+                            "text-sm leading-none",
+                            active ? "text-primary" : "opacity-45",
+                          )}
+                        >
+                          #
+                        </span>
+                        <span className="truncate text-[12px]">{label}</span>
+                      </button>
                       {onlineCount != null ? (
-                        <span className="irc-room-count-bubble">{onlineCount}</span>
+                        <span className="flex shrink-0 items-center gap-1 text-[10px] tabular-nums">
+                          <span
+                            className="chat-online-dot"
+                            aria-hidden
+                            style={{ width: "0.4rem", height: "0.4rem" }}
+                          />
+                          <span
+                            className="font-semibold text-muted-foreground"
+                            title={`${onlineCount} online`}
+                          >
+                            {onlineCount}
+                          </span>
+                        </span>
                       ) : null}
-                    </button>
-                  </li>
+                    </div>
+                  </div>
                 );
               })}
-            </ul>
-          )}
-        </ScrollArea>
+              </div>
+            )}
+          </nav>
 
-        <div className="mx-2 border-t border-border/60" />
+          <div className="sidebar-flex-spacer min-h-0 flex-1" />
 
         <div className="sidebar-section-label flex items-center gap-1 px-2 pt-2">
           <MessageSquare className="h-3 w-3 opacity-70" aria-hidden />
           Direct messages
         </div>
 
-        <ScrollArea className="min-h-0 flex-1 px-1.5 pb-2">
+        <ScrollArea className="sidebar-scroll min-h-0 max-h-[38%] shrink-0 px-1.5 pb-2">
           {dmThreads.length === 0 ? (
             <p className="px-2 py-3 text-[11px] leading-relaxed text-muted-foreground">
               No DMs yet. Message someone from the member list.
@@ -273,6 +287,7 @@ export function IrcChatSidebar({
             </ul>
           )}
         </ScrollArea>
+        </div>
 
         <div className="sidebar-bottom-panel shrink-0 border-t border-border/40 bg-card/20 px-2 py-2 backdrop-blur-sm">
           {user ? (

@@ -2,6 +2,7 @@ import { User, X } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useIrcChatState } from "@/lib/irc-chat";
 import { useProfilePopup } from "@/lib/profile-popup-context";
 import {
   findMemberByNick,
@@ -14,6 +15,7 @@ type IrcDmInfoPanelProps = {
   peerNick: string;
   selfNick: string | null;
   onClose?: () => void;
+  forceDesktopColumn?: boolean;
   className?: string;
 };
 
@@ -21,8 +23,10 @@ export function IrcDmInfoPanel({
   peerNick,
   selfNick,
   onClose,
+  forceDesktopColumn = false,
   className,
 }: IrcDmInfoPanelProps) {
+  const state = useIrcChatState();
   const { openProfile } = useProfilePopup();
   const member = findMemberByNick(state.members, peerNick);
   const profileId = member ? profileUserIdForMember(member) : null;
@@ -33,13 +37,16 @@ export function IrcDmInfoPanel({
 
   return (
     <aside
+      data-chatroom-members=""
       data-irc-column="members"
       className={cn(
-        "flex h-full w-[272px] shrink-0 flex-col bg-transparent p-1.5 lg:w-[280px]",
+        forceDesktopColumn
+          ? "flex h-full w-60 shrink-0 flex-col border-l border-border bg-card"
+          : "flex h-full w-60 shrink-0 flex-col border-l border-border bg-card lg:flex",
         className,
       )}
+      style={forceDesktopColumn ? { display: "flex" } : undefined}
     >
-      <div className="premium-floating-sidebar irc-members-panel-inner flex h-full min-h-0 flex-col overflow-hidden">
         <div className="flex items-center justify-between border-b border-border/50 bg-muted/15 px-3 py-3">
           <div>
             <h2 className="text-[13px] font-bold tracking-tight text-foreground">
@@ -93,7 +100,6 @@ export function IrcDmInfoPanel({
             </Button>
           ) : null}
         </div>
-      </div>
     </aside>
   );
 }

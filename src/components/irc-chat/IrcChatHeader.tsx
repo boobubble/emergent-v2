@@ -10,6 +10,7 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { BrandMark } from "@/components/BrandMark";
 import { cn } from "@/lib/utils";
 import { useIrcChatState } from "@/lib/irc-chat";
 import { useProfilePopup } from "@/lib/profile-popup-context";
@@ -72,11 +73,11 @@ export function IrcChatHeader({
   return (
     <header
       className={cn(
-        "irc-center-room-header shrink-0 bg-background",
+        "chat-glass sticky top-0 z-20 shrink-0",
         isDesktop
-          ? "hidden items-center gap-3 px-4 md:flex"
-          : "chat-glass sticky top-0 z-20 flex min-h-[3.75rem] items-center gap-3 px-3 py-2.5 sm:min-h-16 sm:px-5",
-        onBack && !isDesktop ? "pl-2 sm:pl-3" : isDesktop ? "pl-3" : "pl-3 sm:pl-5",
+          ? "hidden h-16 items-center justify-between gap-1 px-2 sm:gap-2 sm:px-6 md:flex pl-3"
+          : "flex min-h-[3.75rem] items-center gap-3 px-3 py-2.5 sm:min-h-16 sm:px-5",
+        onBack && !isDesktop ? "pl-2 sm:pl-3" : !isDesktop ? "pl-3 sm:pl-5" : undefined,
         className,
       )}
     >
@@ -84,7 +85,7 @@ export function IrcChatHeader({
         <button
           type="button"
           onClick={onToggleSidebar}
-          className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-border/60 bg-background text-muted-foreground shadow-sm transition hover:bg-muted/50 hover:text-foreground"
+          className="hidden h-9 w-9 shrink-0 place-items-center rounded-full text-muted-foreground transition hover:bg-white/5 hover:text-foreground md:grid"
           title={sidebarOpen ? "Hide sidebar" : "Show sidebar"}
           aria-label={sidebarOpen ? "Hide sidebar" : "Show sidebar"}
         >
@@ -108,7 +109,14 @@ export function IrcChatHeader({
         </Button>
       ) : null}
 
-      {view.kind === "room" && !isDesktop ? (
+      {isDesktop && view.kind === "room" ? (
+        <BrandMark
+          slot="chat"
+          roomId={view.roomId}
+          alt="Room logo"
+          className="hidden h-9 w-9 shrink-0 rounded-xl object-contain ring-1 ring-border sm:block"
+        />
+      ) : view.kind === "room" && !isDesktop ? (
         <span
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/15"
           aria-hidden
@@ -127,14 +135,26 @@ export function IrcChatHeader({
 
       <div className="min-w-0 flex-1">
         {isDesktop && view.kind === "room" ? (
-          <div className="flex min-w-0 flex-1 items-center gap-3">
-            <h1 className="min-w-0 flex-1 truncate text-base font-bold leading-tight tracking-tight text-foreground">
-              {roomTitlePlain ?? roomTitle}
-            </h1>
-            <span className="hidden shrink-0 items-center gap-1.5 text-xs font-medium text-muted-foreground lg:inline-flex">
-              <Users className="h-3.5 w-3.5 opacity-60" aria-hidden />
-              {roomMembers > 0 ? `${roomMembers} online` : "Public room"}
-            </span>
+          <div className="min-w-0 flex-1 overflow-hidden">
+            <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+              <span
+                className="block truncate font-bold text-foreground"
+                title={roomTitlePlain ?? roomTitle ?? undefined}
+              >
+                {roomTitlePlain ?? roomTitle}
+              </span>
+            </div>
+            <div className="mt-0.5 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[11px] text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5 font-semibold text-foreground/75">
+                <span
+                  className="chat-online-dot"
+                  aria-hidden
+                  style={{ width: "0.4rem", height: "0.4rem" }}
+                />
+                {roomMembers > 0 ? `${roomMembers} online` : "Public room"}
+              </span>
+              <IrcConnectionBadge inline variant="header" className="text-[11px]" />
+            </div>
           </div>
         ) : (
           <>
@@ -157,8 +177,7 @@ export function IrcChatHeader({
       </div>
 
       {isDesktop && view.kind === "room" ? (
-        <div className="flex shrink-0 items-center gap-1.5">
-          <IrcConnectionBadge inline variant="header" className="hidden text-[11px] xl:inline-flex" />
+        <div className="flex shrink-0 items-center gap-1">
           <button
             type="button"
             className="chat-icon-btn"
@@ -184,15 +203,18 @@ export function IrcChatHeader({
         </Button>
       ) : null}
 
-      {isDesktop && showMembersButton && onOpenMembers ? (
+      {isDesktop && showMembersButton && onOpenMembers && view.kind === "room" ? (
         <button
           type="button"
           onClick={onOpenMembers}
-          className="chat-icon-btn shrink-0"
-          aria-label="Open online users"
-          title="Online users"
+          className="chat-icon-btn relative lg:hidden"
+          aria-label="Show members"
+          title="Members"
         >
           <Users className="h-4 w-4" />
+          <span className="absolute -right-1 -top-1 grid h-4 min-w-[16px] place-items-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground">
+            {roomMembers > 99 ? "99+" : roomMembers}
+          </span>
         </button>
       ) : null}
 
