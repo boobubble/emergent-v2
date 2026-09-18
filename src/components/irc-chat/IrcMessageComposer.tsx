@@ -284,8 +284,7 @@ export function IrcMessageComposer({
       >
         {showEmoji ? (
           <IrcEmojiPicker
-            onPickUnicode={(e) => insertText(e)}
-            onPickCustom={(token) => insertText(token)}
+            onPick={(token) => insertText(token)}
             onClose={() => setShowEmoji(false)}
           />
         ) : null}

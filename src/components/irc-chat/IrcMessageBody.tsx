@@ -37,7 +37,7 @@ export function IrcMessageBody({
             src={emoji.url}
             alt={emoji.name}
             loading="lazy"
-            className="mx-0.5 inline-block h-7 w-7 align-text-bottom object-contain sm:h-8 sm:w-8"
+            className="mx-0.5 inline-block h-[42px] w-[42px] align-text-bottom object-contain md:h-[48px] md:w-[48px]"
           />
         );
       })}

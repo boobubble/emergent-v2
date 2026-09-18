@@ -1,68 +1,30 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Loader2 } from "lucide-react";
-import { EmojiPicker } from "@/components/chat/EmojiPicker";
 import { pickerItemPointerHandlers } from "@/components/chat/picker-pointer-tap";
 import { useCustomEmojiCatalog, type CustomEmojiRecord } from "@/lib/custom-emoji-catalog";
 import { createCustomEmojiToken } from "@/lib/irc-chat/irc-custom-emoji";
-import { cn } from "@/lib/utils";
-
-type Tab = "unicode" | "yaarzo";
 
 export function IrcEmojiPicker({
-  onPickUnicode,
-  onPickCustom,
+  onPick,
   onClose,
 }: {
-  onPickUnicode: (char: string) => void;
-  onPickCustom: (token: string) => void;
+  onPick: (token: string) => void;
   onClose?: () => void;
 }) {
   const { emojis, isLoading } = useCustomEmojiCatalog();
-  const [tab, setTab] = useState<Tab>("unicode");
-  const hasYaarzo = emojis.length > 0;
-
+  const hasEmojis = emojis.length > 0;
   const byPack = useMemo(() => groupCustomEmojisByPack(emojis), [emojis]);
 
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card shadow-xl">
-      <div className="flex border-b border-border">
-        <button
-          type="button"
-          className={cn(
-            "flex-1 px-2 py-1.5 text-[11px] font-semibold transition-colors",
-            tab === "unicode" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted/40",
-          )}
-          onClick={() => setTab("unicode")}
-        >
-          Emoji
-        </button>
-        <button
-          type="button"
-          className={cn(
-            "flex-1 px-2 py-1.5 text-[11px] font-semibold transition-colors",
-            tab === "yaarzo" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted/40",
-            !hasYaarzo && !isLoading && "opacity-60",
-          )}
-          onClick={() => setTab("yaarzo")}
-        >
-          Yaarzo
-        </button>
-      </div>
-
-      {tab === "unicode" ? (
-        <EmojiPicker
-          embedded
-          onPick={onPickUnicode}
-          onClose={onClose}
-        />
-      ) : isLoading ? (
+      {isLoading ? (
         <div className="grid place-items-center gap-2 p-6 text-xs text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-          Loading custom emojis…
+          Loading emojis…
         </div>
-      ) : !hasYaarzo ? (
+      ) : !hasEmojis ? (
         <p className="p-4 text-center text-[11px] text-muted-foreground">
-          No Yaarzo custom emojis yet.
+          No Yaarzo emojis yet.
         </p>
       ) : (
         <div className="max-h-[240px] overflow-y-auto p-2">
@@ -78,7 +40,7 @@ export function IrcEmojiPicker({
                     type="button"
                     title={emoji.name}
                     {...pickerItemPointerHandlers(() => {
-                      onPickCustom(createCustomEmojiToken(emoji.id));
+                      onPick(createCustomEmojiToken(emoji.id));
                       onClose?.();
                     })}
                     className="grid h-10 w-10 place-items-center rounded-lg transition-transform hover:scale-110 hover:bg-muted/50 active:scale-95"
