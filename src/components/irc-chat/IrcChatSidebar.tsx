@@ -247,7 +247,7 @@ export function IrcChatSidebar({
 
         <ScrollArea className="sidebar-scroll min-h-0 max-h-[32%] shrink-0 px-1.5 pb-1">
           {dmThreads.length === 0 ? (
-            <p className="px-2 py-3 text-[11px] leading-relaxed text-muted-foreground">
+            <p className="irc-sidebar-dm-empty">
               No DMs yet. Message someone from the member list.
             </p>
           ) : (

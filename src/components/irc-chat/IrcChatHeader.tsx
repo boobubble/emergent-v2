@@ -75,7 +75,7 @@ export function IrcChatHeader({
       className={cn(
         "chat-glass sticky top-0 z-20 shrink-0",
         isDesktop
-          ? "chat-glass irc-center-room-header hidden h-16 items-center justify-between gap-1 px-2 sm:gap-2 sm:px-6 md:flex pl-3"
+          ? "irc-center-room-header chat-glass hidden h-16 w-full items-center justify-between gap-2 px-3 sm:px-5 md:flex"
           : "flex min-h-[3.75rem] items-center gap-3 px-3 py-2.5 sm:min-h-16 sm:px-5",
         onBack && !isDesktop ? "pl-2 sm:pl-3" : !isDesktop ? "pl-3 sm:pl-5" : undefined,
         className,
@@ -117,7 +117,7 @@ export function IrcChatHeader({
             <div className="min-w-0 flex-1 overflow-hidden">
               <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
                 <span
-                  className="block truncate text-base font-bold text-foreground"
+                  className="block truncate text-[17px] font-bold tracking-tight text-foreground sm:text-lg"
                   title={view.kind === "room" ? (roomTitlePlain ?? roomTitle ?? undefined) : title}
                 >
                   {view.kind === "room" ? (roomTitlePlain ?? roomTitle) : title}

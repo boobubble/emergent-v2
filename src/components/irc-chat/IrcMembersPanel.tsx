@@ -40,8 +40,8 @@ function MemberAvatar({
     <div className="relative shrink-0">
       <Avatar
         className={cn(
-          "h-8 w-8 border border-border/50 lg:h-7 lg:w-7",
-          offline && "opacity-75 saturate-[0.85]",
+          "h-[30px] w-[30px] border border-border/45",
+          offline && "opacity-72 saturate-[0.82]",
         )}
       >
         {avatarUrl ? <AvatarImage src={avatarUrl} alt="" /> : null}
@@ -80,7 +80,7 @@ function OnlineMemberRow({
     <li className="irc-member-row group">
       <MemberAvatar label={member.nick} hue={hue} />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[13px] font-semibold leading-tight text-foreground/90 lg:text-[12px]">
+        <p className="truncate text-[12px] font-semibold leading-tight text-foreground/90">
           {member.nick}
           {isSelf ? (
             <span className="ml-1.5 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">
@@ -130,7 +130,7 @@ function OfflineProfileRow({
     <li className="irc-member-row irc-member-row--offline group">
       <MemberAvatar label={profile.username} hue={hue} avatarUrl={profile.avatarUrl} offline />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[13px] font-semibold leading-tight text-muted-foreground lg:text-[12px]">
+        <p className="truncate text-[12px] font-semibold leading-tight text-muted-foreground">
           {profile.username}
         </p>
       </div>
@@ -187,7 +187,7 @@ export function IrcMembersPanel({
       data-chatroom-members=""
       data-irc-column="members"
       className={cn(
-        "irc-members-panel flex h-full w-[240px] max-w-[240px] shrink-0 flex-col border-l border-border/80 bg-card/95 shadow-[inset_1px_0_0_hsl(var(--border)/0.35)]",
+        "irc-members-panel flex h-full shrink-0 flex-col overflow-hidden border-l border-border/60",
         !forceDesktopColumn && !inSheet && "hidden lg:flex",
         inSheet && "w-full max-w-none border-l-0 shadow-none",
         className,
@@ -219,7 +219,7 @@ export function IrcMembersPanel({
               <X className="h-4 w-4" />
             </button>
           ) : null}
-          <div className="irc-members-tab irc-members-tab--active min-h-10 flex-1">
+          <div className="irc-members-tab irc-members-tab--active flex-1">
             <Users2 className="h-3.5 w-3.5 shrink-0" aria-hidden />
             <span className="truncate">Users</span>
           </div>
@@ -266,8 +266,8 @@ export function IrcMembersPanel({
           </div>
         ) : null}
 
-        <ScrollArea className="min-h-0 flex-1 px-1 pb-2 pt-0.5">
-          <div className="sidebar-section-label px-2 pb-1 pt-0.5">
+        <ScrollArea className="min-h-0 flex-1 px-0.5 pb-2 pt-0">
+          <div className="irc-members-section-label">
             ONLINE — {members.length}
           </div>
           {members.length === 0 ? (
@@ -297,7 +297,7 @@ export function IrcMembersPanel({
             </ul>
           )}
 
-          <div className="sidebar-section-label mt-3 px-2 pb-1 pt-1">
+          <div className="irc-members-section-label irc-members-section-label--offline">
             OFFLINE — {offlineProfiles.length}
           </div>
           {directoryLoading && offlineProfiles.length === 0 ? (

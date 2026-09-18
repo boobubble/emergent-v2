@@ -51,7 +51,7 @@ export function IrcMessageComposer({
   const bar = (
     <div
       className={cn(
-        "chat-composer-glow chat-composer-bar group relative flex min-w-0 items-end gap-0.5 rounded-3xl border border-border/80 bg-card/70 pb-0 pt-1.5 pr-1 shadow-md backdrop-blur-md transition-[border-color,box-shadow,transform] duration-150 focus-within:border-primary/30",
+        "chat-composer-glow chat-composer-bar group relative flex min-w-0 items-end gap-0.5 rounded-[1.35rem] border border-border/70 bg-white/80 pb-0 pt-1 pr-0.5 shadow-[0_4px_20px_-10px_hsl(var(--foreground)/0.12)] backdrop-blur-md transition-[border-color,box-shadow] duration-150 dark:bg-card/70",
         compact
           ? "pl-1 sm:gap-0.5 sm:pl-2 sm:pr-1"
           : "pl-2 sm:gap-1 sm:pl-4 sm:pr-2",
@@ -71,7 +71,7 @@ export function IrcMessageComposer({
         maxLength={2000}
         rows={1}
         className={cn(
-          "chat-composer-input max-h-[140px] min-h-11 min-w-0 flex-1 resize-none border-0 bg-transparent py-2.5 text-base leading-6 text-foreground shadow-none outline-none placeholder:truncate placeholder:whitespace-nowrap placeholder:text-muted-foreground/70 sm:py-1.5 sm:text-sm",
+          "chat-composer-input max-h-[120px] min-h-10 min-w-0 flex-1 resize-none border-0 bg-transparent py-2 text-base leading-5 text-foreground shadow-none outline-none placeholder:truncate placeholder:whitespace-nowrap placeholder:text-muted-foreground/70 sm:min-h-9 sm:py-1.5 sm:text-sm",
           "focus-visible:ring-0 focus-visible:ring-offset-0",
           !connected && "opacity-60",
         )}
@@ -79,7 +79,7 @@ export function IrcMessageComposer({
       <button
         type="submit"
         disabled={!connected || !draft.trim()}
-        className="chat-composer-send mb-1 grid h-11 w-11 shrink-0 touch-manipulation place-items-center rounded-full text-primary-foreground shadow-lg transition-[transform,opacity] duration-75 ease-out hover:scale-105 active:scale-[0.94] active:opacity-90 disabled:pointer-events-none disabled:opacity-40 disabled:active:scale-100"
+        className="chat-composer-send mb-0.5 grid h-10 w-10 shrink-0 touch-manipulation place-items-center rounded-full text-primary-foreground shadow-lg transition-[transform,opacity] duration-75 ease-out hover:scale-105 active:scale-[0.94] active:opacity-90 disabled:pointer-events-none disabled:opacity-40 disabled:active:scale-100 sm:h-9 sm:w-9"
         style={{
           background: "var(--gradient-primary)",
           boxShadow: "0 8px 24px -8px var(--primary-glow)",
@@ -100,7 +100,7 @@ export function IrcMessageComposer({
         "chat-composer-root irc-composer-shell min-w-0",
         compact
           ? "overflow-x-auto px-1.5 py-1.5"
-          : "overflow-x-auto px-3 py-2 sm:px-6 sm:py-2.5",
+          : "overflow-x-auto px-3 py-1.5 sm:px-5 sm:py-2",
         className,
       )}
       onSubmit={(e) => {

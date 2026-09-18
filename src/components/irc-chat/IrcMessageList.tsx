@@ -102,22 +102,22 @@ function EmptyConversation({
       : null;
 
   return (
-    <div className="irc-empty-conversation flex flex-col items-center justify-center px-6 py-14 text-center">
+    <div className="irc-empty-conversation flex flex-col items-center px-6 pb-10 pt-0 text-center">
       <div
-        className="irc-empty-icon-shell mb-5 flex h-16 w-16 items-center justify-center text-primary"
+        className="irc-empty-icon-shell mb-3 flex items-center justify-center text-primary"
         aria-hidden
       >
         {view.kind === "room" ? (
-          <Hash className="h-7 w-7" strokeWidth={2.25} />
+          <Hash className="h-5 w-5" strokeWidth={2.25} />
         ) : (
-          <span className="text-2xl">💬</span>
+          <span className="text-lg">💬</span>
         )}
       </div>
-      <p className="text-lg font-bold tracking-tight text-foreground">
+      <p className="irc-empty-room-title text-foreground">
         {view.kind === "room" ? roomTitle : view.peerNick}
       </p>
-      <p className="mt-1 text-sm font-semibold text-muted-foreground">No messages yet</p>
-      <p className="mt-2 max-w-[20rem] text-xs leading-relaxed text-muted-foreground/90">
+      <p className="mt-1 text-xs font-semibold text-muted-foreground">No messages yet</p>
+      <p className="mt-1.5 max-w-[18rem] text-[11px] leading-relaxed text-muted-foreground/90">
         {connected
           ? "Say hello and start the conversation."
           : "Connect to IRC to send messages."}
