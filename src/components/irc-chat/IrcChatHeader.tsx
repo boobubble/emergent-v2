@@ -1,4 +1,4 @@
-import { ArrowLeft, Hash, Minus, User, X } from "lucide-react";
+import { ArrowLeft, Hash, Minus, User, Users, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useIrcChatState } from "@/lib/irc-chat";
@@ -47,8 +47,8 @@ export function IrcChatHeader({
   return (
     <header
       className={cn(
-        "chat-glass sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2.5 px-3 sm:h-16 sm:px-4",
-        onBack ? "pl-2 sm:pl-3" : "pl-3 sm:pl-4",
+        "chat-glass sticky top-0 z-20 flex min-h-[3.75rem] shrink-0 items-center gap-3 px-3 py-2.5 sm:min-h-16 sm:px-5",
+        onBack ? "pl-2 sm:pl-3" : "pl-3 sm:pl-5",
         className,
       )}
     >
@@ -57,7 +57,7 @@ export function IrcChatHeader({
           type="button"
           variant="ghost"
           size="icon"
-          className="h-8 w-8 shrink-0"
+          className="h-9 w-9 shrink-0 rounded-lg"
           onClick={onBack}
         >
           <ArrowLeft className="h-4 w-4" />
@@ -65,43 +65,52 @@ export function IrcChatHeader({
       ) : null}
       {view.kind === "room" ? (
         <span
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-muted/80 to-background text-foreground ring-1 ring-border/60 shadow-sm"
           aria-hidden
         >
-          <Hash className="h-4 w-4" />
+          <Hash className="h-[18px] w-[18px] text-foreground/75" strokeWidth={2.25} />
         </span>
       ) : hue !== null ? (
         <span
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white ring-1 ring-border/40"
-          style={{ backgroundColor: `hsl(${hue} 52% 46%)` }}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white ring-2 ring-background shadow-sm"
+          style={{ backgroundColor: `hsl(${hue} 48% 42%)` }}
           aria-hidden
         >
           {nickInitial(view.peerNick)}
         </span>
       ) : null}
       <div className="min-w-0 flex-1">
-        <h1 className="truncate text-sm font-bold leading-tight text-foreground sm:text-[15px]">
+        <h1 className="truncate text-[15px] font-bold leading-snug tracking-tight text-foreground sm:text-base">
           {title}
         </h1>
-        <p className="flex items-center gap-1.5 truncate text-[11px] text-muted-foreground">
-          {connected ? (
-            <span className="chat-online-dot shrink-0" aria-hidden style={{ width: "0.45rem", height: "0.45rem" }} />
+        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
+          {view.kind === "room" ? (
+            <>
+              <span className="inline-flex items-center gap-1">
+                <Users className="h-3 w-3 opacity-70" aria-hidden />
+                <span className="font-medium text-foreground/75">
+                  {roomMembers > 0 ? `${roomMembers} online` : "Public room"}
+                </span>
+              </span>
+              <span className="hidden text-border sm:inline" aria-hidden>
+                ·
+              </span>
+            </>
+          ) : (
+            <span className="font-medium">Direct message</span>
+          )}
+          <IrcConnectionBadge inline className="text-[10px]" />
+          {connected && view.kind === "room" ? (
+            <span className="chat-online-dot shrink-0 sm:hidden" aria-hidden style={{ width: "0.4rem", height: "0.4rem" }} />
           ) : null}
-          <span className="truncate">
-            {view.kind === "room"
-              ? roomMembers > 0
-                ? `${roomMembers} online`
-                : "Public room"
-              : "Direct message"}
-          </span>
-        </p>
+        </div>
       </div>
       {view.kind === "dm" && profileId ? (
         <Button
           type="button"
           variant="outline"
           size="sm"
-          className="hidden h-8 gap-1.5 rounded-lg px-2.5 text-xs shadow-sm sm:inline-flex"
+          className="hidden h-8 gap-1.5 rounded-lg border-border/70 px-2.5 text-xs shadow-none sm:inline-flex"
           onClick={() => openProfile(profileId)}
         >
           <User className="h-3.5 w-3.5" />
@@ -129,7 +138,6 @@ export function IrcChatHeader({
           <X className="h-4 w-4" />
         </button>
       ) : null}
-      <IrcConnectionBadge compact className="hidden shrink-0 sm:inline-flex" />
     </header>
   );
 }

@@ -44,17 +44,14 @@ export function IrcMessageComposer({ onSend, view, className }: IrcMessageCompos
   return (
     <div
       className={cn(
-        "chat-composer-footer shrink-0 border-t border-border/50 px-3 py-2 sm:px-4",
+        "irc-composer-shell chat-composer-footer shrink-0 px-3 py-2.5 sm:px-4 sm:py-3",
         className,
       )}
     >
       <form
         data-irc-chat-composer=""
         data-irc-chat-composer-kind={composerKind}
-        className={cn(
-          "chat-composer-root mx-auto flex max-w-4xl items-end gap-2",
-          "chat-composer-glow rounded-2xl border border-border/60 bg-background/90 p-1.5 shadow-sm backdrop-blur-sm",
-        )}
+        className="chat-composer-root irc-composer-bar mx-auto flex max-w-3xl items-end gap-2 p-1.5"
         onSubmit={(e) => {
           e.preventDefault();
           submit();
@@ -74,8 +71,8 @@ export function IrcMessageComposer({ onSend, view, className }: IrcMessageCompos
           maxLength={2000}
           rows={1}
           className={cn(
-            "chat-composer-input min-h-[42px] max-h-36 min-w-0 flex-1 resize-y rounded-xl border-0 bg-muted/25 py-2.5 pl-3 pr-3 text-sm shadow-none",
-            "focus-visible:bg-background focus-visible:ring-0",
+            "chat-composer-input min-h-[40px] max-h-32 min-w-0 flex-1 resize-none rounded-md border-0 bg-transparent py-2 pl-2.5 pr-2 text-sm shadow-none",
+            "focus-visible:ring-0 focus-visible:ring-offset-0",
             !connected && "opacity-60",
           )}
         />
@@ -83,7 +80,8 @@ export function IrcMessageComposer({ onSend, view, className }: IrcMessageCompos
           type="submit"
           size="icon"
           disabled={!connected || !draft.trim()}
-          className="chat-composer-send h-[42px] w-[42px] shrink-0 rounded-xl shadow-sm disabled:opacity-40"
+          variant="secondary"
+          className="irc-composer-send chat-composer-send h-9 w-9 shrink-0 disabled:opacity-40"
           aria-label="Send message"
         >
           <Send className="h-4 w-4" />

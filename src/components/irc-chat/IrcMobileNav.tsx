@@ -32,7 +32,7 @@ export function IrcMobileNav({
   return (
     <div
       className={cn(
-        "chat-glass flex shrink-0 flex-col gap-2 px-3 py-2 md:hidden",
+        "chat-glass flex shrink-0 flex-col gap-1.5 px-3 py-2.5 md:hidden",
         className,
       )}
     >

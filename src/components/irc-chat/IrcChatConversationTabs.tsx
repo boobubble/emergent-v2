@@ -64,7 +64,7 @@ export function IrcChatConversationTabs({
 
   return (
     <div
-      className="hidden h-11 shrink-0 border-b border-border/70 bg-background/95 backdrop-blur-sm md:flex"
+      className="hidden h-11 shrink-0 border-b border-border/60 bg-muted/10 md:flex"
       data-irc-conversation-tabs=""
     >
       <div
@@ -96,8 +96,8 @@ export function IrcChatConversationTabs({
             className={cn(
               "inline-flex h-8 max-w-[11rem] shrink-0 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium transition-colors",
               roomActive
-                ? "border-primary/35 bg-primary/10 text-foreground shadow-sm"
-                : "border-transparent bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+                ? "border-border/70 bg-background text-foreground shadow-sm"
+                : "border-transparent bg-transparent text-muted-foreground hover:bg-muted/40 hover:text-foreground",
             )}
           >
             <Hash className="h-3 w-3 shrink-0 opacity-70" aria-hidden />
@@ -126,8 +126,8 @@ export function IrcChatConversationTabs({
               className={cn(
                 "inline-flex h-8 max-w-[10.5rem] shrink-0 items-center rounded-lg border text-xs font-medium transition-colors",
                 active
-                  ? "border-primary/35 bg-primary/10 text-foreground shadow-sm"
-                  : "border-transparent bg-muted/30 text-muted-foreground",
+                  ? "border-border/70 bg-background text-foreground shadow-sm"
+                  : "border-transparent bg-transparent text-muted-foreground",
               )}
             >
               <button
@@ -137,14 +137,14 @@ export function IrcChatConversationTabs({
               >
                 <span
                   className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full text-[9px] font-semibold text-white"
-                  style={{ backgroundColor: `hsl(${hue} 52% 46%)` }}
+                  style={{ backgroundColor: `hsl(${hue} 48% 42%)` }}
                   aria-hidden
                 >
                   {nickInitial(peerNick)}
                 </span>
                 <span className="truncate">{peerNick}</span>
                 {unread > 0 ? (
-                  <span className="unread-pop grid h-4 min-w-4 shrink-0 place-items-center rounded-full bg-primary px-1 text-[9px] font-bold leading-none text-primary-foreground">
+                  <span className="unread-pop grid h-4 min-w-4 shrink-0 place-items-center rounded-full bg-foreground px-1 text-[9px] font-bold leading-none text-background">
                     {unread > 99 ? "99+" : unread}
                   </span>
                 ) : null}

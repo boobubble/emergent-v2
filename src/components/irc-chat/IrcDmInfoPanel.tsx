@@ -2,7 +2,6 @@ import { User, X } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useIrcChatState } from "@/lib/irc-chat";
 import { useProfilePopup } from "@/lib/profile-popup-context";
 import {
   findMemberByNick,
@@ -24,7 +23,6 @@ export function IrcDmInfoPanel({
   onClose,
   className,
 }: IrcDmInfoPanelProps) {
-  const state = useIrcChatState();
   const { openProfile } = useProfilePopup();
   const member = findMemberByNick(state.members, peerNick);
   const profileId = member ? profileUserIdForMember(member) : null;
@@ -35,16 +33,19 @@ export function IrcDmInfoPanel({
 
   return (
     <aside
+      data-irc-column="members"
       className={cn(
-        "flex h-full w-[272px] shrink-0 flex-col border-l border-border/50 bg-transparent p-1 lg:w-[280px]",
+        "flex h-full w-[272px] shrink-0 flex-col bg-transparent p-1.5 lg:w-[280px]",
         className,
       )}
     >
-      <div className="premium-floating-sidebar flex h-full min-h-0 flex-col overflow-hidden">
-        <div className="flex items-center justify-between border-b border-border/40 px-3 py-2.5">
+      <div className="premium-floating-sidebar irc-members-panel-inner flex h-full min-h-0 flex-col overflow-hidden">
+        <div className="flex items-center justify-between border-b border-border/50 bg-muted/15 px-3 py-3">
           <div>
-            <h2 className="text-[13px] font-semibold text-foreground">Conversation</h2>
-            <p className="text-[10px] text-muted-foreground">Direct message</p>
+            <h2 className="text-[13px] font-bold tracking-tight text-foreground">
+              Conversation
+            </h2>
+            <p className="text-[11px] text-muted-foreground">Direct message</p>
           </div>
           {onClose ? (
             <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={onClose}>
@@ -53,19 +54,19 @@ export function IrcDmInfoPanel({
           ) : null}
         </div>
 
-        <div className="flex flex-1 flex-col items-center px-4 py-8 text-center">
-          <Avatar className="h-14 w-14 border border-border/50 shadow-sm ring-2 ring-primary/10">
+        <div className="flex flex-1 flex-col items-center px-4 py-10 text-center">
+          <Avatar className="h-16 w-16 border border-border/50 shadow-sm">
             <AvatarFallback
-              className="text-base font-semibold text-white"
-              style={{ backgroundColor: `hsl(${hue} 52% 46%)` }}
+              className="text-lg font-semibold text-white"
+              style={{ backgroundColor: `hsl(${hue} 48% 42%)` }}
             >
               {nickInitial(peerNick)}
             </AvatarFallback>
           </Avatar>
-          <p className="mt-3 max-w-full truncate text-sm font-bold text-foreground">
+          <p className="mt-4 max-w-full truncate text-base font-bold text-foreground">
             {peerNick}
           </p>
-          <p className="mt-0.5 text-[11px] text-muted-foreground">IRC direct message</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">IRC PRIVMSG</p>
           {isSelf ? (
             <p className="mt-1 text-[11px] text-muted-foreground">This is you</p>
           ) : null}
@@ -75,8 +76,8 @@ export function IrcDmInfoPanel({
             </p>
           ) : null}
 
-          <p className="mt-5 max-w-[220px] text-[11px] leading-relaxed text-muted-foreground">
-            Messages are sent through Yaarzo IRC (PRIVMSG).
+          <p className="mt-6 max-w-[220px] text-[11px] leading-relaxed text-muted-foreground">
+            Messages are sent through Yaarzo IRC. No Supabase chat relay.
           </p>
 
           {profileId ? (
@@ -84,7 +85,7 @@ export function IrcDmInfoPanel({
               type="button"
               variant="outline"
               size="sm"
-              className="mt-5 gap-1.5 rounded-lg text-xs shadow-sm"
+              className="mt-6 gap-1.5 rounded-lg border-border/70 text-xs shadow-none"
               onClick={() => openProfile(profileId)}
             >
               <User className="h-3.5 w-3.5" />

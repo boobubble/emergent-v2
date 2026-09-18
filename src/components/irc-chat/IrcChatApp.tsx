@@ -40,6 +40,7 @@ import { IrcMessageList } from "./IrcMessageList";
 import { IrcMobileNav } from "./IrcMobileNav";
 import { IrcMobileDmDock } from "./IrcMobileDmDock";
 import type { IrcActiveView } from "./irc-chat-types";
+import "./irc-chat-polish.css";
 
 function IrcChatCenter({
   view,
@@ -70,7 +71,7 @@ function IrcChatCenter({
   }
 
   return (
-    <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[color-mix(in_oklab,var(--background)_96%,var(--muted)_4%)]">
+    <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background" data-irc-column="center">
       {showHeader ? (
         <IrcChatHeader view={view} onBack={onBack} onMinimizeDm={onMinimizeDm} />
       ) : null}
@@ -225,7 +226,7 @@ function IrcChatAppShell() {
       data-irc-chat-app
       data-chatroom-shell=""
       data-chatroom-layout={chatroomShellLayoutAttr(shellLayout)}
-      className="mx-auto flex h-[calc(100dvh-3.5rem)] w-full max-w-[1800px] flex-col overflow-hidden overscroll-none bg-background text-foreground lg:h-[calc(100dvh-2rem)] lg:rounded-2xl lg:border lg:border-border/60 lg:shadow-[0_12px_48px_-16px_hsl(var(--foreground)/0.12)]"
+      className="mx-auto flex h-[calc(100dvh-3.5rem)] w-full max-w-[1840px] flex-col overflow-hidden overscroll-none bg-background text-foreground lg:h-[calc(100dvh-2rem)] lg:rounded-xl lg:border lg:border-border/70 lg:shadow-[0_8px_32px_-12px_hsl(var(--foreground)/0.1)]"
     >
       {chatroomSidebarBackdropVisible(shellLayout, sidebarOpen) ? (
         <button
@@ -240,6 +241,7 @@ function IrcChatAppShell() {
         {showInlineSidebar ? (
           <div
             data-chatroom-sidebar=""
+            data-irc-column="sidebar"
             className={cn(chatroomSidebarClassName(shellLayout, sidebarOpen))}
             style={chatroomSidebarStyle(shellLayout, sidebarOpen)}
             aria-hidden={!sidebarOpen}

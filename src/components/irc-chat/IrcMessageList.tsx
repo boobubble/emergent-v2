@@ -20,9 +20,6 @@ type IrcMessageListProps = {
   className?: string;
 };
 
-const BUBBLE_SHELL =
-  "w-max max-w-[min(85%,28rem)] shrink-0 rounded-xl px-3 py-2 text-[13px] leading-[1.55] shadow-sm ring-1 ring-inset chat-bubble-in";
-
 function MessageRow({
   msg,
   own,
@@ -35,41 +32,29 @@ function MessageRow({
   const hue = nickAvatarHue(msg.nick);
 
   return (
-    <div
-      className={cn(
-        "group/msg flex gap-2.5 px-0.5 py-0.5",
-        own ? "flex-row-reverse" : "",
+    <div className="group/msg flex gap-2 py-1 sm:gap-2.5 sm:py-1.5">
+      {showMeta ? (
+        <div
+          className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white ring-1 ring-border/30"
+          style={{ backgroundColor: `hsl(${hue} 48% 42%)` }}
+          aria-hidden
+        >
+          {nickInitial(msg.nick)}
+        </div>
+      ) : (
+        <div className="w-8 shrink-0" aria-hidden />
       )}
-    >
-      {!own ? (
-        showMeta ? (
-          <div
-            className="mt-5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white ring-1 ring-black/5"
-            style={{ backgroundColor: `hsl(${hue} 52% 46%)` }}
-            aria-hidden
-          >
-            {nickInitial(msg.nick)}
-          </div>
-        ) : (
-          <div className="w-7 shrink-0" aria-hidden />
-        )
-      ) : null}
-      <div
-        className={cn(
-          "min-w-0 flex-1",
-          own && "flex flex-col items-end",
-        )}
-      >
+      <div className="min-w-0 max-w-[min(100%,32rem)] flex-1">
         {showMeta ? (
-          <div
-            className={cn(
-              "mb-1 flex flex-wrap items-baseline gap-x-2 px-0.5",
-              own && "flex-row-reverse",
-            )}
-          >
-            <span className="text-[11px] font-semibold text-foreground">{msg.nick}</span>
+          <div className="mb-1 flex items-baseline gap-2 px-0.5">
+            <span className="text-[12px] font-semibold text-foreground">{msg.nick}</span>
+            {own ? (
+              <span className="rounded bg-muted px-1 py-px text-[9px] font-medium uppercase tracking-wide text-muted-foreground">
+                You
+              </span>
+            ) : null}
             <time
-              className="text-[10px] tabular-nums text-muted-foreground/80"
+              className="text-[10px] tabular-nums text-muted-foreground"
               dateTime={new Date(msg.ts).toISOString()}
             >
               {formatMessageTime(msg.ts)}
@@ -78,11 +63,9 @@ function MessageRow({
         ) : null}
         <div
           className={cn(
-            BUBBLE_SHELL,
-            own
-              ? "rounded-br-md bg-primary/[0.09] text-foreground ring-primary/18"
-              : "rounded-bl-md bg-card/95 text-foreground ring-border/45",
-            msg.pending && "opacity-80",
+            "irc-msg-bubble chat-msg-in w-max max-w-full",
+            own ? "irc-msg-bubble--own" : "irc-msg-bubble--other",
+            msg.pending && "opacity-75",
           )}
         >
           <p className="whitespace-pre-wrap [overflow-wrap:break-word]">{msg.text}</p>
@@ -115,9 +98,9 @@ function EmptyConversation({
       : null;
 
   return (
-    <div className="flex flex-col items-center justify-center px-4 py-14 text-center">
+    <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
       <div
-        className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/15 to-accent/10 text-primary ring-1 ring-primary/15"
+        className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-muted/60 text-muted-foreground ring-1 ring-border/50"
         aria-hidden
       >
         <MessagesSquare className="h-5 w-5" strokeWidth={1.75} />
@@ -157,11 +140,11 @@ export function IrcMessageList({ messages, selfNick, view, className }: IrcMessa
   return (
     <ScrollArea
       className={cn(
-        "min-h-0 flex-1 bg-[color-mix(in_oklab,var(--muted)_32%,var(--background)_68%)]",
+        "min-h-0 flex-1 bg-[color-mix(in_oklab,var(--muted)_22%,var(--background)_78%)]",
         className,
       )}
     >
-      <div className="mx-auto w-full max-w-4xl space-y-1 px-3 py-3 sm:px-5 sm:py-4 md:text-[15px]">
+      <div className="mx-auto w-full max-w-3xl px-3 py-3 sm:px-4 sm:py-4">
         {connecting && messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" aria-hidden />
@@ -175,33 +158,31 @@ export function IrcMessageList({ messages, selfNick, view, className }: IrcMessa
         ) : messages.length === 0 ? (
           <EmptyConversation view={view} connected={connected} />
         ) : (
-          items.map((item) => {
-            if (item.type === "date") {
+          <div className="space-y-0.5">
+            {items.map((item) => {
+              if (item.type === "date") {
+                return (
+                  <div
+                    key={item.key}
+                    className="irc-date-divider"
+                    role="separator"
+                  >
+                    <span>{item.label}</span>
+                  </div>
+                );
+              }
               return (
-                <div
-                  key={item.key}
-                  className="flex items-center gap-2 py-2.5"
-                  role="separator"
-                >
-                  <div className="h-px flex-1 bg-border/60" />
-                  <span className="shrink-0 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/90">
-                    {item.label}
-                  </span>
-                  <div className="h-px flex-1 bg-border/60" />
-                </div>
+                <MessageRow
+                  key={item.msg.id}
+                  msg={item.msg}
+                  own={item.own}
+                  showMeta={item.showMeta}
+                />
               );
-            }
-            return (
-              <MessageRow
-                key={item.msg.id}
-                msg={item.msg}
-                own={item.own}
-                showMeta={item.showMeta}
-              />
-            );
-          })
+            })}
+          </div>
         )}
-        <div ref={bottomRef} aria-hidden className="h-px" />
+        <div ref={bottomRef} aria-hidden className="h-2" />
       </div>
     </ScrollArea>
   );
