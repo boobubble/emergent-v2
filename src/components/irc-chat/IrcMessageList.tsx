@@ -11,6 +11,7 @@ import {
   nickAvatarHue,
   nickInitial,
 } from "./irc-chat-ui";
+import { IrcMessageBody } from "./IrcMessageBody";
 import "@/components/chat/message-list.css";
 
 const BUBBLE_SHELL = "w-max max-w-[min(80%,20rem)] shrink-0";
@@ -72,7 +73,7 @@ function MessageRow({
             msg.pending && "opacity-75",
           )}
         >
-          <p className="whitespace-pre-wrap [overflow-wrap:break-word]">{msg.text}</p>
+          <IrcMessageBody text={msg.text} className={MSG_BODY_CLASS} />
           {msg.pending ? (
             <span className="mt-1 inline-flex items-center gap-1 text-[10px] text-muted-foreground">
               <Clock className="h-3 w-3 animate-pulse" aria-hidden />

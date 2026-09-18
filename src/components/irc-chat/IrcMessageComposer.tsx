@@ -8,9 +8,10 @@ import {
 } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
-import { EmojiPicker } from "@/components/chat/EmojiPicker";
 import { GiphyPicker } from "@/components/chat/GiphyPicker";
 import { YoutubePicker } from "@/components/chat/YoutubePicker";
+import { IrcComposerPickerPortal } from "./IrcComposerPickerPortal";
+import { IrcEmojiPicker } from "./IrcEmojiPicker";
 import { useAppSettings } from "@/lib/app-settings";
 import { mergeMediaConfig } from "@/lib/media-providers-config";
 import { cn } from "@/lib/utils";
@@ -179,6 +180,8 @@ export function IrcMessageComposer({
     [giphyOn, youtubeOn],
   );
 
+  const pickerOpen = showEmoji || showGiphy || showYoutube;
+
   const bar = (
     <div ref={pickerAnchorRef} className="relative min-w-0 flex-1">
       <div
@@ -274,32 +277,33 @@ export function IrcMessageComposer({
         </button>
       </div>
 
-      {showEmoji ? (
-        <div className="absolute bottom-full left-0 z-50 mb-2 max-w-[min(100vw-1rem,320px)]">
-          <EmojiPicker
-            onPick={(e) => insertText(e)}
+      <IrcComposerPickerPortal
+        open={pickerOpen}
+        onClose={closePickers}
+        anchorRef={pickerAnchorRef}
+      >
+        {showEmoji ? (
+          <IrcEmojiPicker
+            onPickUnicode={(e) => insertText(e)}
+            onPickCustom={(token) => insertText(token)}
             onClose={() => setShowEmoji(false)}
           />
-        </div>
-      ) : null}
-      {showGiphy ? (
-        <div className="absolute bottom-full left-0 z-50 mb-2 w-[min(100vw-1rem,340px)]">
+        ) : null}
+        {showGiphy ? (
           <GiphyPicker
             onPick={(g) => {
               submit(g.fullUrl);
             }}
           />
-        </div>
-      ) : null}
-      {showYoutube ? (
-        <div className="absolute bottom-full left-0 z-50 mb-2 w-[min(100vw-1rem,340px)]">
+        ) : null}
+        {showYoutube ? (
           <YoutubePicker
             onPick={(url) => {
               submit(url);
             }}
           />
-        </div>
-      ) : null}
+        ) : null}
+      </IrcComposerPickerPortal>
     </div>
   );
 

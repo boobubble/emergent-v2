@@ -6,10 +6,13 @@ import { pickerItemPointerHandlers } from "./picker-pointer-tap";
 export function EmojiPicker({
   onPick,
   onClose,
+  embedded,
 }: {
   onPick: (e: string) => void;
   /** When set, picking an emoji (and clicking the backdrop) dismisses the picker. */
   onClose?: () => void;
+  /** When true, skip fixed backdrop (parent handles overlay/portaling). */
+  embedded?: boolean;
 }) {
   const [cat, setCat] = useState<string>("smileys");
   const [q, setQ] = useState("");
@@ -38,7 +41,7 @@ export function EmojiPicker({
 
   return (
     <>
-    {onClose && (
+    {!embedded && onClose && (
       <div
         className="fixed inset-0 z-40"
         aria-hidden
@@ -48,7 +51,13 @@ export function EmojiPicker({
         }}
       />
     )}
-    <div className="relative z-50 w-[300px] overflow-hidden rounded-xl border border-border bg-card shadow-lg">
+    <div
+      className={
+        embedded
+          ? "w-full overflow-hidden bg-card"
+          : "relative z-50 w-[300px] overflow-hidden rounded-xl border border-border bg-card shadow-lg"
+      }
+    >
       <div className="flex items-center gap-0.5 border-b border-border px-1.5 py-1 overflow-x-auto">
         {categories.map(c => {
           if (c.id === "recent" && recent.length === 0) return null;
