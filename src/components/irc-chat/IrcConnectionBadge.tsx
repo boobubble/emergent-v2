@@ -6,11 +6,12 @@ export function IrcConnectionBadge({
   className,
   compact = false,
   inline = false,
+  variant = "default",
 }: {
   className?: string;
   compact?: boolean;
-  /** Sidebar/header: minimal dot + label, no pill bar */
   inline?: boolean;
+  variant?: "default" | "header";
 }) {
   const state = useIrcChatState();
   const hadAuthRef = useRef(false);
@@ -28,7 +29,9 @@ export function IrcConnectionBadge({
 
   const dotClass =
     label === "Connected"
-      ? "bg-primary"
+      ? variant === "header"
+        ? "bg-emerald-500 shadow-[0_0_0_2px_color-mix(in_oklab,var(--background)_80%,transparent)]"
+        : "bg-primary"
       : label === "Disconnected"
         ? "bg-destructive"
         : "animate-pulse bg-amber-500";
@@ -38,7 +41,9 @@ export function IrcConnectionBadge({
       <span
         className={cn(
           "inline-flex items-center gap-1.5 text-[11px] font-medium",
-          tone,
+          variant === "header" && label === "Connected"
+            ? "text-emerald-700/90 dark:text-emerald-400/90"
+            : tone,
           className,
         )}
         title={state.statusDetail ?? label}

@@ -22,6 +22,23 @@ export function formatRoomLabel(name: string): string {
   return trimmed.startsWith("#") ? trimmed : `#${trimmed}`;
 }
 
+/** Header/display title: exactly one leading `#`, never `# #room`. */
+export function formatRoomDisplayTitle(name: string): string {
+  const core = String(name || "")
+    .trim()
+    .replace(/^#+/, "")
+    .trim();
+  return core ? `#${core}` : "#room";
+}
+
+/** Title without `#` prefix (for use beside a hash icon tile). */
+export function formatRoomTitlePlain(name: string): string {
+  return String(name || "")
+    .trim()
+    .replace(/^#+/, "")
+    .trim() || "room";
+}
+
 /** Room slug for composer placeholder (keeps # prefix). */
 export function roomComposerPlaceholder(roomName: string): string {
   return `Message ${formatRoomLabel(roomName)}`;

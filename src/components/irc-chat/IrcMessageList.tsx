@@ -7,7 +7,7 @@ import type { IrcActiveView } from "./irc-chat-types";
 import {
   buildMessageListItems,
   formatMessageTime,
-  formatRoomLabel,
+  formatRoomDisplayTitle,
   nickAvatarHue,
   nickInitial,
 } from "./irc-chat-ui";
@@ -94,22 +94,22 @@ function EmptyConversation({
   const state = useIrcChatState();
   const roomTitle =
     view.kind === "room"
-      ? formatRoomLabel(state.rooms[view.roomId]?.name ?? view.roomId)
+      ? formatRoomDisplayTitle(state.rooms[view.roomId]?.name ?? view.roomId)
       : null;
 
   return (
-    <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
+    <div className="flex flex-col items-center justify-center px-4 py-14 text-center">
       <div
-        className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-muted/60 text-muted-foreground ring-1 ring-border/50"
+        className="mb-2.5 flex h-9 w-9 items-center justify-center rounded-lg bg-muted/50 text-muted-foreground/80"
         aria-hidden
       >
-        <MessagesSquare className="h-5 w-5" strokeWidth={1.75} />
+        <MessagesSquare className="h-4 w-4" strokeWidth={2} />
       </div>
-      <p className="text-sm font-semibold text-foreground">
+      <p className="text-[15px] font-semibold text-foreground">
         {view.kind === "room" ? roomTitle : view.peerNick}
       </p>
       <p className="mt-1 text-sm text-muted-foreground">No messages yet</p>
-      <p className="mt-2 max-w-xs text-xs leading-relaxed text-muted-foreground">
+      <p className="mt-1.5 max-w-[16rem] text-xs leading-relaxed text-muted-foreground/90">
         {connected
           ? "Say hello and start the conversation."
           : "Connect to IRC to send messages."}

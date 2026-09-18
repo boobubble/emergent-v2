@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Send } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useIrcChatState } from "@/lib/irc-chat";
@@ -76,16 +75,14 @@ export function IrcMessageComposer({ onSend, view, className }: IrcMessageCompos
             !connected && "opacity-60",
           )}
         />
-        <Button
+        <button
           type="submit"
-          size="icon"
           disabled={!connected || !draft.trim()}
-          variant="secondary"
-          className="irc-composer-send chat-composer-send h-9 w-9 shrink-0 disabled:opacity-40"
+          className="irc-composer-send-btn"
           aria-label="Send message"
         >
           <Send className="h-4 w-4" />
-        </Button>
+        </button>
       </form>
     </div>
   );

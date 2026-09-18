@@ -39,35 +39,32 @@ export function IrcMembersPanel({
     <aside
       data-irc-column="members"
       className={cn(
-        "flex h-full w-[272px] shrink-0 flex-col bg-transparent p-1.5 lg:w-[280px]",
+        "flex h-full w-[var(--irc-members-w,248px)] max-w-[248px] shrink-0 flex-col bg-background",
         className,
       )}
     >
-      <div className="premium-floating-sidebar irc-members-panel-inner flex h-full min-h-0 flex-col overflow-hidden">
-        <div className="shrink-0 border-b border-border/50 bg-muted/15 px-3 py-3">
-          <div className="flex items-start justify-between gap-2">
-            <div>
-              <h2 className="text-[13px] font-bold tracking-tight text-foreground">
-                In this room
-              </h2>
-              <p className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                <span
-                  className="chat-online-dot"
-                  aria-hidden
-                  style={{ width: "0.4rem", height: "0.4rem" }}
-                />
-                <span className="font-medium">{members.length} online</span>
-              </p>
-            </div>
-            {onClose ? (
-              <Button type="button" variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={onClose}>
-                <X className="h-4 w-4" />
-              </Button>
-            ) : null}
-          </div>
+      <div className="irc-members-panel-inner flex h-full min-h-0 flex-col overflow-hidden">
+        <div className="irc-members-users-banner shrink-0">
+          <span>Users {members.length}</span>
+          {onClose ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 shrink-0 text-primary-foreground hover:bg-primary-foreground/15"
+              onClick={onClose}
+              aria-label="Close members panel"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          ) : null}
         </div>
 
-        <div className="px-2.5 py-2.5">
+        <div className="sidebar-section-label px-3 py-2 text-[10px] tracking-wider">
+          ONLINE — {members.length}
+        </div>
+
+        <div className="px-2.5 pb-2">
           <div className="relative">
             <Search
               className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/80"
@@ -77,7 +74,7 @@ export function IrcMembersPanel({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search nicks…"
-              className="h-9 rounded-lg border-border/65 bg-background pl-8 text-[13px] shadow-sm focus-visible:ring-1 focus-visible:ring-foreground/10"
+              className="h-8 rounded-lg border-border/65 bg-background pl-8 text-[12px] shadow-none focus-visible:ring-1 focus-visible:ring-primary/20"
             />
           </div>
         </div>
@@ -103,7 +100,7 @@ export function IrcMembersPanel({
                 return (
                   <li
                     key={`${member.nick}:${member.userId}`}
-                    className="group flex min-h-10 items-center gap-2 rounded-lg border border-transparent px-1.5 py-1 transition-colors hover:border-border/40 hover:bg-muted/35"
+                    className="group irc-member-row"
                   >
                     <div className="relative shrink-0">
                       <Avatar className="h-8 w-8 border border-border/50">
@@ -120,7 +117,7 @@ export function IrcMembersPanel({
                       />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-[13px] font-semibold leading-tight text-foreground">
+                      <p className="truncate text-[12px] font-semibold leading-tight text-foreground">
                         {member.nick}
                         {isSelf ? (
                           <span className="ml-1.5 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">
@@ -128,13 +125,6 @@ export function IrcMembersPanel({
                           </span>
                         ) : null}
                       </p>
-                      {member.isGuest ? (
-                        <p className="text-[9px] font-medium uppercase tracking-wide text-muted-foreground">
-                          Guest
-                        </p>
-                      ) : (
-                        <p className="text-[10px] text-muted-foreground">Online</p>
-                      )}
                     </div>
                     <div className="flex shrink-0 items-center gap-0.5 opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100 sm:focus-within:opacity-100">
                       {profileId ? (
@@ -142,7 +132,7 @@ export function IrcMembersPanel({
                           type="button"
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 rounded-lg"
+                          className="h-7 w-7 rounded-lg"
                           aria-label={`View profile for ${member.nick}`}
                           onClick={() => openProfile(profileId)}
                         >
@@ -154,7 +144,7 @@ export function IrcMembersPanel({
                           type="button"
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground"
+                          className="h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground"
                           aria-label={`Direct message ${member.nick}`}
                           onClick={() => onDm(member.nick)}
                         >

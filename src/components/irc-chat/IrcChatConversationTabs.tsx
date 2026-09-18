@@ -1,4 +1,4 @@
-import { Hash, PanelLeftClose, PanelLeftOpen, Users, X } from "lucide-react";
+import { Users, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   isClientDesktopShell,
@@ -7,8 +7,6 @@ import {
 import type { IrcActiveView } from "./irc-chat-types";
 import {
   countDmUnread,
-  formatRoomLabel,
-  listDmThreads,
   nickAvatarHue,
   nickInitial,
 } from "./irc-chat-ui";
@@ -17,11 +15,8 @@ import { ircPmChannelForNick } from "@/lib/irc-chat/dm";
 
 type IrcChatConversationTabsProps = {
   shellLayout: ChatroomShellLayout;
-  sidebarOpen: boolean;
-  onToggleSidebar: () => void;
   activeView: IrcActiveView;
   primaryRoomId: string;
-  activeRoomName: string | undefined;
   openDmPeers: string[];
   privateMessages: Record<string, IrcChatMessage[]>;
   lastReadDmByPeer: Record<string, number>;
@@ -29,17 +24,15 @@ type IrcChatConversationTabsProps = {
   onSelectRoom: (roomId: string) => void;
   onSelectDm: (peerNick: string) => void;
   onCloseDmTab: (peerNick: string) => void;
-  showMembersButton?: boolean;
-  onOpenMembers?: () => void;
 };
 
+/**
+ * Desktop-only DM tabs. Hidden when no open DM tabs (room header owns the public room).
+ */
 export function IrcChatConversationTabs({
   shellLayout,
-  sidebarOpen,
-  onToggleSidebar,
   activeView,
   primaryRoomId,
-  activeRoomName,
   openDmPeers,
   privateMessages,
   lastReadDmByPeer,
@@ -47,65 +40,36 @@ export function IrcChatConversationTabs({
   onSelectRoom,
   onSelectDm,
   onCloseDmTab,
-  showMembersButton,
-  onOpenMembers,
 }: IrcChatConversationTabsProps) {
   const desktop = isClientDesktopShell(shellLayout);
-  if (!desktop) return null;
-
-  const roomId = primaryRoomId;
-  const roomLabel = formatRoomLabel(activeRoomName ?? roomId);
-  const roomActive = activeView.kind === "room";
-  const dmThreads = listDmThreads(privateMessages);
-  const tabPeers =
-    openDmPeers.length > 0
-      ? openDmPeers
-      : dmThreads.map((t) => t.peerNick).slice(0, 8);
+  if (!desktop || openDmPeers.length === 0) return null;
 
   return (
     <div
-      className="hidden h-11 shrink-0 border-b border-border/60 bg-muted/10 md:flex"
+      className="hidden h-10 shrink-0 border-b border-border/50 bg-muted/15 md:flex"
       data-irc-conversation-tabs=""
     >
       <div
-        className="flex h-full min-w-0 flex-1 items-center gap-1 overflow-x-auto overflow-y-hidden px-2 scrollbar-thin"
+        className="flex h-full min-w-0 flex-1 items-center gap-1.5 overflow-x-auto overflow-y-hidden px-3 scrollbar-thin"
         role="tablist"
-        aria-label="Conversations"
+        aria-label="Direct message conversations"
       >
         <button
           type="button"
-          onClick={onToggleSidebar}
-          className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-muted-foreground transition hover:bg-muted/70 hover:text-foreground"
-          title={sidebarOpen ? "Hide sidebar" : "Show sidebar"}
-          aria-label={sidebarOpen ? "Hide sidebar" : "Show sidebar"}
-        >
-          {sidebarOpen ? (
-            <PanelLeftClose className="h-4 w-4" />
-          ) : (
-            <PanelLeftOpen className="h-4 w-4" />
+          role="tab"
+          aria-selected={activeView.kind === "room"}
+          onClick={() => onSelectRoom(primaryRoomId)}
+          className={cn(
+            "inline-flex h-7 shrink-0 items-center rounded-md px-2.5 text-[11px] font-semibold transition-colors",
+            activeView.kind === "room"
+              ? "bg-background text-foreground shadow-sm ring-1 ring-border/60"
+              : "text-muted-foreground hover:bg-background/60 hover:text-foreground",
           )}
+        >
+          Room
         </button>
 
-        {roomId ? (
-          <button
-            type="button"
-            role="tab"
-            aria-selected={roomActive}
-            onClick={() => onSelectRoom(roomId)}
-            title={roomLabel}
-            className={cn(
-              "inline-flex h-8 max-w-[11rem] shrink-0 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium transition-colors",
-              roomActive
-                ? "border-border/70 bg-background text-foreground shadow-sm"
-                : "border-transparent bg-transparent text-muted-foreground hover:bg-muted/40 hover:text-foreground",
-            )}
-          >
-            <Hash className="h-3 w-3 shrink-0 opacity-70" aria-hidden />
-            <span className="truncate">{roomLabel}</span>
-          </button>
-        ) : null}
-
-        {tabPeers.map((peerNick) => {
+        {openDmPeers.map((peerNick) => {
           const active =
             activeView.kind === "dm" &&
             activeView.peerNick.toLowerCase() === peerNick.toLowerCase();
@@ -124,19 +88,19 @@ export function IrcChatConversationTabs({
               role="tab"
               aria-selected={active}
               className={cn(
-                "inline-flex h-8 max-w-[10.5rem] shrink-0 items-center rounded-lg border text-xs font-medium transition-colors",
+                "inline-flex h-7 max-w-[11rem] shrink-0 items-center rounded-md border text-[11px] font-medium transition-colors",
                 active
-                  ? "border-border/70 bg-background text-foreground shadow-sm"
+                  ? "border-border/60 bg-background text-foreground shadow-sm"
                   : "border-transparent bg-transparent text-muted-foreground",
               )}
             >
               <button
                 type="button"
                 onClick={() => onSelectDm(peerNick)}
-                className="inline-flex min-w-0 flex-1 items-center gap-1.5 px-2 py-1 text-left hover:text-foreground"
+                className="inline-flex min-w-0 flex-1 items-center gap-1.5 px-2 py-0.5 text-left hover:text-foreground"
               >
                 <span
-                  className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full text-[9px] font-semibold text-white"
+                  className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[8px] font-semibold text-white"
                   style={{ backgroundColor: `hsl(${hue} 48% 42%)` }}
                   aria-hidden
                 >
@@ -144,7 +108,7 @@ export function IrcChatConversationTabs({
                 </span>
                 <span className="truncate">{peerNick}</span>
                 {unread > 0 ? (
-                  <span className="unread-pop grid h-4 min-w-4 shrink-0 place-items-center rounded-full bg-foreground px-1 text-[9px] font-bold leading-none text-background">
+                  <span className="unread-pop grid h-3.5 min-w-3.5 shrink-0 place-items-center rounded-full bg-foreground px-0.5 text-[8px] font-bold leading-none text-background">
                     {unread > 99 ? "99+" : unread}
                   </span>
                 ) : null}
@@ -156,26 +120,14 @@ export function IrcChatConversationTabs({
                   onCloseDmTab(peerNick);
                 }}
                 aria-label={`Close ${peerNick} tab`}
-                className="mr-1 grid h-5 w-5 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                className="mr-0.5 grid h-4 w-4 shrink-0 place-items-center rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
               >
-                <X className="h-3 w-3" />
+                <X className="h-2.5 w-2.5" />
               </button>
             </div>
           );
         })}
       </div>
-
-      {showMembersButton && onOpenMembers ? (
-        <button
-          type="button"
-          onClick={onOpenMembers}
-          className="chat-icon-btn mr-2 shrink-0"
-          aria-label="Open online users"
-          title="Online users"
-        >
-          <Users className="h-4 w-4" />
-        </button>
-      ) : null}
     </div>
   );
 }

@@ -216,6 +216,8 @@ function IrcChatAppShell() {
 
   const showMobileNav = !isDesktopShell;
   const showCenterHeader = !isDesktopShell;
+  const showDmConversationTabs =
+    isDesktopShell && openDmPeers.length > 0;
   const showInlineSidebar = isDesktopShell;
   const showInlineMembers = isLargeDesktop && activeView.kind === "room";
   const showInlineDmPanel = isLargeDesktop && activeView.kind === "dm";
@@ -224,9 +226,15 @@ function IrcChatAppShell() {
     <div
       ref={shellRef}
       data-irc-chat-app
+      data-yaarzo-desktop={isDesktopShell ? "true" : undefined}
       data-chatroom-shell=""
       data-chatroom-layout={chatroomShellLayoutAttr(shellLayout)}
-      className="mx-auto flex h-[calc(100dvh-3.5rem)] w-full max-w-[1840px] flex-col overflow-hidden overscroll-none bg-background text-foreground lg:h-[calc(100dvh-2rem)] lg:rounded-xl lg:border lg:border-border/70 lg:shadow-[0_8px_32px_-12px_hsl(var(--foreground)/0.1)]"
+      className={cn(
+        "mx-auto flex h-[calc(100dvh-3.5rem)] w-full flex-col overflow-hidden overscroll-none bg-background text-foreground",
+        isDesktopShell
+          ? "max-w-none md:rounded-none md:border-0 md:shadow-none"
+          : "max-w-[1840px] lg:h-[calc(100dvh-2rem)] lg:rounded-xl lg:border lg:border-border/70 lg:shadow-[0_8px_32px_-12px_hsl(var(--foreground)/0.1)]",
+      )}
     >
       {chatroomSidebarBackdropVisible(shellLayout, sidebarOpen) ? (
         <button
@@ -271,13 +279,21 @@ function IrcChatAppShell() {
           ) : null}
 
           {isDesktopShell ? (
-            <IrcChatConversationTabs
-              shellLayout={shellLayout}
+            <IrcChatHeader
+              layout="desktop"
+              view={activeView}
               sidebarOpen={sidebarOpen}
               onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+              showMembersButton={!isLargeDesktop && activeView.kind === "room"}
+              onOpenMembers={() => setMembersOpen(true)}
+            />
+          ) : null}
+
+          {showDmConversationTabs ? (
+            <IrcChatConversationTabs
+              shellLayout={shellLayout}
               activeView={activeView}
               primaryRoomId={activeRoomId}
-              activeRoomName={activeRoomName}
               openDmPeers={openDmPeers}
               privateMessages={state.privateMessages}
               lastReadDmByPeer={lastReadDmByPeer}
@@ -285,8 +301,6 @@ function IrcChatAppShell() {
               onSelectRoom={selectRoom}
               onSelectDm={openDm}
               onCloseDmTab={closeDmTab}
-              showMembersButton={!isLargeDesktop && activeView.kind === "room"}
-              onOpenMembers={() => setMembersOpen(true)}
             />
           ) : null}
 
@@ -308,8 +322,9 @@ function IrcChatAppShell() {
             />
           ) : null}
 
-          <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
-            <IrcChatCenter
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+            <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
+              <IrcChatCenter
               view={activeView}
               showHeader={showCenterHeader}
               onBack={
@@ -335,6 +350,7 @@ function IrcChatAppShell() {
             {showInlineDmPanel ? (
               <IrcDmInfoPanel peerNick={activeView.peerNick} selfNick={selfNick} />
             ) : null}
+            </div>
           </div>
         </main>
       </div>
