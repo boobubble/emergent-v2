@@ -2423,6 +2423,7 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          display_size: string
           height: number | null
           id: string
           is_active: boolean
@@ -2440,6 +2441,7 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
+          display_size?: string
           height?: number | null
           id?: string
           is_active?: boolean
@@ -2457,6 +2459,7 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
+          display_size?: string
           height?: number | null
           id?: string
           is_active?: boolean

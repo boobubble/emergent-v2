@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -25,6 +26,7 @@ import {
   sanitizePackName,
   slugToken,
   todayStamp,
+  type EmojiDisplaySize,
   type StickerCategory,
   type StickerPack,
 } from "@/lib/sticker-catalog";
@@ -53,6 +55,7 @@ type Row = {
   sort_order: number;
   is_active: boolean;
   created_at: string;
+  display_size: EmojiDisplaySize;
 };
 
 type BulkItem = { file: File; status: "pending" | "uploading" | "ok" | "fail"; error?: string };
@@ -403,12 +406,14 @@ function ManagePackView({
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [kind, setKind] = useState<"sticker" | "emoji">("sticker");
+  const [displaySize, setDisplaySize] = useState<EmojiDisplaySize>("small");
   const [singleName, setSingleName] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulk, setBulk] = useState<BulkItem[] | null>(null);
   const [bulkRunning, setBulkRunning] = useState(false);
   const [editRow, setEditRow] = useState<Row | null>(null);
   const [editName, setEditName] = useState("");
+  const [editDisplaySize, setEditDisplaySize] = useState<EmojiDisplaySize>("small");
 
   const selectToggle = (id: string, next: boolean) => {
     setSelected((prev) => {
@@ -455,6 +460,7 @@ function ManagePackView({
       kind,
       userId,
       displayName: singleName || undefined,
+      displaySize: kind === "emoji" ? displaySize : undefined,
     });
     if (!res.ok) return toast.error(`${res.fileName} — ${res.error}`);
     toast.success("Sticker uploaded");
@@ -476,6 +482,7 @@ function ManagePackView({
         packId: pack.id,
         kind,
         userId,
+        displaySize: kind === "emoji" ? displaySize : undefined,
       });
       next[i] = res.ok
         ? { ...next[i], status: "ok" }
@@ -502,7 +509,11 @@ function ManagePackView({
     if (!editRow) return;
     const n = editName.trim();
     if (!n) return toast.error("Name is required");
-    const { error } = await sb.from("custom_stickers").update({ name: n.slice(0, 80) }).eq("id", editRow.id);
+    const patch: { name: string; display_size?: EmojiDisplaySize } = { name: n.slice(0, 80) };
+    if (editRow.kind === "emoji") {
+      patch.display_size = editDisplaySize;
+    }
+    const { error } = await sb.from("custom_stickers").update(patch).eq("id", editRow.id);
     if (error) return toast.error(error.message);
     setEditRow(null);
     onRefresh();
@@ -531,10 +542,38 @@ function ManagePackView({
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="sticker">Sticker (~160px)</SelectItem>
-                <SelectItem value="emoji">Animated Emoji (32px)</SelectItem>
+                <SelectItem value="emoji">Animated Emoji</SelectItem>
               </SelectContent>
             </Select>
           </div>
+          {kind === "emoji" ? (
+            <div className="space-y-2 md:col-span-3">
+              <Label>Display Size</Label>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={displaySize === "small" ? "default" : "outline"}
+                  onClick={() => setDisplaySize("small")}
+                >
+                  Small Emoji
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={displaySize === "large" ? "default" : "outline"}
+                  onClick={() => setDisplaySize("large")}
+                >
+                  Large Emoji
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {displaySize === "small"
+                  ? "Compact animated emoji for inline reactions"
+                  : "Larger animated emoji for expressive reactions"}
+              </p>
+            </div>
+          ) : null}
           <div className="space-y-1.5">
             <Label>Display name (single upload)</Label>
             <Input value={singleName} onChange={(e) => setSingleName(e.target.value)} placeholder="Auto from filename" />
@@ -626,11 +665,28 @@ function ManagePackView({
                 <img src={r.url} alt={r.name} className="h-full w-full object-contain" loading="lazy" />
               </div>
               <div className="min-w-0 flex-1">
-                <button className="truncate text-left text-sm font-medium hover:underline" onClick={() => { setEditRow(r); setEditName(r.name); }}>
+                <button
+                  className="truncate text-left text-sm font-medium hover:underline"
+                  onClick={() => {
+                    setEditRow(r);
+                    setEditName(r.name);
+                    setEditDisplaySize(r.display_size === "large" ? "large" : "small");
+                  }}
+                >
                   {r.name}
                 </button>
                 <div className="truncate text-[11px] text-muted-foreground">
-                  {r.kind} · {pack.name} · {r.width && r.height ? `${r.width}×${r.height}` : "—"}
+                  {r.kind}
+                  {r.kind === "emoji" ? (
+                    <>
+                      {" · "}
+                      <Badge variant="outline" className="px-1 py-0 text-[9px] uppercase">
+                        {r.display_size === "large" ? "Large" : "Small"}
+                      </Badge>
+                    </>
+                  ) : null}
+                  {" · "}
+                  {pack.name} · {r.width && r.height ? `${r.width}×${r.height}` : "—"}
                   {r.size_bytes ? ` · ${(r.size_bytes / 1024).toFixed(0)} KB` : ""}
                 </div>
                 <div className="mt-2 flex items-center gap-2">
@@ -656,10 +712,42 @@ function ManagePackView({
       <Dialog open={!!editRow} onOpenChange={(v) => !v && setEditRow(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Sticker name</DialogTitle>
-            <DialogDescription>Does not rename the Storage file.</DialogDescription>
+            <DialogTitle>{editRow?.kind === "emoji" ? "Emoji settings" : "Sticker name"}</DialogTitle>
+            <DialogDescription>
+              {editRow?.kind === "emoji"
+                ? "Update the display name or presentation size. Does not change the file or Storage path."
+                : "Does not rename the Storage file."}
+            </DialogDescription>
           </DialogHeader>
-          <Input value={editName} onChange={(e) => setEditName(e.target.value)} maxLength={80} />
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label>Name</Label>
+              <Input value={editName} onChange={(e) => setEditName(e.target.value)} maxLength={80} />
+            </div>
+            {editRow?.kind === "emoji" ? (
+              <div className="space-y-2">
+                <Label>Display Size</Label>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={editDisplaySize === "small" ? "default" : "outline"}
+                    onClick={() => setEditDisplaySize("small")}
+                  >
+                    Small Emoji
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={editDisplaySize === "large" ? "default" : "outline"}
+                    onClick={() => setEditDisplaySize("large")}
+                  >
+                    Large Emoji
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditRow(null)}>Cancel</Button>
             <Button onClick={saveName}>Save</Button>

@@ -3,7 +3,14 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { FALLBACK_CATEGORIES, type StickerCategory, type StickerPack } from "@/lib/sticker-catalog";
+import {
+  FALLBACK_CATEGORIES,
+  type EmojiDisplaySize,
+  type StickerCategory,
+  type StickerPack,
+} from "@/lib/sticker-catalog";
+
+export type CustomEmojiDisplaySize = EmojiDisplaySize;
 
 export type CustomEmojiRecord = {
   id: string;
@@ -13,6 +20,7 @@ export type CustomEmojiRecord = {
   packName: string;
   categoryId: string | null;
   sortOrder: number;
+  displaySize: CustomEmojiDisplaySize;
 };
 
 export const CUSTOM_EMOJI_CATALOG_QUERY_KEY = ["custom-emoji-catalog", "active"] as const;
@@ -25,9 +33,22 @@ type StickerRow = {
   kind: string;
   url: string;
   sort_order: number;
+  display_size?: string | null;
 };
 
 const sb = supabase as any;
+
+export function normalizeEmojiDisplaySize(raw: string | null | undefined): CustomEmojiDisplaySize {
+  return raw === "large" ? "large" : "small";
+}
+
+/** CSS classes for rendered IRC message custom emoji (trusted catalog size only). */
+export function ircMessageCustomEmojiClassName(displaySize: CustomEmojiDisplaySize): string {
+  if (displaySize === "large") {
+    return "mx-0.5 inline-block h-[48px] w-[48px] max-w-[48px] align-text-bottom object-contain";
+  }
+  return "mx-0.5 inline-block h-[28px] w-[28px] max-w-[32px] align-text-bottom object-contain md:h-[32px] md:w-[32px]";
+}
 
 /** Pure filter used by fetch + tests. */
 export function rowsToActiveCustomEmojis(
@@ -46,6 +67,7 @@ export function rowsToActiveCustomEmojis(
 
   for (const row of rows) {
     if (row.kind !== "emoji") continue;
+    const displaySize = normalizeEmojiDisplaySize(row.display_size);
     if (row.pack_id) {
       const pack = packById.get(row.pack_id);
       if (!pack) continue;
@@ -57,6 +79,7 @@ export function rowsToActiveCustomEmojis(
         packName: pack.name,
         categoryId: pack.category_id,
         sortOrder: row.sort_order,
+        displaySize,
       });
       continue;
     }
@@ -68,6 +91,7 @@ export function rowsToActiveCustomEmojis(
       packName: row.pack || "Custom",
       categoryId: null,
       sortOrder: row.sort_order,
+      displaySize,
     });
   }
 
@@ -89,7 +113,7 @@ export async function fetchActiveCustomEmojis(): Promise<CustomEmojiRecord[]> {
       .order("sort_order", { ascending: true }),
     sb
       .from("custom_stickers")
-      .select("id, name, pack, pack_id, kind, url, sort_order")
+      .select("id, name, pack, pack_id, kind, url, sort_order, display_size")
       .eq("is_active", true)
       .order("sort_order", { ascending: true }),
   ]);

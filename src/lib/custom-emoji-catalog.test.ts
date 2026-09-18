@@ -1,32 +1,38 @@
 import { describe, expect, it } from "vitest";
 import { FALLBACK_CATEGORIES, type StickerPack } from "@/lib/sticker-catalog";
-import { buildCustomEmojiById, rowsToActiveCustomEmojis } from "@/lib/custom-emoji-catalog";
+import {
+  buildCustomEmojiById,
+  ircMessageCustomEmojiClassName,
+  normalizeEmojiDisplaySize,
+  rowsToActiveCustomEmojis,
+} from "@/lib/custom-emoji-catalog";
+import { createCustomEmojiToken } from "@/lib/irc-chat/irc-custom-emoji";
 
 describe("custom-emoji-catalog", () => {
-  it("includes only active emoji kind rows in active packs", () => {
-    const packs: StickerPack[] = [
-      {
-        id: "pack-1",
-        name: "Party",
-        category_id: "custom",
-        sort_order: 1,
-        is_active: true,
-        created_by: null,
-        created_at: "",
-        updated_at: "",
-      },
-      {
-        id: "pack-hidden",
-        name: "Hidden",
-        category_id: "custom",
-        sort_order: 2,
-        is_active: false,
-        created_by: null,
-        created_at: "",
-        updated_at: "",
-      },
-    ];
+  const packs: StickerPack[] = [
+    {
+      id: "pack-1",
+      name: "Party",
+      category_id: "custom",
+      sort_order: 1,
+      is_active: true,
+      created_by: null,
+      created_at: "",
+      updated_at: "",
+    },
+    {
+      id: "pack-hidden",
+      name: "Hidden",
+      category_id: "custom",
+      sort_order: 2,
+      is_active: false,
+      created_by: null,
+      created_at: "",
+      updated_at: "",
+    },
+  ];
 
+  it("includes only active emoji kind rows in active packs", () => {
     const rows = [
       {
         id: "550e8400-e29b-41d4-a716-446655440000",
@@ -36,6 +42,7 @@ describe("custom-emoji-catalog", () => {
         kind: "emoji",
         url: "https://cdn.example/wave.gif",
         sort_order: 2,
+        display_size: "small",
       },
       {
         id: "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
@@ -63,6 +70,40 @@ describe("custom-emoji-catalog", () => {
     expect(emojis[0]?.packName).toBe("Party");
   });
 
+  it("normalizes missing or unknown display_size to small", () => {
+    expect(normalizeEmojiDisplaySize(undefined)).toBe("small");
+    expect(normalizeEmojiDisplaySize(null)).toBe("small");
+    expect(normalizeEmojiDisplaySize("tiny")).toBe("small");
+  });
+
+  it("preserves explicit small and large display_size", () => {
+    const rows = [
+      {
+        id: "550e8400-e29b-41d4-a716-446655440000",
+        name: "S",
+        pack: "Party",
+        pack_id: "pack-1",
+        kind: "emoji",
+        url: "https://cdn.example/s.gif",
+        sort_order: 1,
+        display_size: "small",
+      },
+      {
+        id: "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
+        name: "L",
+        pack: "Party",
+        pack_id: "pack-1",
+        kind: "emoji",
+        url: "https://cdn.example/l.gif",
+        sort_order: 2,
+        display_size: "large",
+      },
+    ];
+    const emojis = rowsToActiveCustomEmojis(rows, packs, FALLBACK_CATEGORIES);
+    expect(emojis.find((e) => e.id.endsWith("440000"))?.displaySize).toBe("small");
+    expect(emojis.find((e) => e.id.endsWith("430c8"))?.displaySize).toBe("large");
+  });
+
   it("builds case-insensitive id lookup", () => {
     const id = "550e8400-e29b-41d4-a716-446655440000";
     const map = buildCustomEmojiById([
@@ -74,8 +115,20 @@ describe("custom-emoji-catalog", () => {
         packName: "Custom",
         categoryId: null,
         sortOrder: 0,
+        displaySize: "small",
       },
     ]);
     expect(map.get(id.toLowerCase())?.name).toBe("Wave");
+  });
+
+  it("maps IRC message classes by display size", () => {
+    expect(ircMessageCustomEmojiClassName("small")).toContain("h-[28px]");
+    expect(ircMessageCustomEmojiClassName("small")).toContain("md:h-[32px]");
+    expect(ircMessageCustomEmojiClassName("large")).toContain("h-[48px]");
+  });
+
+  it("keeps IRC token format unchanged", () => {
+    const id = "550e8400-e29b-41d4-a716-446655440000";
+    expect(createCustomEmojiToken(id)).toBe(`:e:${id}:`);
   });
 });

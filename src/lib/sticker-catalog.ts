@@ -1,6 +1,7 @@
 /** Central sticker category/pack helpers. Category ids match sticker_categories.id. */
 
 export const STICKERS_BUCKET = "stickers";
+export type EmojiDisplaySize = "small" | "large";
 export const MAX_STICKER_BYTES = 2 * 1024 * 1024;
 export const MAX_BULK_FILES = 20;
 export const MAX_PACK_NAME = 80;

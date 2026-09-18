@@ -5,6 +5,7 @@ import {
   validateStickerFile,
   displayNameFromFilename,
   slugToken,
+  type EmojiDisplaySize,
 } from "./sticker-catalog";
 
 function stickerClient() {
@@ -49,6 +50,7 @@ export async function uploadOneSticker(opts: {
   kind: "sticker" | "emoji";
   userId: string | null;
   displayName?: string;
+  displaySize?: EmojiDisplaySize;
 }): Promise<StickerUploadOk | StickerUploadFail> {
   const fileName = opts.file.name;
   const typeErr = validateStickerFile(opts.file);
@@ -83,9 +85,7 @@ export async function uploadOneSticker(opts: {
     return { ok: false, fileName, error: "Could not build public URL" };
   }
 
-  const { data: row, error: insErr } = await sb
-    .from("custom_stickers")
-    .insert({
+  const insertRow: Record<string, unknown> = {
       name: display,
       pack: opts.packName,
       pack_id: opts.packId,
@@ -97,7 +97,14 @@ export async function uploadOneSticker(opts: {
       width: dims?.w ?? null,
       height: dims?.h ?? null,
       created_by: opts.userId,
-    })
+    };
+  if (opts.kind === "emoji") {
+    insertRow.display_size = opts.displaySize === "large" ? "large" : "small";
+  }
+
+  const { data: row, error: insErr } = await sb
+    .from("custom_stickers")
+    .insert(insertRow)
     .select("id")
     .single();
 
