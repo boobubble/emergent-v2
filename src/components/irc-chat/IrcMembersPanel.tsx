@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { MessageCircle, Search, User, UserCog, Users2, X } from "lucide-react";
+import { MessageCircle, Search, User, Users2, X } from "lucide-react";
+import { IrcChatSettingsMenu } from "./IrcChatSettingsMenu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -196,16 +197,7 @@ export function IrcMembersPanel({
     >
       <div className="flex h-full min-h-0 flex-col overflow-hidden">
         <div className="irc-members-toolbar flex items-center justify-end gap-1 px-2 py-1.5">
-          <a
-            href="/feed?tab=account"
-            target="_blank"
-            rel="noopener noreferrer"
-            title="Profile settings"
-            aria-label="Profile settings"
-            className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
-          >
-            <UserCog className="h-5 w-5" />
-          </a>
+          <IrcChatSettingsMenu mobileSheet={inSheet} />
         </div>
 
         <div className="flex items-center gap-1 px-2 pb-1.5 pt-0.5">

@@ -5,7 +5,15 @@
   --irc-members-w: 256px;
   --irc-header-h: 64px;
   --irc-border-subtle: color-mix(in oklab, var(--border) 88%, #e5e7eb 12%);
-  --irc-shell-lavender: color-mix(in oklab, var(--primary) 4%, #faf9fc 96%);
+  --irc-surface-lavender: color-mix(in oklab, var(--primary) 4%, #faf9fc 96%);
+  --irc-surface-header: color-mix(in oklab, #faf9fc 88%, var(--primary) 12%);
+  --irc-surface-members: color-mix(in oklab, #faf9fc 90%, var(--primary) 10%);
+  --irc-canvas-gradient-top: color-mix(in oklab, #faf9fc 88%, var(--primary) 12%);
+  --irc-canvas-gradient-mid: color-mix(in oklab, var(--background) 96%, var(--primary) 4%);
+  --irc-canvas-gradient-bottom: color-mix(in oklab, var(--background) 94%, var(--primary) 6%);
+  --irc-nav-active-surface: color-mix(in oklab, var(--primary) 12%, #faf9fc 88%);
+  --irc-empty-icon-top: color-mix(in oklab, #ffffff 85%, var(--primary) 15%);
+  --irc-shell-lavender: var(--irc-surface-lavender);
   background: var(--irc-shell-lavender);
 }
 
@@ -26,6 +34,32 @@
 [data-irc-chat-app] [data-chatroom-sidebar][data-irc-column="sidebar"] {
   width: var(--irc-sidebar-w) !important;
   max-width: var(--irc-sidebar-w) !important;
+  transition:
+    width 0.22s ease,
+    max-width 0.22s ease,
+    opacity 0.18s ease,
+    border-color 0.22s ease;
+}
+
+[data-irc-chat-app][data-yaarzo-desktop="true"]
+  [data-chatroom-sidebar][data-irc-column="sidebar"][data-sidebar-open="false"] {
+  width: 0 !important;
+  max-width: 0 !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  border-right-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+[data-irc-chat-app][data-yaarzo-desktop="true"]
+  [data-chatroom-sidebar][data-irc-column="sidebar"][data-sidebar-open="false"]
+  .premium-floating-sidebar {
+  margin: 0 !important;
+  border-width: 0 !important;
+  box-shadow: none !important;
 }
 
 [data-irc-chat-app][data-yaarzo-desktop="true"] {
@@ -69,9 +103,9 @@
 [data-irc-chat-app] .irc-message-canvas {
   background: linear-gradient(
     180deg,
-    color-mix(in oklab, #faf9fc 88%, var(--primary) 12%) 0%,
-    color-mix(in oklab, var(--background) 96%, var(--primary) 4%) 55%,
-    color-mix(in oklab, var(--background) 94%, var(--primary) 6%) 100%
+    var(--irc-canvas-gradient-top) 0%,
+    var(--irc-canvas-gradient-mid) 55%,
+    var(--irc-canvas-gradient-bottom) 100%
   );
 }
 
@@ -106,7 +140,7 @@
 [data-irc-chat-app] .irc-members-panel {
   width: var(--irc-members-w);
   max-width: var(--irc-members-w);
-  background: color-mix(in oklab, #faf9fc 90%, var(--primary) 10%);
+  background: var(--irc-surface-members);
   box-shadow:
     inset 1px 0 0 color-mix(in oklab, var(--border) 75%, transparent),
     -4px 0 24px -20px color-mix(in oklab, var(--foreground) 8%, transparent);
@@ -262,7 +296,7 @@
   min-height: var(--irc-header-h);
   max-height: var(--irc-header-h);
   border-bottom: 1px solid var(--irc-border-subtle);
-  background: color-mix(in oklab, #faf9fc 88%, var(--primary) 12%);
+  background: var(--irc-surface-header);
   box-shadow:
     0 1px 0 color-mix(in oklab, var(--foreground) 4%, transparent),
     0 10px 28px -24px color-mix(in oklab, var(--foreground) 12%, transparent);
@@ -408,7 +442,7 @@
   border: 1px solid color-mix(in oklab, var(--border) 70%, var(--primary) 15%);
   background: linear-gradient(
     145deg,
-    color-mix(in oklab, #ffffff 85%, var(--primary) 15%) 0%,
+    var(--irc-empty-icon-top) 0%,
     color-mix(in oklab, var(--background) 96%, transparent) 100%
   );
   box-shadow:
@@ -429,7 +463,7 @@
 }
 
 [data-irc-chat-app] .premium-nav-item-active.sidebar-room-active {
-  background: color-mix(in oklab, var(--primary) 12%, #faf9fc 88%);
+  background: var(--irc-nav-active-surface);
   border: 1px solid color-mix(in oklab, var(--primary) 18%, transparent);
   border-radius: 0.75rem;
 }
@@ -469,4 +503,62 @@
 
 [data-irc-chat-app] .msg-mine {
   max-width: min(80%, 20rem);
+}
+
+[data-irc-chat-app] .irc-composer-bar-surface {
+  background: color-mix(in oklab, #ffffff 82%, var(--primary) 18%);
+}
+
+/* ── Dark mode (scoped; light tokens above unchanged) ── */
+
+.dark [data-irc-chat-app] {
+  --irc-border-subtle: color-mix(in oklab, var(--border) 75%, transparent);
+  --irc-surface-lavender: color-mix(in oklab, var(--background) 94%, var(--primary) 6%);
+  --irc-surface-header: color-mix(in oklab, var(--card) 90%, var(--primary) 10%);
+  --irc-surface-members: color-mix(in oklab, var(--card) 88%, var(--primary) 12%);
+  --irc-canvas-gradient-top: color-mix(in oklab, hsl(240 8% 16%) 88%, var(--primary) 12%);
+  --irc-canvas-gradient-mid: color-mix(in oklab, var(--background) 92%, var(--primary) 8%);
+  --irc-canvas-gradient-bottom: color-mix(in oklab, var(--background) 90%, var(--primary) 10%);
+  --irc-nav-active-surface: color-mix(in oklab, var(--primary) 22%, var(--card) 78%);
+  --irc-empty-icon-top: color-mix(in oklab, var(--card) 85%, var(--primary) 15%);
+  --irc-shell-lavender: var(--irc-surface-lavender);
+  background: var(--irc-shell-lavender);
+}
+
+.dark [data-irc-chat-app] .chat-glass,
+.dark [data-irc-chat-app] .irc-center-room-header {
+  background: var(--irc-surface-header);
+  box-shadow:
+    0 1px 0 color-mix(in oklab, var(--foreground) 6%, transparent),
+    0 8px 24px -22px color-mix(in oklab, #000 35%, transparent);
+}
+
+.dark [data-irc-chat-app] .chat-composer-footer,
+.dark [data-irc-chat-app] .irc-composer-shell {
+  background: color-mix(in oklab, var(--card) 88%, var(--background) 12%);
+}
+
+.dark [data-irc-chat-app] .irc-composer-bar-surface {
+  background: color-mix(in oklab, var(--card) 82%, var(--background) 18%);
+  border-color: color-mix(in oklab, var(--border) 80%, var(--primary) 20%);
+}
+
+.dark [data-irc-chat-app] .irc-members-toolbar {
+  background: color-mix(in oklab, var(--card) 86%, var(--primary) 14%);
+}
+
+.dark [data-irc-chat-app] .irc-sidebar-dm-empty {
+  background: color-mix(in oklab, var(--card) 70%, var(--primary) 8%);
+  border-color: color-mix(in oklab, var(--border) 65%, var(--primary) 15%);
+}
+
+.dark [data-irc-chat-app] .premium-floating-sidebar {
+  background: color-mix(in oklab, var(--card) 90%, var(--primary) 10%);
+  box-shadow:
+    0 10px 36px -14px color-mix(in oklab, #000 40%, transparent),
+    0 0 0 1px color-mix(in oklab, var(--border) 70%, var(--primary) 15%);
+}
+
+.dark [data-irc-chat-app] .irc-chat-settings-panel {
+  background: var(--popover);
 }

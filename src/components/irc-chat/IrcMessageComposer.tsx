@@ -51,7 +51,7 @@ export function IrcMessageComposer({
   const bar = (
     <div
       className={cn(
-        "chat-composer-glow chat-composer-bar group relative flex min-w-0 items-end gap-0.5 rounded-[1.35rem] border border-border/70 bg-white/80 pb-0 pt-1 pr-0.5 shadow-[0_4px_20px_-10px_hsl(var(--foreground)/0.12)] backdrop-blur-md transition-[border-color,box-shadow] duration-150 dark:bg-card/70",
+        "chat-composer-glow chat-composer-bar irc-composer-bar-surface group relative flex min-w-0 items-end gap-0.5 rounded-[1.35rem] border border-border/70 pb-0 pt-1 pr-0.5 shadow-[0_4px_20px_-10px_hsl(var(--foreground)/0.12)] backdrop-blur-md transition-[border-color,box-shadow] duration-150",
         compact
           ? "pl-1 sm:gap-0.5 sm:pl-2 sm:pr-1"
           : "pl-2 sm:gap-1 sm:pl-4 sm:pr-2",

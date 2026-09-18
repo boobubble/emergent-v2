@@ -263,6 +263,7 @@ function IrcChatAppShell() {
           <div
             data-chatroom-sidebar=""
             data-irc-column="sidebar"
+            data-sidebar-open={sidebarOpen ? "true" : "false"}
             className={cn(chatroomSidebarClassName(shellLayout, sidebarOpen))}
             style={chatroomSidebarStyle(shellLayout, sidebarOpen)}
             aria-hidden={!sidebarOpen}

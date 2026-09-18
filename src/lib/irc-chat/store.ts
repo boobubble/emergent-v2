@@ -51,6 +51,8 @@ export class IrcChatCore {
   private joinedPublicRoom: string | null = null;
   /** Latest UI/core switch target; used to ignore stale room.joined acks. */
   private desiredPublicRoom: string | null = null;
+  /** Client-side acceptance of incoming native IRC PMs (does not disconnect IRC). */
+  private incomingPmEnabled = true;
 
   constructor(options: IrcChatCoreOptions) {
     this.wsUrl = options.wsUrl ?? IRC_CHAT_DEFAULT_WS_URL;
@@ -72,6 +74,11 @@ export class IrcChatCore {
 
   getState(): IrcChatState {
     return this.state;
+  }
+
+  /** Yaarzo client policy: when false, incoming `pm_message` events are not stored. */
+  setIncomingPmEnabled(enabled: boolean): void {
+    this.incomingPmEnabled = enabled;
   }
 
   connect(): void {
@@ -282,6 +289,9 @@ export class IrcChatCore {
         break;
       }
       case "pm_message": {
+        if (!this.incomingPmEnabled) {
+          break;
+        }
         this.patchState({
           privateMessages: receivePrivateMessage(
             this.state.privateMessages,

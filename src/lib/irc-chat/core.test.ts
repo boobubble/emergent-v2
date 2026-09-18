@@ -267,6 +267,133 @@ describe("IrcChatCore integration", () => {
   });
 });
 
+describe("IrcChatCore incoming PM acceptance", () => {
+  beforeEach(resetMockWs);
+  afterEach(teardownMockWs);
+
+  function createCore(auth: Parameters<IrcChatTransport["connect"]>[1]) {
+    const transport = new IrcChatTransport();
+    transport.setKnownRoomIds([IRC_CHAT_PRODUCT_ROOM]);
+    const core = new IrcChatCore({
+      wsUrl: "wss://ws.yaarzo.com",
+      auth,
+      transport,
+    });
+    return { core, transport };
+  }
+
+  function authGuest(core: IrcChatCore) {
+    core.connect();
+    latestSocket().open();
+    latestSocket().emitMessage(authOkFrame("visitor_test123", "Ranjha"));
+  }
+
+  it("accepts incoming PM by default", () => {
+    const { core } = createCore({ kind: "guest", guest: guestAuth });
+    authGuest(core);
+    const messageId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+    latestSocket().emitMessage(
+      pmMessageFrame({ messageId, nick: "Peer", text: "hello" }),
+    );
+    expect(core.getState().privateMessages["ircpm:Peer"]?.some((m) => m.id === messageId)).toBe(
+      true,
+    );
+  });
+
+  it("drops incoming PM when disabled without clearing history", () => {
+    const { core } = createCore({ kind: "guest", guest: guestAuth });
+    authGuest(core);
+    const first = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+    latestSocket().emitMessage(pmMessageFrame({ messageId: first, nick: "Peer", text: "keep" }));
+    expect(core.getState().privateMessages["ircpm:Peer"]?.length).toBe(1);
+
+    core.setIncomingPmEnabled(false);
+    const blocked = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+    latestSocket().emitMessage(
+      pmMessageFrame({ messageId: blocked, nick: "Peer", text: "blocked" }),
+    );
+    expect(core.getState().privateMessages["ircpm:Peer"]?.length).toBe(1);
+    expect(
+      core.getState().privateMessages["ircpm:Peer"]?.some((m) => m.id === blocked),
+    ).toBe(false);
+  });
+
+  it("accepts incoming PM again after re-enable", () => {
+    const { core } = createCore({ kind: "guest", guest: guestAuth });
+    authGuest(core);
+    core.setIncomingPmEnabled(false);
+    const messageId = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
+    latestSocket().emitMessage(
+      pmMessageFrame({ messageId, nick: "Peer", text: "retry" }),
+    );
+    expect(core.getState().privateMessages["ircpm:Peer"]).toBeUndefined();
+
+    core.setIncomingPmEnabled(true);
+    latestSocket().emitMessage(
+      pmMessageFrame({ messageId, nick: "Peer", text: "retry" }),
+    );
+    expect(core.getState().privateMessages["ircpm:Peer"]?.some((m) => m.id === messageId)).toBe(
+      true,
+    );
+  });
+
+  it("does not block public messages when incoming PM is disabled", () => {
+    const { core } = createCore({ kind: "guest", guest: guestAuth });
+    authGuest(core);
+    core.setIncomingPmEnabled(false);
+    const messageId = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee";
+    latestSocket().emitMessage(
+      publicMessageFrame({
+        room: IRC_CHAT_PRODUCT_ROOM,
+        messageId,
+        nick: "Alice",
+        userId: "550e8400-e29b-41d4-a716-446655440001",
+        text: "public hi",
+      }),
+    );
+    const msgs = core.getState().messages[IRC_CHAT_PRODUCT_ROOM] ?? [];
+    expect(msgs.some((m) => m.id === messageId)).toBe(true);
+  });
+
+  it("still confirms outgoing PM on pm_sent when incoming PM is disabled", () => {
+    const { core } = createCore({ kind: "guest", guest: guestAuth });
+    authGuest(core);
+    core.setIncomingPmEnabled(false);
+    core.sendPrivateMessage("Peer", "outgoing");
+    const sent = latestSocket().sent
+      .map((raw) => JSON.parse(raw) as { type?: string; messageId?: string })
+      .find((f) => f.type === "pm.send");
+    expect(sent?.messageId).toBeTruthy();
+    latestSocket().emitMessage(
+      pmSentFrame({
+        messageId: sent!.messageId!,
+        recipientNick: "Peer",
+        text: "outgoing",
+      }),
+    );
+    const msg = core.getState().privateMessages["ircpm:Peer"]?.find(
+      (m) => m.id === sent!.messageId,
+    );
+    expect(msg?.pending).toBe(false);
+  });
+
+  it("does not reconnect when toggling incoming PM acceptance", () => {
+    const transport = new IrcChatTransport();
+    transport.setKnownRoomIds([IRC_CHAT_PRODUCT_ROOM]);
+    const connectSpy = vi.spyOn(transport, "connect");
+    const core = new IrcChatCore({
+      wsUrl: "wss://ws.yaarzo.com",
+      auth: { kind: "guest", guest: guestAuth },
+      transport,
+    });
+    core.connect();
+    expect(connectSpy).toHaveBeenCalledTimes(1);
+    core.setIncomingPmEnabled(false);
+    core.setIncomingPmEnabled(true);
+    expect(connectSpy).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe("irc-chat guardrails", () => {
   it("new core sources avoid legacy fake ids and Supabase transport", async () => {
     const { readFileSync, readdirSync } = await import("node:fs");
