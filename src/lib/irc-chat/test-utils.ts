@@ -139,3 +139,11 @@ export function pmSentFrame(opts: {
 }): string {
   return JSON.stringify({ type: "pm.sent", ...opts });
 }
+
+export function ircJoinLineFrame(room: string, nick: string): string {
+  const channel = room.startsWith("#") ? room : `#${room}`;
+  return JSON.stringify({
+    type: "irc",
+    line: `:${nick}!guest@yaarzo JOIN ${channel}`,
+  });
+}

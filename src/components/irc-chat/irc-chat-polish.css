@@ -125,10 +125,26 @@
   padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
 }
 
-[data-irc-chat-app] .chat-composer-root .chat-composer-bar {
-  max-width: min(100%, 52rem);
+[data-irc-chat-app] .chat-composer-root .chat-composer-bar,
+[data-irc-chat-app] .irc-composer-inner {
+  max-width: min(100%, 72rem);
+  width: 100%;
   margin-left: auto;
   margin-right: auto;
+}
+
+[data-irc-chat-app] .irc-composer-action-btn {
+  flex-shrink: 0;
+}
+
+[data-irc-chat-app] .irc-profile-menu-header {
+  border: 1px solid color-mix(in oklab, var(--border) 55%, transparent);
+  background: color-mix(in oklab, var(--card) 40%, transparent);
+}
+
+[data-irc-chat-app] .irc-profile-menu-row:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--primary) 45%, transparent);
+  outline-offset: 1px;
 }
 
 [data-irc-chat-app] [data-chatroom-members] {

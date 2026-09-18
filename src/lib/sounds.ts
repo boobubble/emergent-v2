@@ -86,6 +86,29 @@ export function playPublicChatTick() {
   });
 }
 
+/** Soft tick when another user joins the active IRC room. */
+export function playUserJoinTick() {
+  gated("user_join", () => {
+    const ac = getCtx();
+    if (!ac) return;
+    try {
+      if (ac.state === "suspended") ac.resume();
+      const now = ac.currentTime;
+      const osc = ac.createOscillator();
+      const gain = ac.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(520, now);
+      osc.frequency.linearRampToValueAtTime(680, now + 0.08);
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.14, now + 0.008);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+      osc.connect(gain).connect(ac.destination);
+      osc.start(now);
+      osc.stop(now + 0.2);
+    } catch { /* ignore */ }
+  });
+}
+
 /** Generic notification ping (friend post, like, reply). */
 export function playNotificationPing() {
   gated("notifications", () => {

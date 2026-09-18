@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 export type SoundKind =
   | "public_chat"
   | "private_chat"
+  | "user_join"
   | "notifications"
   | "username_mention"
   | "calls"
@@ -15,6 +16,7 @@ export type SoundPrefs = Record<SoundKind, boolean>;
 export const SOUND_PREFS_DEFAULTS: SoundPrefs = {
   public_chat: true,
   private_chat: true,
+  user_join: true,
   notifications: true,
   username_mention: true,
   calls: true,

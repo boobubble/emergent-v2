@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { MessageCircle, Search, User, Users2, X } from "lucide-react";
-import { IrcChatSettingsMenu } from "./IrcChatSettingsMenu";
+import { IrcProfileAvatarTrigger } from "./IrcChatSettingsMenu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -196,11 +196,7 @@ export function IrcMembersPanel({
       style={forceDesktopColumn ? { display: "flex" } : undefined}
     >
       <div className="flex h-full min-h-0 flex-col overflow-hidden">
-        <div className="irc-members-toolbar flex items-center justify-end gap-1 px-2 py-1.5">
-          <IrcChatSettingsMenu mobileSheet={inSheet} />
-        </div>
-
-        <div className="irc-members-tabs-row flex items-center gap-1 px-2 pb-1.5 pt-0.5">
+        <div className="irc-members-tabs-row flex items-center gap-1 px-2 pb-1.5 pt-1.5">
           {onClose ? (
             <button
               type="button"
@@ -211,7 +207,7 @@ export function IrcMembersPanel({
               <X className="h-4 w-4" />
             </button>
           ) : null}
-          <div className="irc-members-tab irc-members-tab--active flex-1">
+          <div className="irc-members-tab irc-members-tab--active min-w-0 flex-1">
             <Users2 className="h-3.5 w-3.5 shrink-0" aria-hidden />
             <span className="truncate">Users</span>
           </div>
@@ -230,6 +226,7 @@ export function IrcMembersPanel({
           >
             <Search className="h-4 w-4" />
           </button>
+          <IrcProfileAvatarTrigger mobileSheet={inSheet} />
         </div>
 
         {searchOpen ? (

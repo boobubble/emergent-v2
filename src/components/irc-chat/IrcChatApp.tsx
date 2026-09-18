@@ -163,6 +163,10 @@ function IrcChatAppShell() {
     }
   }, [activeView, state.privateMessages, markDmRead]);
 
+  useEffect(() => {
+    core.setSoundActiveRoom(activeView.kind === "room" ? activeView.roomId : null);
+  }, [core, activeView]);
+
   const activeRoomId =
     activeView.kind === "room" ? activeView.roomId : IRC_CHAT_PRODUCT_ROOM;
   const selfNick = core.getState().ircNick;

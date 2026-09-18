@@ -31,6 +31,7 @@ describe("sound preferences", () => {
     expect(SOUND_PREFS_DEFAULTS).toEqual({
       public_chat: true,
       private_chat: true,
+      user_join: true,
       notifications: true,
       username_mention: true,
       calls: true,
@@ -100,6 +101,7 @@ describe("sound trigger wiring", () => {
     expect(src).toMatch(/gated\("public_chat"/);
     expect(src).toMatch(/gated\("username_mention"/);
     expect(src).toMatch(/gated\("notifications"/);
+    expect(src).toMatch(/gated\("user_join"/);
     expect(src).toMatch(/canPlaySound\("calls"\)/);
   });
 });

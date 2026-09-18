@@ -1,6 +1,13 @@
 import type { IrcChatAuth } from "./auth";
 import { IRC_CHAT_DEFAULT_WS_URL, IRC_CHAT_PRODUCT_ROOM } from "./constants";
 import {
+  defaultIrcChatSoundPlayer,
+  playIncomingPmSoundEffect,
+  playJoinSoundEffect,
+  playPublicMessageSoundEffects,
+  type IrcChatSoundPlayer,
+} from "./irc-sounds";
+import {
   confirmPrivateMessage,
   markPrivateMessageFailed,
   peerAuthorIdForOutgoingPm,
@@ -34,6 +41,7 @@ export type IrcChatCoreOptions = {
   auth: IrcChatAuth;
   transport?: IrcChatTransport;
   fetchImpl?: typeof fetch;
+  soundPlayer?: IrcChatSoundPlayer;
 };
 
 export class IrcChatCore {
@@ -53,12 +61,18 @@ export class IrcChatCore {
   private desiredPublicRoom: string | null = null;
   /** Client-side acceptance of incoming native IRC PMs (does not disconnect IRC). */
   private incomingPmEnabled = true;
+  /** UI-selected room for public/join sounds (null when viewing a DM). */
+  private soundActiveRoom: string | null = IRC_CHAT_PRODUCT_ROOM;
+  /** Skip join sounds until first NAMES snapshot after room join (avoids bootstrap storms). */
+  private joinSoundSuppressedRooms = new Set<string>();
+  private readonly soundPlayer: IrcChatSoundPlayer;
 
   constructor(options: IrcChatCoreOptions) {
     this.wsUrl = options.wsUrl ?? IRC_CHAT_DEFAULT_WS_URL;
     this.roomsUrl = options.roomsUrl ?? null;
     this.auth = options.auth;
     this.fetchImpl = options.fetchImpl ?? fetch;
+    this.soundPlayer = options.soundPlayer ?? defaultIrcChatSoundPlayer;
     this.transport =
       options.transport ??
       new IrcChatTransport();
@@ -79,6 +93,12 @@ export class IrcChatCore {
   /** Yaarzo client policy: when false, incoming `pm_message` events are not stored. */
   setIncomingPmEnabled(enabled: boolean): void {
     this.incomingPmEnabled = enabled;
+  }
+
+  /** Which public room the user is viewing (for message/join sounds). Pass null in DM view. */
+  setSoundActiveRoom(roomId: string | null): void {
+    const trimmed = roomId?.trim();
+    this.soundActiveRoom = trimmed || null;
   }
 
   connect(): void {
@@ -234,6 +254,7 @@ export class IrcChatCore {
           this.state.members[event.room] ?? [],
           event.members,
         );
+        this.joinSoundSuppressedRooms.delete(event.room.trim());
         this.patchState({
           members: { ...this.state.members, [event.room]: members },
         });
@@ -244,6 +265,17 @@ export class IrcChatCore {
         const room = event.event.room || fallbackRoom;
         const key = presenceDedupKey(event.event, room);
         if (shouldSkipPresenceDedup(this.presenceDedup, key)) break;
+
+        if (event.event.event === "join") {
+          playJoinSoundEffect({
+            room,
+            activeSoundRoom: this.soundActiveRoom,
+            joinNick: event.event.nick,
+            selfNick: this.state.ircNick,
+            suppressJoinSoundsForRoom: this.joinSoundSuppressedRooms.has(room.trim()),
+            player: this.soundPlayer,
+          });
+        }
 
         const current = this.state.members[room] ?? [];
         const nextMembers = applyPresenceEvent(current, event.event, fallbackRoom);
@@ -270,6 +302,14 @@ export class IrcChatCore {
             text: event.text,
             ts: Date.now(),
           }),
+        });
+        playPublicMessageSoundEffects({
+          roomId: event.room,
+          activeSoundRoom: this.soundActiveRoom,
+          authorNick: event.nick,
+          text: event.text,
+          selfNick: this.state.ircNick,
+          player: this.soundPlayer,
         });
         break;
       }
@@ -305,6 +345,10 @@ export class IrcChatCore {
             },
           ),
         });
+        playIncomingPmSoundEffect({
+          incomingAccepted: true,
+          player: this.soundPlayer,
+        });
         break;
       }
       case "pm_sent": {
@@ -333,6 +377,7 @@ export class IrcChatCore {
 
     const previous = this.joinedPublicRoom;
     this.joinedPublicRoom = normalized;
+    this.joinSoundSuppressedRooms.add(normalized);
 
     if (previous && previous !== normalized) {
       this.transport.part(previous);
@@ -360,6 +405,7 @@ export class IrcChatCore {
     this.joinedPublicRoom = null;
     this.desiredPublicRoom = null;
     this.presenceDedup.clear();
+    this.joinSoundSuppressedRooms.clear();
   }
 
   private patchState(patch: Partial<IrcChatState>): void {

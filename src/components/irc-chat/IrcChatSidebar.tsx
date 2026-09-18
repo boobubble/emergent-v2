@@ -18,6 +18,7 @@ import {
   nickAvatarHue,
   nickInitial,
 } from "./irc-chat-ui";
+import { useIrcChatTheme } from "./irc-chat-theme";
 
 type IrcChatSidebarProps = {
   activeView: IrcActiveView;
@@ -52,19 +53,7 @@ export function IrcChatSidebar({
   const activeRoomId = activeView.kind === "room" ? activeView.roomId : null;
   const [roomSearch, setRoomSearch] = useState("");
   const [roomFilter, setRoomFilter] = useState<"all">("all");
-  const [theme, setTheme] = useState<"dark" | "light">(() => {
-    if (typeof document === "undefined") return "dark";
-    return document.documentElement.classList.contains("light") ? "light" : "dark";
-  });
-
-  const toggleTheme = () => {
-    const next = theme === "dark" ? "light" : "dark";
-    setTheme(next);
-    localStorage.setItem("palrgo-theme", next);
-    document.documentElement.classList.toggle("light", next === "light");
-  };
-
-  const selfHue = selfNick ? nickAvatarHue(selfNick) : 220;
+  const { theme, toggleTheme } = useIrcChatTheme();
 
   const rooms = useMemo(() => {
     const list = Object.values(state.rooms).sort((a, b) =>
@@ -305,9 +294,12 @@ export function IrcChatSidebar({
         </div>
 
         <div className="sidebar-bottom-panel shrink-0 border-t border-border/40 bg-card/20 px-1.5 pt-1 pb-1.5 backdrop-blur-sm">
-          <div className="mb-1 flex items-center gap-1">
+          <div className="flex items-center gap-1">
             <p className="min-w-0 flex-1 truncate px-1 text-[10px] font-medium text-muted-foreground">
               {rooms.length} channel{rooms.length === 1 ? "" : "s"} · IRC
+              {selfNick && state.status === "authenticated" ? (
+                <span className="text-emerald-500/90"> · connected</span>
+              ) : null}
             </p>
             <button
               type="button"
@@ -319,26 +311,8 @@ export function IrcChatSidebar({
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
           </div>
-          {user ? (
-            <div className="irc-sidebar-profile-card flex items-center gap-2">
-              <span
-                className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white ring-2 ring-background/80"
-                style={{ backgroundColor: `hsl(${selfHue} 48% 42%)` }}
-              >
-                {selfNick ? nickInitial(selfNick) : "?"}
-              </span>
-              <div className="min-w-0 flex-1 leading-tight">
-                <div className="truncate text-[12px] font-bold text-foreground">
-                  {selfNick ?? "Connecting…"}
-                </div>
-                <div className="flex items-center gap-1 text-[10px] text-emerald-500">
-                  <span className="chat-online-dot" style={{ width: "0.35rem", height: "0.35rem" }} aria-hidden />
-                  IRC online
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="rounded-xl border border-border/60 bg-card/70 p-2.5">
+          {!user ? (
+            <div className="mt-1 rounded-xl border border-border/60 bg-card/70 p-2">
               <p className="mb-2 text-[10px] text-muted-foreground">
                 Chatting as{" "}
                 <span className="font-semibold text-foreground">{selfNick ?? "Guest"}</span> in
@@ -353,7 +327,7 @@ export function IrcChatSidebar({
                 Sign in to unlock all
               </button>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
     </aside>
