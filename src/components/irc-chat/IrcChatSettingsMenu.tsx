@@ -189,7 +189,7 @@ export function IrcChatSettingsMenu({ mobileSheet }: { mobileSheet?: boolean }) 
         align="end"
         side="bottom"
         sideOffset={6}
-        className="w-[min(100vw-1.5rem,18rem)] border-border/80 p-0 shadow-lg"
+        className="w-[min(100vw-1.5rem,18rem)] border-border/80 bg-popover p-0 shadow-lg irc-chat-settings-popover"
       >
         <SettingsBody onClose={() => setOpen(false)} />
       </PopoverContent>

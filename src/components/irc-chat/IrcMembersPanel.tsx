@@ -200,7 +200,7 @@ export function IrcMembersPanel({
           <IrcChatSettingsMenu mobileSheet={inSheet} />
         </div>
 
-        <div className="flex items-center gap-1 px-2 pb-1.5 pt-0.5">
+        <div className="irc-members-tabs-row flex items-center gap-1 px-2 pb-1.5 pt-0.5">
           {onClose ? (
             <button
               type="button"
