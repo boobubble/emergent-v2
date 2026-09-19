@@ -30,7 +30,7 @@ function CodyChatPage() {
   useEffect(() => {
     const handleCodyChatMessage = (event: MessageEvent) => {
       if (event.origin === "https://chat.yaarzo.com" && event.data?.type === "YAARZO_LOGOUT") {
-        void logout();
+        void logout().then(() => window.location.replace("/"));
       }
     };
 
