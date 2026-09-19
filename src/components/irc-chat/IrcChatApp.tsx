@@ -42,7 +42,7 @@ import { IrcMessageList } from "./IrcMessageList";
 import { IrcMobileNav } from "./IrcMobileNav";
 import { IrcMobileDmDock } from "./IrcMobileDmDock";
 import type { IrcActiveView, IrcComposerReplyTarget } from "./irc-chat-types";
-import { buildReplyPreviewText } from "@/lib/irc-chat/reply";
+import { buildIrcMessageReplyPreview } from "@/lib/irc-chat/reply";
 import { DjPlayerHost } from "@/components/chat/DjFooter";
 import "./irc-chat-polish.css";
 
@@ -53,6 +53,7 @@ function IrcChatCenter({
   showComposer = true,
   onMinimizeDm,
   onSend,
+  onSendSticker,
   replyingTo,
   onCancelReply,
   onReplyToMessage,
@@ -65,6 +66,7 @@ function IrcChatCenter({
   showComposer?: boolean;
   onMinimizeDm?: () => void;
   onSend: (text: string) => void;
+  onSendSticker?: (stickerId: string) => void;
   replyingTo?: IrcComposerReplyTarget | null;
   onCancelReply?: () => void;
   onReplyToMessage?: (msg: import("@/lib/irc-chat").IrcChatMessage) => void;
@@ -106,6 +108,7 @@ function IrcChatCenter({
       {showComposer ? (
         <IrcMessageComposer
           onSend={onSend}
+          onSendSticker={view.kind === "room" ? onSendSticker : undefined}
           view={view}
           shell="embedded"
           replyingTo={replyingTo}
@@ -269,7 +272,7 @@ function IrcChatAppShell() {
         roomId: activeView.roomId,
         messageId: msg.id,
         authorNick: msg.nick,
-        textPreview: buildReplyPreviewText(msg.text),
+        textPreview: buildIrcMessageReplyPreview(msg),
       });
     },
     [activeView],
@@ -305,6 +308,21 @@ function IrcChatAppShell() {
       } else {
         core.sendPrivateMessage(activeView.peerNick, text);
       }
+    },
+    [activeView, core, replyingTo],
+  );
+
+  const handleSendSticker = useCallback(
+    (stickerId: string) => {
+      if (activeView.kind !== "room") return;
+      const replyId =
+        replyingTo?.roomId === activeView.roomId ? replyingTo.messageId : undefined;
+      core.sendStickerMessage(
+        stickerId,
+        activeView.roomId,
+        replyId ? { replyToMessageId: replyId } : undefined,
+      );
+      setReplyingTo(null);
     },
     [activeView, core, replyingTo],
   );
@@ -433,6 +451,7 @@ function IrcChatAppShell() {
               onReplyToMessage={handleReplyToMessage}
               onToggleReaction={handleToggleReaction}
               reactionsByMessageId={roomReactions}
+              onSendSticker={handleSendSticker}
               onBack={
                 activeView.kind === "dm"
                   ? () => setActiveView({ kind: "room", roomId: activeRoomId })
@@ -453,6 +472,9 @@ function IrcChatAppShell() {
             >
               <IrcMessageComposer
                 onSend={handleSend}
+                onSendSticker={
+                  activeView.kind === "room" ? handleSendSticker : undefined
+                }
                 view={activeView}
                 shell="footer"
                 replyingTo={replyingTo}

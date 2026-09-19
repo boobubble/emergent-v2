@@ -145,7 +145,7 @@ export class IrcChatTransport {
     room: string,
     messageId: string,
     text: string,
-    replyToMessageId?: string,
+    options?: { replyToMessageId?: string; contentType?: "sticker"; stickerId?: string },
   ): boolean {
     if (!isValidMessageId(messageId)) return false;
     const trimmed = text.trim();
@@ -154,9 +154,7 @@ export class IrcChatTransport {
     if (!isIrcChatLiveRoom(normalizedRoom, this.knownRoomIds)) return false;
     try {
       this.ws.send(
-        JSON.stringify(
-          buildPublicSendFrame(normalizedRoom, messageId, trimmed, replyToMessageId),
-        ),
+        JSON.stringify(buildPublicSendFrame(normalizedRoom, messageId, trimmed, options)),
       );
       return true;
     } catch {

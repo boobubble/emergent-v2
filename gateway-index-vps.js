@@ -45,6 +45,7 @@ const {
   listIrcMessageReactions,
   toggleIrcMessageReaction,
 } = require("./lib/irc-reactions.cjs");
+const { parseOutboundMessageContent } = require("./lib/irc-message-content.cjs");
 const {
   parseIrcAccountLinksJson,
   lookupIrcAccountLink,
@@ -257,6 +258,10 @@ function broadcastChannelMessage(wss, payload) {
   };
   if (payload.replyToMessageId && isValidUuid(payload.replyToMessageId)) {
     frame.replyToMessageId = payload.replyToMessageId.trim();
+  }
+  if (payload.contentType === "sticker" && payload.stickerId && isValidUuid(payload.stickerId)) {
+    frame.contentType = "sticker";
+    frame.stickerId = payload.stickerId.trim();
   }
   broadcastToAuthenticatedClients(wss, frame);
 }
@@ -859,10 +864,17 @@ wss.on("connection", async (ws) => {
       return;
     }
 
-    const text = typeof payload.text === "string"
-      ? payload.text.trim()
-      : "";
+    const parsedContent = parseOutboundMessageContent(payload);
+    if (!parsedContent.ok) {
+      ws.send(JSON.stringify({
+        type: "error",
+        code: parsedContent.code || "INVALID_MESSAGE",
+        message: parsedContent.message || "Invalid message",
+      }));
+      return;
+    }
 
+    const text = parsedContent.text;
     if (!text || text.length > 500) {
       ws.send(JSON.stringify({
         type: "error",
@@ -906,6 +918,8 @@ wss.on("connection", async (ws) => {
       room,
       text: safeText,
       replyToMessageId,
+      contentType: parsedContent.contentType,
+      stickerId: parsedContent.stickerId,
       ws,
     });
 
@@ -928,6 +942,10 @@ wss.on("connection", async (ws) => {
     };
     if (replyToMessageId) {
       sentFrame.replyToMessageId = replyToMessageId;
+    }
+    if (parsedContent.contentType === "sticker" && parsedContent.stickerId) {
+      sentFrame.contentType = "sticker";
+      sentFrame.stickerId = parsedContent.stickerId;
     }
     ws.send(JSON.stringify(sentFrame));
 

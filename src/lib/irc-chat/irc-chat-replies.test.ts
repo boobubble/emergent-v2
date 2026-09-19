@@ -5,10 +5,12 @@ import {
   parseOptionalReplyToMessageId,
 } from "./protocol";
 import {
+  buildIrcMessageReplyPreview,
   buildReplyPreviewText,
   indexMessagesById,
   resolveReplyParent,
 } from "./reply";
+import { createStickerToken } from "./irc-sticker";
 import type { IrcChatMessage } from "./types";
 import { IrcChatCore } from "./store";
 import { IRC_CHAT_PRODUCT_ROOM } from "./constants";
@@ -43,10 +45,14 @@ describe("irc reply protocol", () => {
       text: "hello",
     });
 
-    const withReply = buildPublicSendFrame("lobby", REPLY_ID, "hello", PARENT_ID);
+    const withReply = buildPublicSendFrame("lobby", REPLY_ID, "hello", {
+      replyToMessageId: PARENT_ID,
+    });
     expect(withReply.replyToMessageId).toBe(PARENT_ID);
 
-    const bad = buildPublicSendFrame("lobby", REPLY_ID, "hello", BAD_REPLY);
+    const bad = buildPublicSendFrame("lobby", REPLY_ID, "hello", {
+      replyToMessageId: BAD_REPLY,
+    });
     expect(bad.replyToMessageId).toBeUndefined();
   });
 
@@ -77,6 +83,17 @@ describe("irc reply protocol", () => {
     if (malformed?.kind === "public_message") {
       expect(malformed.replyToMessageId).toBeUndefined();
     }
+  });
+
+  it("reply preview uses Sticker label for sticker messages", () => {
+    expect(
+      buildIrcMessageReplyPreview({
+        text: createStickerToken(PARENT_ID),
+        contentType: "sticker",
+        stickerId: PARENT_ID,
+      }),
+    ).toBe("Sticker");
+    expect(buildReplyPreviewText("plain text")).toBe("plain text");
   });
 
   it("parseOptionalReplyToMessageId validates UUIDs only", () => {

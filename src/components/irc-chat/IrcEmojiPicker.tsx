@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { Loader2 } from "lucide-react";
 import { pickerItemPointerHandlers } from "@/components/chat/picker-pointer-tap";
 import {
+  partitionCustomEmojisByDisplaySize,
   useCustomEmojiCatalog,
   type CustomEmojiRecord,
 } from "@/lib/custom-emoji-catalog";
@@ -31,33 +32,37 @@ export function IrcEmojiPicker({
           No Yaarzo emojis yet.
         </p>
       ) : (
-        <div className="max-h-[min(50dvh,320px)] overflow-y-auto p-2">
+        <div className="max-h-[min(50dvh,360px)] overflow-y-auto p-2">
           {byPack.map((group) => {
-            const small = group.items.filter((e) => e.displaySize === "small");
-            const large = group.items.filter((e) => e.displaySize === "large");
+            const { smallEmojis, largeEmojis } = partitionCustomEmojisByDisplaySize(group.items);
             return (
-              <div key={group.packKey} className="mb-3 last:mb-0">
-                <p className="mb-1.5 px-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+              <div key={group.packKey} className="mb-4 last:mb-0">
+                <p className="mb-2 px-0.5 text-[11px] font-bold uppercase tracking-wide text-foreground/90">
                   {group.packName}
                 </p>
-                {small.length > 0 ? (
-                  <EmojiSizeSection
-                    label="Small Emojis"
-                    emojis={small}
-                    sizeClass="small"
-                    onPick={onPick}
-                    onClose={onClose}
-                  />
-                ) : null}
-                {large.length > 0 ? (
-                  <EmojiSizeSection
-                    label="Large Emojis"
-                    emojis={large}
-                    sizeClass="large"
-                    onPick={onPick}
-                    onClose={onClose}
-                  />
-                ) : null}
+                <div className="space-y-3">
+                  {smallEmojis.length > 0 ? (
+                    <EmojiSizeSection
+                      label="Small Emojis"
+                      emojis={smallEmojis}
+                      sizeClass="small"
+                      onPick={onPick}
+                      onClose={onClose}
+                    />
+                  ) : null}
+                  {smallEmojis.length > 0 && largeEmojis.length > 0 ? (
+                    <div className="border-t border-border/70" role="separator" />
+                  ) : null}
+                  {largeEmojis.length > 0 ? (
+                    <EmojiSizeSection
+                      label="Large Emojis"
+                      emojis={largeEmojis}
+                      sizeClass="large"
+                      onPick={onPick}
+                      onClose={onClose}
+                    />
+                  ) : null}
+                </div>
               </div>
             );
           })}
@@ -82,12 +87,20 @@ function EmojiSizeSection({
 }) {
   const isLarge = sizeClass === "large";
   return (
-    <div className={cn("mb-2 last:mb-0", isLarge && "mt-2")}>
-      <p className="mb-1 px-0.5 text-[9px] font-semibold text-muted-foreground/90">{label}</p>
+    <section
+      className={cn(
+        "rounded-lg border border-border/70 bg-muted/15 p-2.5",
+        isLarge && "bg-muted/25 p-3",
+      )}
+      aria-label={label}
+    >
+      <h4 className="mb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+        {label}
+      </h4>
       <div
         className={cn(
-          "grid gap-1.5",
-          isLarge ? "grid-cols-4 sm:grid-cols-5" : "grid-cols-7 sm:grid-cols-8",
+          "grid",
+          isLarge ? "grid-cols-3 gap-2.5 sm:grid-cols-4" : "grid-cols-6 gap-1 sm:grid-cols-7",
         )}
       >
         {emojis.map((emoji) => (
@@ -100,20 +113,20 @@ function EmojiSizeSection({
               onClose?.();
             })}
             className={cn(
-              "grid place-items-center rounded-lg transition-transform hover:scale-105 hover:bg-muted/50 active:scale-95",
-              isLarge ? "h-16 w-16" : "h-9 w-9",
+              "grid place-items-center rounded-lg border border-transparent transition-transform hover:scale-105 hover:border-border/60 hover:bg-background/40 active:scale-95",
+              isLarge ? "h-[4.25rem] w-full min-w-[4.25rem]" : "h-9 w-9",
             )}
           >
             <img
               src={emoji.url}
               alt={emoji.name}
               loading="lazy"
-              className={cn("object-contain", isLarge ? "h-14 w-14" : "h-8 w-8")}
+              className={cn("object-contain", isLarge ? "h-14 w-14 sm:h-16 sm:w-16" : "h-8 w-8")}
             />
           </button>
         ))}
       </div>
-    </div>
+    </section>
   );
 }
 

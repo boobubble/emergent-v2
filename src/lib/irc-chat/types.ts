@@ -32,6 +32,9 @@ export type IrcChatMessage = {
   failed?: boolean;
   /** References another message in the same room (gateway metadata, not IRC text). */
   replyToMessageId?: string;
+  /** Gateway metadata — not sent as IRC tags. */
+  contentType?: "text" | "sticker";
+  stickerId?: string;
 };
 
 export type IrcChatPresenceEvent = {

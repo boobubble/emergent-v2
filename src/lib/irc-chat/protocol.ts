@@ -6,6 +6,7 @@ import {
   type IrcMessageReactions,
   type IrcReactionType,
 } from "./reactions";
+import { resolveStickerIdForMessage, type IrcMessageContentType } from "./irc-sticker";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -52,7 +53,23 @@ export type GatewayFrame = {
   messageIds?: unknown;
   items?: unknown;
   reactions?: unknown;
+  contentType?: string;
+  stickerId?: string;
 };
+
+export function parseOptionalMessageContentMeta(frame: GatewayFrame): {
+  contentType?: IrcMessageContentType;
+  stickerId?: string;
+} {
+  const text = typeof frame.text === "string" ? frame.text.trim() : "";
+  const stickerId = resolveStickerIdForMessage(
+    text,
+    asNonEmptyString(frame.stickerId) || null,
+    asNonEmptyString(frame.contentType) || null,
+  );
+  if (!stickerId) return {};
+  return { contentType: "sticker", stickerId };
+}
 
 export function parseGatewayFrame(raw: string): GatewayFrame | null {
   try {
@@ -77,6 +94,8 @@ export type ParsedGatewayEvent =
       userId: string;
       text: string;
       replyToMessageId?: string;
+      contentType?: IrcMessageContentType;
+      stickerId?: string;
     }
   | {
       kind: "public_message_sent";
@@ -86,6 +105,8 @@ export type ParsedGatewayEvent =
       userId: string;
       text: string;
       replyToMessageId?: string;
+      contentType?: IrcMessageContentType;
+      stickerId?: string;
     }
   | { kind: "pm_message"; messageId: string; nick: string; text: string }
   | { kind: "pm_sent"; messageId: string; recipientNick: string; text: string }
@@ -144,7 +165,17 @@ export function parseGatewayEvent(frame: GatewayFrame): ParsedGatewayEvent | nul
       return null;
     }
     const replyToMessageId = parseOptionalReplyToMessageId(frame.replyToMessageId);
-    return { kind: "public_message", room, messageId, nick, userId, text, replyToMessageId };
+    const contentMeta = parseOptionalMessageContentMeta(frame);
+    return {
+      kind: "public_message",
+      room,
+      messageId,
+      nick,
+      userId,
+      text,
+      replyToMessageId,
+      ...contentMeta,
+    };
   }
 
   if (frame.type === "message.sent") {
@@ -157,7 +188,17 @@ export function parseGatewayEvent(frame: GatewayFrame): ParsedGatewayEvent | nul
     const replyToMessageId = parseOptionalReplyToMessageId(
       (frame as GatewayFrame).replyToMessageId,
     );
-    return { kind: "public_message_sent", room, messageId, nick, userId, text, replyToMessageId };
+    const contentMeta = parseOptionalMessageContentMeta(frame);
+    return {
+      kind: "public_message_sent",
+      room,
+      messageId,
+      nick,
+      userId,
+      text,
+      replyToMessageId,
+      ...contentMeta,
+    };
   }
 
   if (frame.type === "pm.message") {
@@ -271,13 +312,15 @@ export function buildPublicSendFrame(
   room: string,
   messageId: string,
   text: string,
-  replyToMessageId?: string,
+  options?: { replyToMessageId?: string; contentType?: "sticker"; stickerId?: string },
 ): {
   type: "message.send";
   room: string;
   messageId: string;
   text: string;
   replyToMessageId?: string;
+  contentType?: "sticker";
+  stickerId?: string;
 } {
   const frame = {
     type: "message.send" as const,
@@ -285,8 +328,13 @@ export function buildPublicSendFrame(
     messageId: messageId.trim(),
     text: text.trim(),
   };
-  const reply = parseOptionalReplyToMessageId(replyToMessageId);
-  return reply ? { ...frame, replyToMessageId: reply } : frame;
+  const reply = parseOptionalReplyToMessageId(options?.replyToMessageId);
+  const stickerId = options?.stickerId?.trim().toLowerCase();
+  const withReply = reply ? { ...frame, replyToMessageId: reply } : frame;
+  if (options?.contentType === "sticker" && stickerId && isValidMessageId(stickerId)) {
+    return { ...withReply, contentType: "sticker", stickerId };
+  }
+  return withReply;
 }
 
 export function buildPmSendFrame(

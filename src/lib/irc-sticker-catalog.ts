@@ -1,4 +1,4 @@
-/** Read-only admin custom emoji catalog (custom_stickers kind=emoji). */
+/** Read-only IRC sticker catalog (custom_stickers kind=sticker). */
 
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -10,9 +10,7 @@ import {
   type StickerPack,
 } from "@/lib/sticker-catalog";
 
-export type CustomEmojiDisplaySize = EmojiDisplaySize;
-
-export type CustomEmojiRecord = {
+export type IrcStickerRecord = {
   id: string;
   name: string;
   url: string;
@@ -20,10 +18,10 @@ export type CustomEmojiRecord = {
   packName: string;
   categoryId: string | null;
   sortOrder: number;
-  displaySize: CustomEmojiDisplaySize;
+  displaySize: EmojiDisplaySize;
 };
 
-export const CUSTOM_EMOJI_CATALOG_QUERY_KEY = ["custom-emoji-catalog", "active"] as const;
+export const IRC_STICKER_CATALOG_QUERY_KEY = ["irc-sticker-catalog", "active"] as const;
 
 type StickerRow = {
   id: string;
@@ -38,33 +36,15 @@ type StickerRow = {
 
 const sb = supabase as any;
 
-export function normalizeEmojiDisplaySize(raw: string | null | undefined): CustomEmojiDisplaySize {
+export function normalizeStickerDisplaySize(raw: string | null | undefined): EmojiDisplaySize {
   return raw === "large" ? "large" : "small";
 }
 
-export function partitionCustomEmojisByDisplaySize(emojis: CustomEmojiRecord[]): {
-  smallEmojis: CustomEmojiRecord[];
-  largeEmojis: CustomEmojiRecord[];
-} {
-  const smallEmojis = emojis.filter((emoji) => emoji.displaySize === "small");
-  const largeEmojis = emojis.filter((emoji) => emoji.displaySize === "large");
-  return { smallEmojis, largeEmojis };
-}
-
-/** CSS classes for rendered IRC message custom emoji (trusted catalog size only). */
-export function ircMessageCustomEmojiClassName(displaySize: CustomEmojiDisplaySize): string {
-  if (displaySize === "large") {
-    return "mx-0.5 inline-block h-[64px] w-[64px] max-w-[72px] align-text-bottom object-contain md:h-[72px] md:w-[72px]";
-  }
-  return "mx-0.5 inline-block h-[28px] w-[28px] max-w-[32px] align-text-bottom object-contain md:h-[32px] md:w-[32px]";
-}
-
-/** Pure filter used by fetch + tests. */
-export function rowsToActiveCustomEmojis(
+export function rowsToActiveIrcStickers(
   rows: StickerRow[],
   packs: StickerPack[],
   categories: StickerCategory[],
-): CustomEmojiRecord[] {
+): IrcStickerRecord[] {
   const activeCategoryIds = new Set(categories.filter((c) => c.is_active).map((c) => c.id));
   const packById = new Map(
     packs
@@ -72,11 +52,11 @@ export function rowsToActiveCustomEmojis(
       .map((p) => [p.id, p]),
   );
 
-  const out: CustomEmojiRecord[] = [];
+  const out: IrcStickerRecord[] = [];
 
   for (const row of rows) {
-    if (row.kind !== "emoji") continue;
-    const displaySize = normalizeEmojiDisplaySize(row.display_size);
+    if (row.kind !== "sticker") continue;
+    const displaySize = normalizeStickerDisplaySize(row.display_size);
     if (row.pack_id) {
       const pack = packById.get(row.pack_id);
       if (!pack) continue;
@@ -97,7 +77,7 @@ export function rowsToActiveCustomEmojis(
       name: row.name,
       url: row.url,
       packId: null,
-      packName: row.pack || "Custom",
+      packName: row.pack || "Stickers",
       categoryId: null,
       sortOrder: row.sort_order,
       displaySize,
@@ -108,7 +88,7 @@ export function rowsToActiveCustomEmojis(
   return out;
 }
 
-export async function fetchActiveCustomEmojis(): Promise<CustomEmojiRecord[]> {
+export async function fetchActiveIrcStickers(): Promise<IrcStickerRecord[]> {
   const [catRes, packRes, stickerRes] = await Promise.all([
     sb
       .from("sticker_categories")
@@ -127,47 +107,44 @@ export async function fetchActiveCustomEmojis(): Promise<CustomEmojiRecord[]> {
       .order("sort_order", { ascending: true }),
   ]);
 
-  if (catRes.error) {
-    throw new Error(catRes.error.message);
-  }
-  if (packRes.error) {
-    throw new Error(packRes.error.message);
-  }
-  if (stickerRes.error) {
-    throw new Error(stickerRes.error.message);
-  }
+  if (catRes.error) throw new Error(catRes.error.message);
+  if (packRes.error) throw new Error(packRes.error.message);
+  if (stickerRes.error) throw new Error(stickerRes.error.message);
 
   const categories = (catRes.data?.length ? catRes.data : FALLBACK_CATEGORIES) as StickerCategory[];
   const packs = (packRes.data ?? []) as StickerPack[];
   const rows = (stickerRes.data ?? []) as StickerRow[];
-  return rowsToActiveCustomEmojis(rows, packs, categories);
+  return rowsToActiveIrcStickers(rows, packs, categories);
 }
 
-export function buildCustomEmojiById(
-  emojis: CustomEmojiRecord[],
-): Map<string, CustomEmojiRecord> {
-  const map = new Map<string, CustomEmojiRecord>();
-  for (const e of emojis) {
-    map.set(e.id.toLowerCase(), e);
+export function buildStickerById(stickers: IrcStickerRecord[]): Map<string, IrcStickerRecord> {
+  const map = new Map<string, IrcStickerRecord>();
+  for (const s of stickers) {
+    map.set(s.id.toLowerCase(), s);
   }
   return map;
 }
 
-export function useCustomEmojiCatalog() {
+/** CSS classes for sticker-only IRC messages (trusted catalog size). */
+export function ircMessageStickerClassName(displaySize: EmojiDisplaySize): string {
+  if (displaySize === "large") {
+    return "irc-msg-sticker irc-msg-sticker--large max-h-[140px] max-w-[140px] sm:max-h-[160px] sm:max-w-[160px]";
+  }
+  return "irc-msg-sticker irc-msg-sticker--small max-h-[96px] max-w-[96px] sm:max-h-[112px] sm:max-w-[112px]";
+}
+
+export function useIrcStickerCatalog() {
   const query = useQuery({
-    queryKey: CUSTOM_EMOJI_CATALOG_QUERY_KEY,
-    queryFn: fetchActiveCustomEmojis,
+    queryKey: IRC_STICKER_CATALOG_QUERY_KEY,
+    queryFn: fetchActiveIrcStickers,
     staleTime: 5 * 60_000,
     gcTime: 30 * 60_000,
   });
 
-  const byId = useMemo(
-    () => buildCustomEmojiById(query.data ?? []),
-    [query.data],
-  );
+  const byId = useMemo(() => buildStickerById(query.data ?? []), [query.data]);
 
   return {
-    emojis: query.data ?? [],
+    stickers: query.data ?? [],
     byId,
     isLoading: query.isLoading,
     isError: query.isError,

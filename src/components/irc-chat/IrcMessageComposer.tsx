@@ -1,9 +1,10 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Plus,
   Send,
   Smile,
   Sparkles,
+  Sticker,
   X,
   Youtube,
 } from "lucide-react";
@@ -13,6 +14,7 @@ import { GiphyPicker } from "@/components/chat/GiphyPicker";
 import { YoutubePicker } from "@/components/chat/YoutubePicker";
 import { IrcComposerPickerPortal } from "./IrcComposerPickerPortal";
 import { IrcEmojiPicker } from "./IrcEmojiPicker";
+import { IrcStickerPicker } from "./IrcStickerPicker";
 import { useAppSettings } from "@/lib/app-settings";
 import { mergeMediaConfig } from "@/lib/media-providers-config";
 import { cn } from "@/lib/utils";
@@ -24,6 +26,7 @@ import "./irc-message-input.css";
 
 type IrcMessageComposerProps = {
   onSend: (text: string) => void;
+  onSendSticker?: (stickerId: string) => void;
   view: IrcActiveView;
   shell?: "embedded" | "footer";
   className?: string;
@@ -64,6 +67,7 @@ function ComposerIconBtn({
 
 export function IrcMessageComposer({
   onSend,
+  onSendSticker,
   view,
   shell = "embedded",
   className,
@@ -78,6 +82,7 @@ export function IrcMessageComposer({
 
   const [draft, setDraft] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
+  const [showSticker, setShowSticker] = useState(false);
   const [showGiphy, setShowGiphy] = useState(false);
   const [showYoutube, setShowYoutube] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
@@ -103,6 +108,7 @@ export function IrcMessageComposer({
 
   const closePickers = () => {
     setShowEmoji(false);
+    setShowSticker(false);
     setShowGiphy(false);
     setShowYoutube(false);
   };
@@ -185,7 +191,12 @@ export function IrcMessageComposer({
     [giphyOn, youtubeOn],
   );
 
-  const pickerOpen = showEmoji || showGiphy || showYoutube;
+  const pickerOpen = showEmoji || showSticker || showGiphy || showYoutube;
+
+  useEffect(() => {
+    closePickers();
+    setMoreOpen(false);
+  }, [view.kind, view.kind === "room" ? view.roomId : view.peerNick]);
 
   const showReplyBanner =
     view.kind === "room" &&
@@ -232,12 +243,28 @@ export function IrcMessageComposer({
               className="mb-0.5 hidden md:grid"
               onClick={() => {
                 setShowEmoji((s) => !s);
+                setShowSticker(false);
                 setShowGiphy(false);
                 setShowYoutube(false);
               }}
             >
               <Smile className="h-4 w-4" />
             </ComposerIconBtn>
+            {onSendSticker ? (
+              <ComposerIconBtn
+                label="Sticker"
+                active={showSticker}
+                className="mb-0.5 hidden md:grid"
+                onClick={() => {
+                  setShowSticker((s) => !s);
+                  setShowEmoji(false);
+                  setShowGiphy(false);
+                  setShowYoutube(false);
+                }}
+              >
+                <Sticker className="h-4 w-4" />
+              </ComposerIconBtn>
+            ) : null}
             {desktopExtras.map((a) => (
               <ComposerIconBtn
                 key={a.id}
@@ -288,6 +315,7 @@ export function IrcMessageComposer({
           className={cn("mb-0.5", !compact && "md:hidden")}
           onClick={() => {
             setShowEmoji((s) => !s);
+            setShowSticker(false);
             setShowGiphy(false);
             setShowYoutube(false);
           }}
@@ -318,6 +346,16 @@ export function IrcMessageComposer({
           <IrcEmojiPicker
             onPick={(token) => insertText(token)}
             onClose={() => setShowEmoji(false)}
+          />
+        ) : null}
+        {showSticker && onSendSticker ? (
+          <IrcStickerPicker
+            onPick={(id) => {
+              onSendSticker(id);
+              closePickers();
+              setMoreOpen(false);
+            }}
+            onClose={() => setShowSticker(false)}
           />
         ) : null}
         {showGiphy ? (

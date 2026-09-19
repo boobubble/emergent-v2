@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Clock, Hash, Loader2 } from "lucide-react";
-import { indexMessagesById, resolveReplyParent } from "@/lib/irc-chat/reply";
+import { buildIrcMessageReplyPreview, indexMessagesById, resolveReplyParent } from "@/lib/irc-chat/reply";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { ircConnectionLabel, useIrcChatState, type IrcChatMessage } from "@/lib/irc-chat";
@@ -103,7 +103,7 @@ function MessageRow({
           {msg.replyToMessageId ? (
             <IrcMessageReplyPreview
               authorNick={parent?.nick ?? ""}
-              previewText={parent?.text ?? ""}
+              previewText={parent ? buildIrcMessageReplyPreview(parent) : ""}
               unavailable={replyUnavailable}
               onNavigate={
                 parent && msg.replyToMessageId
@@ -112,7 +112,11 @@ function MessageRow({
               }
             />
           ) : null}
-          <IrcMessageBody text={msg.text} />
+          <IrcMessageBody
+            text={msg.text}
+            contentType={msg.contentType}
+            stickerId={msg.stickerId}
+          />
           {msg.pending ? (
             <span className="irc-msg-status irc-msg-status--pending">
               <Clock className="h-3 w-3 shrink-0" aria-hidden />

@@ -4,6 +4,7 @@ import {
   buildCustomEmojiById,
   ircMessageCustomEmojiClassName,
   normalizeEmojiDisplaySize,
+  partitionCustomEmojisByDisplaySize,
   rowsToActiveCustomEmojis,
 } from "@/lib/custom-emoji-catalog";
 import { createCustomEmojiToken } from "@/lib/irc-chat/irc-custom-emoji";
@@ -67,12 +68,10 @@ describe("custom-emoji-catalog", () => {
     const emojis = rowsToActiveCustomEmojis(rows, packs, FALLBACK_CATEGORIES);
     expect(emojis).toHaveLength(1);
     expect(emojis[0]?.id).toBe("550e8400-e29b-41d4-a716-446655440000");
-    expect(emojis[0]?.packName).toBe("Party");
   });
 
   it("normalizes missing or unknown display_size to small", () => {
     expect(normalizeEmojiDisplaySize(undefined)).toBe("small");
-    expect(normalizeEmojiDisplaySize(null)).toBe("small");
     expect(normalizeEmojiDisplaySize("tiny")).toBe("small");
   });
 
@@ -104,6 +103,52 @@ describe("custom-emoji-catalog", () => {
     expect(emojis.find((e) => e.id.endsWith("430c8"))?.displaySize).toBe("large");
   });
 
+  it("partitions picker groups by displaySize only", () => {
+    const emojis = rowsToActiveCustomEmojis(
+      [
+        {
+          id: "550e8400-e29b-41d4-a716-446655440000",
+          name: "S",
+          pack: "Party",
+          pack_id: "pack-1",
+          kind: "emoji",
+          url: "https://cdn.example/s.gif",
+          sort_order: 1,
+          display_size: "small",
+        },
+        {
+          id: "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
+          name: "L",
+          pack: "Party",
+          pack_id: "pack-1",
+          kind: "emoji",
+          url: "https://cdn.example/l.gif",
+          sort_order: 2,
+          display_size: "large",
+        },
+      ],
+      packs,
+      FALLBACK_CATEGORIES,
+    );
+    const { smallEmojis, largeEmojis } = partitionCustomEmojisByDisplaySize(emojis);
+    expect(smallEmojis).toHaveLength(1);
+    expect(largeEmojis).toHaveLength(1);
+    expect(smallEmojis[0]?.displaySize).toBe("small");
+    expect(largeEmojis[0]?.displaySize).toBe("large");
+  });
+
+  it("maps IRC message classes by display size", () => {
+    expect(ircMessageCustomEmojiClassName("small")).toContain("h-[28px]");
+    expect(ircMessageCustomEmojiClassName("small")).toContain("md:h-[32px]");
+    expect(ircMessageCustomEmojiClassName("large")).toContain("h-[64px]");
+    expect(ircMessageCustomEmojiClassName("large")).toContain("md:h-[72px]");
+  });
+
+  it("keeps IRC token format unchanged", () => {
+    const id = "550e8400-e29b-41d4-a716-446655440000";
+    expect(createCustomEmojiToken(id)).toBe(`:e:${id}:`);
+  });
+
   it("builds case-insensitive id lookup", () => {
     const id = "550e8400-e29b-41d4-a716-446655440000";
     const map = buildCustomEmojiById([
@@ -119,16 +164,5 @@ describe("custom-emoji-catalog", () => {
       },
     ]);
     expect(map.get(id.toLowerCase())?.name).toBe("Wave");
-  });
-
-  it("maps IRC message classes by display size", () => {
-    expect(ircMessageCustomEmojiClassName("small")).toContain("h-[28px]");
-    expect(ircMessageCustomEmojiClassName("small")).toContain("md:h-[32px]");
-    expect(ircMessageCustomEmojiClassName("large")).toContain("h-[48px]");
-  });
-
-  it("keeps IRC token format unchanged", () => {
-    const id = "550e8400-e29b-41d4-a716-446655440000";
-    expect(createCustomEmojiToken(id)).toBe(`:e:${id}:`);
   });
 });

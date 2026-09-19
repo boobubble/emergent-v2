@@ -27,6 +27,8 @@ import {
   shouldAcceptIncomingPublicMessage,
 } from "./messages";
 import { isValidMessageId, parseOptionalReplyToMessageId, type ParsedGatewayEvent } from "./protocol";
+import { createStickerToken, resolveStickerIdForMessage } from "./irc-sticker";
+import { isValidCustomEmojiId } from "./irc-custom-emoji";
 import {
   applyOptimisticReactionToggle,
   IRC_REACTION_LIST_BATCH_MAX,
@@ -153,7 +155,7 @@ export class IrcChatCore {
   sendPublicMessage(
     text: string,
     roomId = IRC_CHAT_PRODUCT_ROOM,
-    options?: { replyToMessageId?: string },
+    options?: { replyToMessageId?: string; contentType?: "sticker"; stickerId?: string },
   ): string | null {
     const trimmed = text.trim();
     if (!trimmed || !this.transport.connected) return null;
@@ -165,6 +167,10 @@ export class IrcChatCore {
       (this.auth.kind === "guest" ? this.auth.guest.visitorId : "");
 
     const replyToMessageId = parseOptionalReplyToMessageId(options?.replyToMessageId);
+    const stickerId =
+      options?.contentType === "sticker" && options.stickerId && isValidCustomEmojiId(options.stickerId)
+        ? options.stickerId.trim().toLowerCase()
+        : undefined;
 
     const msg = {
       id: messageId,
@@ -175,13 +181,19 @@ export class IrcChatCore {
       ts: Date.now(),
       pending: true,
       ...(replyToMessageId ? { replyToMessageId } : {}),
+      ...(stickerId ? { contentType: "sticker" as const, stickerId } : {}),
     };
 
     this.patchState({
       messages: receivePublicMessage(this.state.messages, roomId, msg),
     });
 
-    if (!this.transport.sendPublic(roomId, messageId, trimmed, replyToMessageId)) {
+    if (
+      !this.transport.sendPublic(roomId, messageId, trimmed, {
+        replyToMessageId,
+        ...(stickerId ? { contentType: "sticker", stickerId } : {}),
+      })
+    ) {
       this.patchState({
         messages: markPublicMessageFailed(this.state.messages, roomId, messageId),
       });
@@ -190,6 +202,21 @@ export class IrcChatCore {
 
     this.scheduleReactionHydration(roomId);
     return messageId;
+  }
+
+  sendStickerMessage(
+    stickerId: string,
+    roomId = IRC_CHAT_PRODUCT_ROOM,
+    options?: { replyToMessageId?: string },
+  ): string | null {
+    const id = stickerId.trim().toLowerCase();
+    if (!isValidCustomEmojiId(id) || !this.transport.connected) return null;
+    const text = createStickerToken(id);
+    return this.sendPublicMessage(text, roomId, {
+      contentType: "sticker",
+      stickerId: id,
+      replyToMessageId: options?.replyToMessageId,
+    });
   }
 
   toggleReaction(
@@ -383,6 +410,7 @@ export class IrcChatCore {
             ...(event.replyToMessageId
               ? { replyToMessageId: event.replyToMessageId }
               : {}),
+            ...this.stickerFieldsFromEvent(event),
           }),
         });
         this.scheduleReactionHydration(event.room);
@@ -409,6 +437,7 @@ export class IrcChatCore {
               ...(event.replyToMessageId
                 ? { replyToMessageId: event.replyToMessageId }
                 : {}),
+              ...this.stickerFieldsFromEvent(event),
             },
           ),
         });
@@ -501,6 +530,20 @@ export class IrcChatCore {
         [room]: roomReactions,
       },
     });
+  }
+
+  private stickerFieldsFromEvent(event: {
+    text: string;
+    contentType?: string;
+    stickerId?: string;
+  }): { contentType?: "sticker"; stickerId?: string } {
+    const stickerId = resolveStickerIdForMessage(
+      event.text,
+      event.stickerId,
+      event.contentType,
+    );
+    if (!stickerId) return {};
+    return { contentType: "sticker", stickerId };
   }
 
   private scheduleReactionHydration(roomId: string): void {

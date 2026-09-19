@@ -301,6 +301,23 @@
   background: color-mix(in oklab, var(--primary) 14%, transparent);
 }
 
+[data-irc-chat-app] .irc-sticker-picker {
+  border-radius: 0.85rem;
+  border: 1px solid color-mix(in oklab, var(--primary) 22%, var(--border));
+  background: color-mix(in oklab, var(--background) 92%, hsl(230 38% 10%));
+  box-shadow: 0 12px 32px -16px color-mix(in oklab, var(--foreground) 30%, transparent);
+}
+
+[data-irc-chat-app] .irc-msg-sticker {
+  display: block;
+  object-fit: contain;
+  border-radius: 0.65rem;
+}
+
+[data-irc-chat-app] .irc-msg-giphy img {
+  display: block;
+}
+
 [data-irc-chat-app] .irc-composer-reply-banner {
   box-shadow: inset 3px 0 0 color-mix(in oklab, var(--primary) 55%, transparent);
 }
