@@ -40,14 +40,13 @@ export function IrcDmInfoPanel({
       data-chatroom-members=""
       data-irc-column="members"
       className={cn(
-        forceDesktopColumn
-          ? "flex h-full w-60 shrink-0 flex-col border-l border-border bg-card"
-          : "flex h-full w-60 shrink-0 flex-col border-l border-border bg-card lg:flex",
+        "irc-members-panel irc-dm-info-panel flex h-full shrink-0 flex-col overflow-hidden border-l border-border/60",
+        !forceDesktopColumn && "lg:flex",
         className,
       )}
       style={forceDesktopColumn ? { display: "flex" } : undefined}
     >
-        <div className="flex items-center justify-between border-b border-border/50 bg-muted/15 px-3 py-3">
+        <div className="irc-members-header flex shrink-0 items-center justify-between border-b border-border/50 px-3 py-3">
           <div>
             <h2 className="text-[13px] font-bold tracking-tight text-foreground">
               Conversation

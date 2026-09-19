@@ -69,8 +69,22 @@ export function listOfflineRegisteredProfiles(
 export function filterIrcOnlineMembers(
   members: IrcChatMember[],
   query: string,
+  profilesById?: Record<string, RemoteProfile>,
 ): IrcChatMember[] {
   const q = query.trim().toLowerCase();
   if (!q) return members;
-  return members.filter((m) => m.nick.toLowerCase().includes(q));
+  return members.filter((m) => {
+    if (m.nick.toLowerCase().includes(q)) return true;
+    const profileId = profileUserIdForMember(m);
+    if (!profileId || !profilesById) return false;
+    const username = profilesById[profileId]?.username?.toLowerCase();
+    return Boolean(username && username.includes(q));
+  });
+}
+
+/** Stable display order for member list (nick, case-insensitive). */
+export function sortIrcMembersForDisplay(members: IrcChatMember[]): IrcChatMember[] {
+  return [...members].sort((a, b) =>
+    a.nick.localeCompare(b.nick, undefined, { sensitivity: "base" }),
+  );
 }

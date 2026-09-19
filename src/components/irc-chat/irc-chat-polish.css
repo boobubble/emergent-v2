@@ -535,14 +535,46 @@
   border: 1px solid color-mix(in oklab, var(--primary) 18%, transparent);
 }
 
+[data-irc-chat-app] .irc-members-header {
+  background: color-mix(in oklab, var(--card) 88%, var(--primary) 12%);
+}
+
+[data-irc-chat-app] .irc-members-search-input {
+  border: 1px solid color-mix(in oklab, var(--border) 80%, var(--primary) 12%);
+  background: color-mix(in oklab, var(--background) 92%, transparent);
+  color: var(--foreground);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+[data-irc-chat-app] .irc-members-search-input:focus-visible {
+  border-color: color-mix(in oklab, var(--primary) 40%, var(--border));
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--primary) 12%, transparent);
+}
+
 [data-irc-chat-app] .irc-member-row {
   display: flex;
   min-height: 2.75rem;
   align-items: center;
-  gap: 0.5rem;
-  border-radius: 0.5rem;
-  padding: 0.25rem 0.4rem;
+  gap: 0.35rem;
+  border-radius: 0.55rem;
+  padding: 0.2rem 0.35rem;
   transition: background 0.12s ease;
+}
+
+[data-irc-chat-app] .irc-member-row--interactive:hover,
+[data-irc-chat-app] .irc-member-row--interactive:focus-within {
+  background: color-mix(in oklab, var(--primary) 6%, transparent);
+}
+
+[data-irc-chat-app] .irc-member-quick-popover {
+  border: 1px solid color-mix(in oklab, var(--border) 75%, var(--primary) 15%);
+  background: color-mix(in oklab, var(--card) 94%, var(--background) 6%);
+  box-shadow: 0 12px 40px -16px color-mix(in oklab, var(--foreground) 22%, transparent);
+}
+
+[data-irc-chat-app] .irc-dm-info-panel .irc-members-header {
+  min-height: auto;
 }
 
 @media (min-width: 1024px) {

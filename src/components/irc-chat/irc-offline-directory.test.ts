@@ -3,6 +3,7 @@ import type { RemoteProfile } from "@/lib/use-remote-profiles";
 import type { IrcChatMember } from "@/lib/irc-chat";
 import {
   collectIrcOnlineRegisteredUserIds,
+  filterIrcOnlineMembers,
   listOfflineRegisteredProfiles,
 } from "./irc-offline-directory";
 
@@ -116,5 +117,12 @@ describe("irc-offline-directory", () => {
       "",
     );
     expect(offline).toHaveLength(0);
+  });
+
+  it("filterIrcOnlineMembers matches mapped profile username", () => {
+    const members = [member("IRC_Nick", REG_A)];
+    const profiles = { [REG_A]: profile(REG_A, "AliceProfile") };
+    expect(filterIrcOnlineMembers(members, "alice", profiles)).toHaveLength(1);
+    expect(filterIrcOnlineMembers(members, "zzz", profiles)).toHaveLength(0);
   });
 });
