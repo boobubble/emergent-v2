@@ -23,6 +23,7 @@ scp "${REPO_ROOT}/scripts/gateway/irc-message-content.cjs" "${VPS}:${REMOTE_DIR}
 scp "${REPO_ROOT}/scripts/gateway/irc-attachment.cjs" "${VPS}:${REMOTE_DIR}/lib/irc-attachment.cjs"
 scp "${REPO_ROOT}/scripts/gateway/irc-typing.cjs" "${VPS}:${REMOTE_DIR}/lib/irc-typing.cjs"
 scp "${REPO_ROOT}/scripts/gateway/irc-names.cjs" "${VPS}:${REMOTE_DIR}/lib/irc-names.cjs"
+scp "${REPO_ROOT}/scripts/gateway/irc-account-links.cjs" "${VPS}:${REMOTE_DIR}/lib/irc-account-links.cjs"
 
 echo "==> Syntax check"
 ssh "$VPS" "node --check ${REMOTE_DIR}/index.js"
