@@ -7,7 +7,7 @@ import { getCodyChatSsoUrl } from "@/lib/codychat-sso.functions";
 import { loadRouteSeo, headFromRouteSeo } from "@/lib/seo";
 
 function CodyChatPage() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const getSsoUrl = useServerFn(getCodyChatSsoUrl);
   const [chatUrl, setChatUrl] = useState<string | null>(null);
@@ -26,6 +26,17 @@ function CodyChatPage() {
         console.error("CodyChat SSO failed:", error);
       });
   }, [user, navigate, getSsoUrl]);
+
+  useEffect(() => {
+    const handleCodyChatMessage = (event: MessageEvent) => {
+      if (event.origin === "https://chat.yaarzo.com" && event.data?.type === "YAARZO_LOGOUT") {
+        void logout();
+      }
+    };
+
+    window.addEventListener("message", handleCodyChatMessage);
+    return () => window.removeEventListener("message", handleCodyChatMessage);
+  }, [logout]);
 
   if (!user || user.isGuest) {
     return null;
@@ -68,3 +79,4 @@ export const Route = createFileRoute("/chatroom")({
     </RouteErrorBoundary>
   ),
 });
+
