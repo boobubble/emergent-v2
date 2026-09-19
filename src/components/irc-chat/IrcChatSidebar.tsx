@@ -38,6 +38,7 @@ import {
 import { roomListGlyph, roomListSubtitle } from "./irc-room-glyph";
 import { useIrcChatTheme } from "./irc-chat-theme";
 import { IrcChatExploreMore } from "./IrcChatExploreMore";
+import { IrcChatRadioWidget } from "./IrcChatRadioWidget";
 import { IrcChatRoomDiscoverySheet } from "./IrcChatRoomDiscoverySheet";
 
 type IrcChatSidebarProps = {
@@ -429,10 +430,11 @@ export function IrcChatSidebar({
           ) : null}
 
           <div
-            className="irc-radio-slot shrink-0 border-t border-dashed border-border/35 px-2 py-1.5"
+            className="irc-radio-slot shrink-0 border-t border-border/45 px-2 py-2"
             data-irc-radio-slot=""
-            aria-hidden
-          />
+          >
+            <IrcChatRadioWidget />
+          </div>
 
           <div className="sidebar-bottom-panel shrink-0 border-t border-border/40 bg-card/20 px-1.5 pt-1 pb-1.5 backdrop-blur-sm">
             <div className="flex items-center gap-1">

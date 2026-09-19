@@ -63,7 +63,7 @@ function setSharedListenerPaused(next: boolean) {
   emitListenerPrefs();
 }
 
-function useDjListenerPrefs() {
+export function useDjListenerPrefs() {
   const snap = useSyncExternalStore(
     (cb) => {
       listenerSubscribers.add(cb);

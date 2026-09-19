@@ -699,7 +699,39 @@
 }
 
 [data-irc-chat-app] .irc-radio-slot {
-  min-height: 0.25rem;
+  min-height: 0;
+}
+
+[data-irc-chat-app] .irc-radio-widget-card {
+  border-radius: 12px;
+  border: 1px solid color-mix(in oklab, var(--primary) 22%, var(--border) 78%);
+  background: color-mix(in oklab, var(--card) 92%, var(--primary) 8%);
+  padding: 0.65rem 0.7rem;
+  max-height: 170px;
+  box-shadow: 0 4px 18px -12px color-mix(in oklab, var(--primary) 35%, transparent);
+}
+
+[data-irc-chat-app] .irc-radio-widget-title {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--foreground);
+}
+
+[data-irc-chat-app] .irc-radio-live-badge {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: hsl(0 84% 58%);
+}
+
+[data-irc-chat-app] .irc-radio-volume-range {
+  height: 4px;
+  accent-color: var(--primary);
+  cursor: pointer;
 }
 
 [data-irc-chat-app] main {

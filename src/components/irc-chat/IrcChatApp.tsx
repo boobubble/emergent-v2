@@ -40,6 +40,7 @@ import { IrcMessageList } from "./IrcMessageList";
 import { IrcMobileNav } from "./IrcMobileNav";
 import { IrcMobileDmDock } from "./IrcMobileDmDock";
 import type { IrcActiveView } from "./irc-chat-types";
+import { DjPlayerHost } from "@/components/chat/DjFooter";
 import "./irc-chat-polish.css";
 
 function IrcChatCenter({
@@ -253,6 +254,7 @@ function IrcChatAppShell() {
           : "h-[calc(100dvh-3.5rem)] max-w-[1840px] lg:h-[calc(100dvh-2rem)] lg:rounded-xl lg:border lg:border-border/70 lg:shadow-[0_8px_32px_-12px_hsl(var(--foreground)/0.1)]",
       )}
     >
+      <DjPlayerHost />
       {chatroomSidebarBackdropVisible(shellLayout, sidebarOpen) ? (
         <button
           type="button"
