@@ -68,8 +68,9 @@ function IrcChatCenter({
 
   return (
     <div
-      className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background"
+      className="irc-chat-center relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background"
       data-irc-column="center"
+      data-irc-chat-center=""
     >
       {showHeader ? (
         <IrcChatHeader view={view} onBack={onBack} onMinimizeDm={onMinimizeDm} />

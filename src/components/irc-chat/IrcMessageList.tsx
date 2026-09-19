@@ -8,14 +8,12 @@ import {
   buildMessageListItems,
   formatMessageTime,
   formatRoomDisplayTitle,
+  formatRoomTitlePlain,
   nickAvatarHue,
   nickInitial,
 } from "./irc-chat-ui";
 import { IrcMessageBody } from "./IrcMessageBody";
-import "@/components/chat/message-list.css";
-
-const BUBBLE_SHELL = "w-max max-w-[min(80%,20rem)] shrink-0";
-const MSG_BODY_CLASS = "text-[13px] leading-snug sm:text-sm";
+import "./message-list.css";
 
 type IrcMessageListProps = {
   messages: IrcChatMessage[];
@@ -36,56 +34,59 @@ function MessageRow({
   const hue = nickAvatarHue(msg.nick);
 
   return (
-    <div className="group/msg flex max-w-full gap-2 py-0.5 sm:gap-2.5">
-      {showMeta ? (
-        <div
-          className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white ring-1 ring-border/30 sm:h-8 sm:w-8"
-          style={{ backgroundColor: `hsl(${hue} 48% 42%)` }}
-          aria-hidden
-        >
-          {nickInitial(msg.nick)}
-        </div>
-      ) : (
-        <div className="w-7 shrink-0 sm:w-8" aria-hidden />
+    <article
+      className={cn(
+        "irc-msg-row group/msg max-w-full irc-msg-in",
+        showMeta ? "irc-msg-row--start" : "irc-msg-row--grouped",
+        own && "irc-msg-row--own",
       )}
-      <div className="min-w-0 max-w-full flex-1">
+      data-irc-msg-own={own ? "true" : undefined}
+    >
+      <div className="irc-msg-avatar-col" aria-hidden>
         {showMeta ? (
-          <div className="mb-1 flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
-            <span className="text-[13px] font-semibold text-foreground/95">{msg.nick}</span>
-            {own ? (
-              <span className="rounded-md bg-muted px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-tight text-muted-foreground">
-                You
-              </span>
-            ) : null}
+          <div
+            className="irc-msg-avatar"
+            style={{ backgroundColor: `hsl(${hue} 48% 42%)` }}
+          >
+            {nickInitial(msg.nick)}
+          </div>
+        ) : null}
+      </div>
+      <div className="irc-msg-content min-w-0 max-w-full flex-1">
+        {showMeta ? (
+          <header className="irc-msg-meta mb-0.5 flex min-w-0 items-baseline gap-x-2">
+            <span className="truncate text-[13px] font-semibold text-foreground sm:text-sm">
+              {msg.nick}
+            </span>
             <time
-              className="text-[10px] tabular-nums text-muted-foreground/90"
+              className="shrink-0 text-[10px] tabular-nums text-muted-foreground"
               dateTime={new Date(msg.ts).toISOString()}
             >
               {formatMessageTime(msg.ts)}
             </time>
-          </div>
+          </header>
         ) : null}
         <div
           className={cn(
-            own
-              ? `msg-mine ${BUBBLE_SHELL} rounded-2xl rounded-tr-md bg-primary px-3 py-2 ${MSG_BODY_CLASS} font-medium text-primary-foreground shadow-lg shadow-primary/20 chat-msg-in`
-              : `${BUBBLE_SHELL} rounded-2xl rounded-tl-md border border-border bg-card/70 px-3 py-2 ${MSG_BODY_CLASS} leading-snug text-foreground/90 shadow-sm backdrop-blur-sm chat-msg-in`,
-            msg.pending && "opacity-75",
+            "irc-msg-body-wrap",
+            own && "irc-msg-body-wrap--own",
+            msg.pending && "irc-msg-body-wrap--pending",
+            msg.failed && "irc-msg-body-wrap--failed",
           )}
         >
-          <IrcMessageBody text={msg.text} className={MSG_BODY_CLASS} />
+          <IrcMessageBody text={msg.text} />
           {msg.pending ? (
-            <span className="mt-1 inline-flex items-center gap-1 text-[10px] text-muted-foreground">
-              <Clock className="h-3 w-3 animate-pulse" aria-hidden />
+            <span className="irc-msg-status irc-msg-status--pending">
+              <Clock className="h-3 w-3 shrink-0" aria-hidden />
               Sending…
             </span>
           ) : null}
           {msg.failed ? (
-            <p className="mt-1 text-[10px] font-medium text-destructive">Failed to send</p>
+            <p className="irc-msg-status irc-msg-status--failed">Failed to send</p>
           ) : null}
         </div>
       </div>
-    </div>
+    </article>
   );
 }
 
@@ -101,28 +102,39 @@ function EmptyConversation({
     view.kind === "room"
       ? formatRoomDisplayTitle(state.rooms[view.roomId]?.name ?? view.roomId)
       : null;
+  const roomPlain =
+    view.kind === "room"
+      ? formatRoomTitlePlain(state.rooms[view.roomId]?.name ?? view.roomId)
+      : view.peerNick;
 
   return (
     <div className="irc-empty-conversation flex flex-col items-center px-6 pb-10 pt-0 text-center">
-      <div
-        className="irc-empty-icon-shell mb-3 flex items-center justify-center text-primary"
-        aria-hidden
-      >
+      <div className="irc-empty-icon-shell mb-3 flex items-center justify-center text-primary" aria-hidden>
         {view.kind === "room" ? (
-          <Hash className="h-5 w-5" strokeWidth={2.25} />
+          <span className="text-xl leading-none" role="img" aria-label="Wave">
+            👋
+          </span>
         ) : (
-          <span className="text-lg">💬</span>
+          <Hash className="h-5 w-5" strokeWidth={2.25} />
         )}
       </div>
       <p className="irc-empty-room-title text-foreground">
-        {view.kind === "room" ? roomTitle : view.peerNick}
+        {view.kind === "room" ? `Welcome to ${roomPlain}` : roomPlain}
       </p>
-      <p className="mt-1 text-xs font-semibold text-muted-foreground">No messages yet</p>
-      <p className="mt-1.5 max-w-[18rem] text-[11px] leading-relaxed text-muted-foreground/90">
-        {connected
-          ? "Say hello and start the conversation."
-          : "Connect to IRC to send messages."}
+      <p className="mt-2 max-w-[20rem] text-xs leading-relaxed text-muted-foreground">
+        {connected ? (
+          <>
+            Start the conversation.
+            <br />
+            Be respectful and enjoy the room.
+          </>
+        ) : (
+          "Connect to chat to send messages."
+        )}
       </p>
+      {view.kind === "room" && roomTitle ? (
+        <p className="mt-2 text-[10px] font-medium text-muted-foreground/80">{roomTitle}</p>
+      ) : null}
     </div>
   );
 }
@@ -147,15 +159,18 @@ export function IrcMessageList({ messages, selfNick, view, className }: IrcMessa
   }, [messages.length, messages[messages.length - 1]?.id]);
 
   return (
-    <ScrollArea
-      className={cn("irc-message-canvas min-h-0 flex-1", className)}
-    >
-      <div className="flex-1 px-3 py-3 text-xs sm:px-4 md:text-[15px]">
+    <ScrollArea className={cn("irc-message-canvas min-h-0 flex-1", className)}>
+      <div className="irc-message-list-inner">
         {connecting && messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" aria-hidden />
+          <div className="irc-connecting-state flex flex-col items-center justify-center gap-2 py-16 text-center">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground motion-reduce:animate-none" aria-hidden />
             <p className="text-sm font-medium text-foreground">
-              {connectionLabel === "Reconnecting" ? "Reconnecting to IRC…" : "Connecting to IRC…"}
+              {connectionLabel === "Reconnecting"
+                ? "Reconnecting to Yaarzo Chat…"
+                : "Connecting to Yaarzo Chat…"}
+            </p>
+            <p className="text-[11px] text-muted-foreground">
+              {connectionLabel === "Reconnecting" ? "Restoring IRC session" : "Opening IRC connection"}
             </p>
             {state.statusDetail ? (
               <p className="max-w-xs text-xs text-muted-foreground">{state.statusDetail}</p>
@@ -164,15 +179,11 @@ export function IrcMessageList({ messages, selfNick, view, className }: IrcMessa
         ) : messages.length === 0 ? (
           <EmptyConversation view={view} connected={connected} />
         ) : (
-          <div className="space-y-3">
+          <div className="irc-message-stream">
             {items.map((item) => {
               if (item.type === "date") {
                 return (
-                  <div
-                    key={item.key}
-                    className="irc-date-divider"
-                    role="separator"
-                  >
+                  <div key={item.key} className="irc-date-divider" role="separator">
                     <span>{item.label}</span>
                   </div>
                 );

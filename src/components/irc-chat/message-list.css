@@ -1,0 +1,21 @@
+/* IRC message list — scoped enter animation (replaces shared chat bubble animation). */
+@keyframes irc-msg-in {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+[data-irc-chat-app] .irc-msg-in {
+  animation: irc-msg-in 0.12s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-irc-chat-app] .irc-msg-in {
+    animation: none;
+  }
+}

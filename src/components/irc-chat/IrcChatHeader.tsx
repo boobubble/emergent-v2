@@ -24,6 +24,7 @@ import {
   nickInitial,
   profileUserIdForMember,
 } from "./irc-chat-ui";
+import { roomListGlyph, roomListSubtitle } from "./irc-room-glyph";
 
 type IrcChatHeaderProps = {
   view: IrcActiveView;
@@ -57,12 +58,15 @@ export function IrcChatHeader({
   const roomMembers =
     view.kind === "room" ? (state.members[view.roomId] ?? []).length : 0;
 
-  const roomRaw =
-    view.kind === "room"
-      ? state.rooms[view.roomId]?.name ?? view.roomId
-      : null;
+  const roomRecord = view.kind === "room" ? state.rooms[view.roomId] : null;
+  const roomRaw = view.kind === "room" ? (roomRecord?.name ?? view.roomId) : null;
   const roomTitle = roomRaw ? formatRoomDisplayTitle(roomRaw) : null;
   const roomTitlePlain = roomRaw ? formatRoomTitlePlain(roomRaw) : null;
+  const roomTopic =
+    view.kind === "room" && roomRaw
+      ? roomListSubtitle(roomRecord?.topic, roomTitlePlain ?? "")
+      : null;
+  const roomGlyph = roomRaw ? roomListGlyph(roomRaw) : null;
 
   const title = view.kind === "room" ? roomTitle : view.peerNick;
 
@@ -116,6 +120,11 @@ export function IrcChatHeader({
             ) : null}
             <div className="min-w-0 flex-1 overflow-hidden">
               <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+                {view.kind === "room" && roomGlyph ? (
+                  <span className="shrink-0 text-base leading-none" aria-hidden>
+                    {roomGlyph}
+                  </span>
+                ) : null}
                 <span
                   className="block truncate text-[17px] font-bold tracking-tight text-foreground sm:text-lg"
                   title={view.kind === "room" ? (roomTitlePlain ?? roomTitle ?? undefined) : title}
@@ -123,22 +132,32 @@ export function IrcChatHeader({
                   {view.kind === "room" ? (roomTitlePlain ?? roomTitle) : title}
                 </span>
               </div>
+              {view.kind === "room" && roomTopic ? (
+                <p className="mt-0.5 truncate text-[11px] text-muted-foreground" title={roomTopic}>
+                  {roomTopic}
+                </p>
+              ) : null}
               <div className="irc-header-status-strip mt-0.5 gap-2">
                 {view.kind === "room" ? (
                   <span className="irc-header-status-pill">
                     <span className="chat-online-dot" aria-hidden style={{ width: "0.4rem", height: "0.4rem" }} />
-                    {roomMembers > 0 ? `${roomMembers} in room` : "Public room"}
+                    {roomMembers > 0 ? `${roomMembers} online` : "Public room"}
                   </span>
                 ) : (
-                  <span className="irc-header-status-pill">Direct message · IRC</span>
+                  <span className="irc-header-status-pill">Direct message</span>
                 )}
                 <IrcConnectionBadge inline variant="header" className="text-[10px]" />
               </div>
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-1">
+          <div className="flex shrink-0 items-center gap-2">
             {view.kind === "room" ? (
               <>
+                {roomMembers > 0 ? (
+                  <span className="hidden text-xs font-medium tabular-nums text-muted-foreground md:inline">
+                    {roomMembers > 999 ? "999+" : roomMembers} online
+                  </span>
+                ) : null}
                 <button
                   type="button"
                   className="chat-icon-btn"
@@ -153,7 +172,7 @@ export function IrcChatHeader({
                     type="button"
                     onClick={onOpenMembers}
                     className="chat-icon-btn relative lg:hidden"
-                    aria-label="Show members"
+                    aria-label={`Show members (${roomMembers})`}
                     title="Members"
                   >
                     <Users className="h-4 w-4" />
@@ -209,9 +228,17 @@ export function IrcChatHeader({
           ) : null}
 
           <div className="min-w-0 flex-1">
-            <h1 className="truncate text-[15px] font-bold leading-tight tracking-tight text-foreground md:text-base">
-              {view.kind === "room" ? (roomTitle ?? roomTitlePlain) : title}
-            </h1>
+            <div className="flex min-w-0 items-center gap-1.5">
+              {view.kind === "room" && roomGlyph ? (
+                <span className="shrink-0 text-sm leading-none" aria-hidden>{roomGlyph}</span>
+              ) : null}
+              <h1 className="truncate text-[15px] font-bold leading-tight tracking-tight text-foreground md:text-base">
+                {view.kind === "room" ? (roomTitlePlain ?? roomTitle) : title}
+              </h1>
+            </div>
+            {view.kind === "room" && roomTopic ? (
+              <p className="mt-0.5 truncate text-[10px] text-muted-foreground">{roomTopic}</p>
+            ) : null}
             <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[11px] text-muted-foreground">
               {view.kind === "room" ? (
                 <span className="inline-flex items-center gap-1.5 font-medium text-foreground/70">

@@ -96,17 +96,138 @@
 }
 
 [data-irc-chat-app] [data-irc-column="center"] {
-  background: color-mix(in oklab, var(--background) 96%, var(--primary) 4%);
+  background: color-mix(in oklab, var(--background) 97%, var(--primary) 3%);
   border-right: 1px solid var(--irc-border-subtle);
 }
 
 [data-irc-chat-app] .irc-message-canvas {
-  background: linear-gradient(
-    180deg,
-    var(--irc-canvas-gradient-top) 0%,
-    var(--irc-canvas-gradient-mid) 55%,
-    var(--irc-canvas-gradient-bottom) 100%
-  );
+  background: color-mix(in oklab, var(--background) 94%, var(--primary) 6%);
+}
+
+[data-irc-chat-app] .irc-message-list-inner {
+  width: 100%;
+  max-width: min(52rem, 100%);
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0.75rem 0.85rem 0.5rem;
+}
+
+@media (min-width: 768px) {
+  [data-irc-chat-app] .irc-message-list-inner {
+    padding: 1rem 1.25rem 0.65rem;
+  }
+}
+
+[data-irc-chat-app] .irc-message-stream {
+  display: flex;
+  flex-direction: column;
+}
+
+[data-irc-chat-app] .irc-msg-row {
+  display: flex;
+  gap: 0.65rem;
+  padding: 0.1rem 0.15rem;
+  border-radius: 0.35rem;
+}
+
+[data-irc-chat-app] .irc-msg-row--start {
+  margin-top: 0.55rem;
+}
+
+[data-irc-chat-app] .irc-msg-row--grouped {
+  margin-top: 0.05rem;
+}
+
+[data-irc-chat-app] .irc-msg-row--grouped .irc-msg-body-wrap {
+  padding-top: 0.05rem;
+}
+
+[data-irc-chat-app] .irc-msg-avatar-col {
+  width: 2.25rem;
+  flex-shrink: 0;
+}
+
+@media (min-width: 640px) {
+  [data-irc-chat-app] .irc-msg-avatar-col {
+    width: 2.5rem;
+  }
+}
+
+[data-irc-chat-app] .irc-msg-avatar {
+  display: grid;
+  height: 2.25rem;
+  width: 2.25rem;
+  place-items: center;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #fff;
+  border: 1px solid color-mix(in oklab, var(--border) 50%, transparent);
+  box-shadow: 0 1px 2px color-mix(in oklab, var(--foreground) 6%, transparent);
+}
+
+@media (min-width: 640px) {
+  [data-irc-chat-app] .irc-msg-avatar {
+    height: 2.5rem;
+    width: 2.5rem;
+    font-size: 11px;
+  }
+}
+
+[data-irc-chat-app] .irc-msg-body-wrap {
+  max-width: min(80%, 42rem);
+  font-size: 13px;
+  line-height: 1.5;
+  color: color-mix(in oklab, var(--foreground) 92%, transparent);
+}
+
+@media (min-width: 640px) {
+  [data-irc-chat-app] .irc-msg-body-wrap {
+    font-size: 14px;
+  }
+}
+
+[data-irc-chat-app] .irc-msg-body-wrap--own {
+  max-width: min(80%, 42rem);
+  border-radius: 0.5rem;
+  padding: 0.15rem 0.45rem;
+  margin-left: -0.45rem;
+  background: color-mix(in oklab, var(--primary) 7%, transparent);
+  border: 1px solid color-mix(in oklab, var(--primary) 12%, transparent);
+}
+
+[data-irc-chat-app] .irc-msg-row--grouped .irc-msg-body-wrap--own {
+  margin-left: 0;
+  padding-left: 0.45rem;
+}
+
+[data-irc-chat-app] .irc-msg-body-wrap--pending {
+  opacity: 0.82;
+}
+
+[data-irc-chat-app] .irc-message-body {
+  word-break: break-word;
+}
+
+[data-irc-chat-app] .irc-msg-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.2rem;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+[data-irc-chat-app] .irc-msg-status--pending {
+  color: var(--muted-foreground);
+}
+
+[data-irc-chat-app] .irc-msg-status--failed {
+  color: var(--destructive);
+}
+
+[data-irc-chat-app] .irc-connecting-state {
+  min-height: 12rem;
 }
 
 [data-irc-chat-app] .chat-glass {
@@ -517,8 +638,10 @@
   cursor: not-allowed;
 }
 
-[data-irc-chat-app] .msg-mine {
-  max-width: min(80%, 20rem);
+[data-irc-chat-app] .irc-header-status-strip .irc-connection-warning {
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+  background: color-mix(in oklab, var(--amber-500, #f59e0b) 12%, transparent);
 }
 
 [data-irc-chat-app] .irc-composer-bar-surface {

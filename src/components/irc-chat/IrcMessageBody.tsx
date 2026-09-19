@@ -14,7 +14,12 @@ export function IrcMessageBody({
   const segments = useMemo(() => parseMessageSegments(text), [text]);
 
   return (
-    <span className={cn("whitespace-pre-wrap [overflow-wrap:break-word]", className)}>
+    <span
+      className={cn(
+        "irc-message-body whitespace-pre-wrap break-words [overflow-wrap:anywhere]",
+        className,
+      )}
+    >
       {segments.map((seg, index) => {
         if (seg.type === "text") {
           return <span key={`t-${index}`}>{seg.value}</span>;
