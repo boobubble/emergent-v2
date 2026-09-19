@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Loader2, PanelLeftOpen } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { ChatProfilePopupHost } from "@/components/chat/ChatProfilePopupHost";
 import { useAuth } from "@/lib/auth-store";
@@ -23,10 +23,8 @@ import {
   CHATROOM_MD_MQ,
   bindChatShellToVisualViewport,
   chatroomShellLayoutAttr,
-  chatroomSidebarBackdropVisible,
   chatroomSidebarClassName,
   chatroomSidebarStyle,
-  chatroomSidebarToggleVisible,
   isClientDesktopShell,
   isClientLargeDesktopShell,
   readChatroomShellLayout,
@@ -43,6 +41,10 @@ import { IrcMobileNav } from "./IrcMobileNav";
 import { IrcMobileDmDock } from "./IrcMobileDmDock";
 import type { IrcActiveView, IrcComposerReplyTarget } from "./irc-chat-types";
 import { buildIrcMessageReplyPreview } from "@/lib/irc-chat/reply";
+import {
+  ircChatShowCenterColumnHeader,
+  ircChatShowSidebarBackdrop,
+} from "@/lib/irc-chat/irc-chat-mobile-shell";
 import { DjPlayerHost } from "@/components/chat/DjFooter";
 import "./irc-chat-polish.css";
 
@@ -158,7 +160,7 @@ function IrcChatAppShell() {
     roomId: IRC_CHAT_PRODUCT_ROOM,
   });
   const [sidebarOpen, setSidebarOpenState] = useState(false);
-  const [roomsOpen, setRoomsOpen] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [membersOpen, setMembersOpen] = useState(false);
   const [lastReadDmByPeer, setLastReadDmByPeer] = useState<Record<string, number>>({});
   const [openDmPeers, setOpenDmPeers] = useState<string[]>([]);
@@ -239,7 +241,7 @@ function IrcChatAppShell() {
   function selectRoom(roomId: string) {
     core.joinRoom(roomId);
     setActiveView({ kind: "room", roomId });
-    setRoomsOpen(false);
+    setMobileNavOpen(false);
     setSidebarOpen(false);
   }
 
@@ -255,7 +257,7 @@ function IrcChatAppShell() {
     setActiveView({ kind: "dm", peerNick });
     markDmRead(peerNick);
     setMembersOpen(false);
-    setRoomsOpen(false);
+    setMobileNavOpen(false);
     setSidebarOpen(false);
   }
 
@@ -371,7 +373,7 @@ function IrcChatAppShell() {
     activeView.kind === "room" ? activeView.roomId : IRC_CHAT_PRODUCT_ROOM;
 
   const showMobileNav = !isDesktopShell;
-  const showCenterHeader = !isDesktopShell;
+  const showCenterHeader = ircChatShowCenterColumnHeader(isDesktopShell);
   const showDmConversationTabs =
     isDesktopShell && openDmPeers.length > 0;
   const showInlineSidebar = isDesktopShell;
@@ -385,15 +387,16 @@ function IrcChatAppShell() {
       data-yaarzo-desktop={isDesktopShell ? "true" : undefined}
       data-chatroom-shell=""
       data-chatroom-layout={chatroomShellLayoutAttr(shellLayout)}
+      data-irc-mobile-shell={showMobileNav ? "" : undefined}
       className={cn(
         "mx-auto flex w-full flex-col overflow-hidden overscroll-none bg-background text-foreground",
         isDesktopShell
           ? "h-dvh max-w-none md:rounded-none md:border-0 md:shadow-none"
-          : "h-[calc(100dvh-3.5rem)] max-w-[1840px] lg:h-[calc(100dvh-2rem)] lg:rounded-xl lg:border lg:border-border/70 lg:shadow-[0_8px_32px_-12px_hsl(var(--foreground)/0.1)]",
+          : "h-dvh max-h-dvh max-w-none rounded-none border-0 shadow-none",
       )}
     >
       <DjPlayerHost />
-      {chatroomSidebarBackdropVisible(shellLayout, sidebarOpen) ? (
+      {ircChatShowSidebarBackdrop(isDesktopShell, showInlineSidebar, sidebarOpen) ? (
         <button
           type="button"
           aria-label="Close sidebar"
@@ -426,19 +429,6 @@ function IrcChatAppShell() {
           data-irc-column="center"
           className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col"
         >
-          {chatroomSidebarToggleVisible(shellLayout, sidebarOpen) ? (
-            <button
-              type="button"
-              data-chatroom-sidebar-toggle=""
-              onClick={() => setSidebarOpen(true)}
-              className="absolute left-3 top-3.5 z-30 grid h-10 w-10 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg ring-2 ring-primary/30 transition-all hover:scale-110 hover:shadow-xl md:hidden"
-              title="Show sidebar"
-              aria-label="Show sidebar"
-            >
-              <PanelLeftOpen className="h-5 w-5" />
-            </button>
-          ) : null}
-
           {isDesktopShell ? (
             <IrcChatHeader
               layout="desktop"
@@ -469,8 +459,7 @@ function IrcChatAppShell() {
             <IrcMobileNav
               view={activeView}
               roomName={activeRoomName}
-              selfNick={selfNick}
-              onOpenRooms={() => setRoomsOpen(true)}
+              onOpenMenu={() => setMobileNavOpen(true)}
               onOpenMembers={() => setMembersOpen(true)}
               onBack={
                 activeView.kind === "dm"
@@ -553,20 +542,26 @@ function IrcChatAppShell() {
 
       {!isDesktopShell ? (
         <>
-          <Sheet open={roomsOpen} onOpenChange={setRoomsOpen}>
-            <SheetContent side="left" className="w-[min(100vw,290px)] p-0">
+          <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+            <SheetContent
+              side="left"
+              className="irc-mobile-nav-sheet w-[min(100vw,320px)] max-w-[320px] border-r border-border/50 bg-background p-0"
+            >
               <IrcChatSidebar
                 activeView={activeView}
                 onSelectRoom={selectRoom}
                 onSelectDm={openDm}
                 lastReadDmByPeer={mobileSidebarLastRead}
-                onClose={() => setRoomsOpen(false)}
-                className="w-full border-r-0 shadow-none"
+                onClose={() => setMobileNavOpen(false)}
+                className="w-full max-w-none border-r-0 shadow-none"
               />
             </SheetContent>
           </Sheet>
             <Sheet open={membersOpen} onOpenChange={setMembersOpen}>
-            <SheetContent side="right" className="w-[min(100vw,260px)] p-0">
+            <SheetContent
+              side="right"
+              className="irc-mobile-members-sheet w-[min(100vw,300px)] max-w-[300px] border-l border-border/50 p-0"
+            >
               {activeView.kind === "dm" ? (
                 <IrcDmInfoPanel
                   peerNick={activeView.peerNick}
