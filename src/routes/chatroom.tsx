@@ -33,7 +33,7 @@ function CodyChatPage() {
 
   if (!chatUrl) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center p-6">
+      <div className="fixed inset-0 z-50 flex h-dvh w-screen items-center justify-center bg-background">
         <div className="text-center">
           <div className="text-lg font-semibold">Opening Chatroom…</div>
           <div className="mt-2 text-sm text-muted-foreground">
@@ -48,7 +48,7 @@ function CodyChatPage() {
     <iframe
       src={chatUrl}
       title="Yaarzo Chat"
-      className="block h-[calc(100dvh-7.75rem)] w-full border-0"
+      className="fixed inset-0 z-50 h-dvh w-screen border-0"
       allow="camera; microphone; autoplay; clipboard-write"
     />
   );
