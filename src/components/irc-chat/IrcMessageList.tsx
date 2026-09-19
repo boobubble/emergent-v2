@@ -116,6 +116,7 @@ function MessageRow({
             text={msg.text}
             contentType={msg.contentType}
             stickerId={msg.stickerId}
+            attachment={msg.attachment}
           />
           {msg.pending ? (
             <span className="irc-msg-status irc-msg-status--pending">

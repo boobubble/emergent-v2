@@ -1,4 +1,5 @@
 import type { IrcRoomReactionsState } from "./reactions";
+import type { IrcMessageAttachment } from "./irc-attachment";
 
 export type IrcChatConnectionStatus =
   | "idle"
@@ -33,8 +34,9 @@ export type IrcChatMessage = {
   /** References another message in the same room (gateway metadata, not IRC text). */
   replyToMessageId?: string;
   /** Gateway metadata — not sent as IRC tags. */
-  contentType?: "text" | "sticker";
+  contentType?: "text" | "sticker" | "image" | "file";
   stickerId?: string;
+  attachment?: IrcMessageAttachment;
 };
 
 export type IrcChatPresenceEvent = {

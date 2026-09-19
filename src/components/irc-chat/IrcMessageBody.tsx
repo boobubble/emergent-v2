@@ -1,7 +1,16 @@
 import { useMemo, useState } from "react";
 import { useCustomEmojiCatalog, ircMessageCustomEmojiClassName } from "@/lib/custom-emoji-catalog";
 import { parseMessageSegments } from "@/lib/irc-chat/irc-custom-emoji";
+import {
+  isAttachmentOnlyMessageText,
+  resolveAttachmentIdForMessage,
+} from "@/lib/irc-chat/irc-attachment";
 import { resolveStickerIdForMessage } from "@/lib/irc-chat/irc-sticker";
+import type { IrcMessageAttachment } from "@/lib/irc-chat/irc-attachment";
+import {
+  IrcMessageFileAttachment,
+  IrcMessageImageAttachment,
+} from "./IrcMessageAttachmentMedia";
 import { useIrcStickerCatalog, ircMessageStickerClassName } from "@/lib/irc-sticker-catalog";
 import { useAppSettings } from "@/lib/app-settings";
 import { mergeMediaFromSettings, messageDisplayText } from "@/lib/media-embed-text";
@@ -12,11 +21,13 @@ export function IrcMessageBody({
   text,
   contentType,
   stickerId,
+  attachment,
   className,
 }: {
   text: string;
-  contentType?: "text" | "sticker";
+  contentType?: "text" | "sticker" | "image" | "file";
   stickerId?: string;
+  attachment?: IrcMessageAttachment;
   className?: string;
 }) {
   const { byId: emojiById } = useCustomEmojiCatalog();
@@ -26,11 +37,31 @@ export function IrcMessageBody({
   const [stickerFailed, setStickerFailed] = useState(false);
 
   const resolvedStickerId = resolveStickerIdForMessage(text, stickerId, contentType);
-  const displayText = useMemo(
-    () => (resolvedStickerId ? "" : messageDisplayText(text, media)),
-    [text, media, resolvedStickerId],
+  const resolvedAttachmentId = resolveAttachmentIdForMessage(
+    text,
+    attachment?.id,
+    contentType,
   );
+  const displayText = useMemo(() => {
+    if (resolvedStickerId) return "";
+    if (resolvedAttachmentId && isAttachmentOnlyMessageText(text)) return "";
+    return messageDisplayText(text, media);
+  }, [text, media, resolvedStickerId, resolvedAttachmentId]);
   const segments = useMemo(() => parseMessageSegments(displayText), [displayText]);
+
+  if (resolvedAttachmentId && attachment) {
+    const caption = isAttachmentOnlyMessageText(text) ? "" : displayText;
+    return (
+      <div className={cn("irc-message-body min-w-0 space-y-2", className)}>
+        {caption ? (
+          <span className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{caption}</span>
+        ) : null}
+        {contentType === "file"
+          ? <IrcMessageFileAttachment attachment={attachment} />
+          : <IrcMessageImageAttachment attachment={attachment} />}
+      </div>
+    );
+  }
 
   if (resolvedStickerId) {
     const sticker = stickerById.get(resolvedStickerId);

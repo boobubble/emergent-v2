@@ -5,7 +5,7 @@ import { CUSTOM_EMOJI_ID_RE, isValidCustomEmojiId } from "./irc-custom-emoji";
 const STICKER_TOKEN_RE =
   /:s:([0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}):/gi;
 
-export type IrcMessageContentType = "text" | "sticker";
+export type IrcMessageContentType = "text" | "sticker" | "image" | "file";
 
 export function createStickerToken(id: string): string {
   const trimmed = id.trim().toLowerCase();

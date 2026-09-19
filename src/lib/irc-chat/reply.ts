@@ -1,4 +1,5 @@
 import type { IrcChatMessage } from "./types";
+import { resolveAttachmentIdForMessage } from "./irc-attachment";
 import { isStickerOnlyMessageText, resolveStickerIdForMessage } from "./irc-sticker";
 
 export function buildReplyPreviewText(text: string, maxLen = 140): string {
@@ -8,10 +9,24 @@ export function buildReplyPreviewText(text: string, maxLen = 140): string {
   return `${normalized.slice(0, maxLen - 1)}…`;
 }
 
-export function buildIrcMessageReplyPreview(msg: Pick<IrcChatMessage, "text" | "contentType" | "stickerId">): string {
+export function buildIrcMessageReplyPreview(
+  msg: Pick<IrcChatMessage, "text" | "contentType" | "stickerId" | "attachment">,
+): string {
   const stickerId = resolveStickerIdForMessage(msg.text, msg.stickerId, msg.contentType);
   if (stickerId || isStickerOnlyMessageText(msg.text)) {
     return "Sticker";
+  }
+  if (msg.contentType === "file") {
+    const name = msg.attachment?.fileName?.trim();
+    return name ? `📄 ${name}` : "File";
+  }
+  const attachmentId = resolveAttachmentIdForMessage(
+    msg.text,
+    msg.attachment?.id,
+    msg.contentType,
+  );
+  if (attachmentId || msg.contentType === "image") {
+    return "Photo";
   }
   return buildReplyPreviewText(msg.text);
 }

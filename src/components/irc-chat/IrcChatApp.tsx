@@ -54,6 +54,10 @@ function IrcChatCenter({
   onMinimizeDm,
   onSend,
   onSendSticker,
+  onSendAttachment,
+  onAttachmentAuthRequired,
+  attachmentRoomId,
+  isRegisteredUser,
   replyingTo,
   onCancelReply,
   onReplyToMessage,
@@ -67,6 +71,14 @@ function IrcChatCenter({
   onMinimizeDm?: () => void;
   onSend: (text: string) => void;
   onSendSticker?: (stickerId: string) => void;
+  onSendAttachment?: (payload: {
+    attachment: import("@/lib/irc-chat/irc-attachment").IrcMessageAttachment;
+    contentType: "image" | "file";
+    caption?: string;
+  }) => void;
+  onAttachmentAuthRequired?: () => void;
+  attachmentRoomId?: string;
+  isRegisteredUser?: boolean;
   replyingTo?: IrcComposerReplyTarget | null;
   onCancelReply?: () => void;
   onReplyToMessage?: (msg: import("@/lib/irc-chat").IrcChatMessage) => void;
@@ -109,6 +121,10 @@ function IrcChatCenter({
         <IrcMessageComposer
           onSend={onSend}
           onSendSticker={view.kind === "room" ? onSendSticker : undefined}
+          onSendAttachment={view.kind === "room" ? onSendAttachment : undefined}
+          onAttachmentAuthRequired={onAttachmentAuthRequired}
+          roomId={attachmentRoomId}
+          isRegisteredUser={isRegisteredUser}
           view={view}
           shell="embedded"
           replyingTo={replyingTo}
@@ -131,6 +147,7 @@ function markPeerRead(
 function IrcChatAppShell() {
   const core = useIrcChatCore();
   const state = useIrcChatState();
+  const { user } = useAuth();
   const { openSignIn } = useAuthGate();
   const shellRef = useRef<HTMLDivElement>(null);
   const sidebarPrefHydrated = useRef(false);
@@ -327,6 +344,32 @@ function IrcChatAppShell() {
     [activeView, core, replyingTo],
   );
 
+  const handleSendAttachment = useCallback(
+    (payload: {
+      attachment: import("@/lib/irc-chat/irc-attachment").IrcMessageAttachment;
+      contentType: "image" | "file";
+      caption?: string;
+    }) => {
+      if (activeView.kind !== "room") return;
+      const replyId =
+        replyingTo?.roomId === activeView.roomId ? replyingTo.messageId : undefined;
+      core.sendAttachmentMessage(
+        payload.attachment,
+        payload.contentType,
+        activeView.roomId,
+        {
+          caption: payload.caption,
+          replyToMessageId: replyId,
+        },
+      );
+      setReplyingTo(null);
+    },
+    [activeView, core, replyingTo],
+  );
+
+  const attachmentRoomId =
+    activeView.kind === "room" ? activeView.roomId : IRC_CHAT_PRODUCT_ROOM;
+
   const showMobileNav = !isDesktopShell;
   const showCenterHeader = !isDesktopShell;
   const showDmConversationTabs =
@@ -452,6 +495,10 @@ function IrcChatAppShell() {
               onToggleReaction={handleToggleReaction}
               reactionsByMessageId={roomReactions}
               onSendSticker={handleSendSticker}
+              onSendAttachment={handleSendAttachment}
+              onAttachmentAuthRequired={openSignIn}
+              attachmentRoomId={attachmentRoomId}
+              isRegisteredUser={Boolean(user)}
               onBack={
                 activeView.kind === "dm"
                   ? () => setActiveView({ kind: "room", roomId: activeRoomId })
@@ -475,6 +522,12 @@ function IrcChatAppShell() {
                 onSendSticker={
                   activeView.kind === "room" ? handleSendSticker : undefined
                 }
+                onSendAttachment={
+                  activeView.kind === "room" ? handleSendAttachment : undefined
+                }
+                onAttachmentAuthRequired={openSignIn}
+                roomId={attachmentRoomId}
+                isRegisteredUser={Boolean(user)}
                 view={activeView}
                 shell="footer"
                 replyingTo={replyingTo}

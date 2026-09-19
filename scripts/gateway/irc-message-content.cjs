@@ -1,8 +1,9 @@
 /**
- * Optional IRC message content metadata (stickers) — gateway WS only, not Ergo tags.
+ * Optional IRC message content metadata (stickers, attachments) — gateway WS only, not Ergo tags.
  */
 
 const { isValidUuid } = require("./irc-pm.cjs");
+const { parseAttachmentToken } = require("./irc-attachment.cjs");
 
 const STICKER_TOKEN_RE =
   /^:s:([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}):$/i;
@@ -38,6 +39,31 @@ function parseOutboundMessageContent(payload) {
       contentType: "sticker",
       stickerId: resolvedId.toLowerCase(),
     };
+  }
+
+  if (rawType === "image" || rawType === "file") {
+    const attachmentId =
+      typeof payload?.attachmentId === "string" && isValidUuid(payload.attachmentId.trim())
+        ? payload.attachmentId.trim().toLowerCase()
+        : null;
+    if (!attachmentId) {
+      return { ok: false, code: "INVALID_ATTACHMENT", message: "Invalid attachment message" };
+    }
+    if (!text) {
+      return { ok: false, code: "INVALID_ATTACHMENT", message: "Attachment message requires text" };
+    }
+    const expectedToken = `:a:${attachmentId}:`;
+    const contentType = rawType === "file" ? "file" : "image";
+    if (text === expectedToken) {
+      return { ok: true, text, contentType, attachmentId };
+    }
+    if (parseAttachmentToken(text)) {
+      return { ok: false, code: "INVALID_ATTACHMENT", message: "Attachment caption must not be a token" };
+    }
+    if (text.length > 500) {
+      return { ok: false, code: "INVALID_ATTACHMENT", message: "Caption too long" };
+    }
+    return { ok: true, text, contentType, attachmentId };
   }
 
   if (rawType && rawType !== "text") {

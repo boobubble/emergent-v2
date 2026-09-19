@@ -27,6 +27,8 @@ import {
   shouldAcceptIncomingPublicMessage,
 } from "./messages";
 import { isValidMessageId, parseOptionalReplyToMessageId, type ParsedGatewayEvent } from "./protocol";
+import { createAttachmentToken } from "./irc-attachment";
+import type { IrcMessageAttachment } from "./irc-attachment";
 import { createStickerToken, resolveStickerIdForMessage } from "./irc-sticker";
 import { isValidCustomEmojiId } from "./irc-custom-emoji";
 import {
@@ -155,7 +157,13 @@ export class IrcChatCore {
   sendPublicMessage(
     text: string,
     roomId = IRC_CHAT_PRODUCT_ROOM,
-    options?: { replyToMessageId?: string; contentType?: "sticker"; stickerId?: string },
+    options?: {
+      replyToMessageId?: string;
+      contentType?: "sticker" | "image" | "file";
+      stickerId?: string;
+      attachment?: IrcMessageAttachment;
+      attachmentId?: string;
+    },
   ): string | null {
     const trimmed = text.trim();
     if (!trimmed || !this.transport.connected) return null;
@@ -171,6 +179,12 @@ export class IrcChatCore {
       options?.contentType === "sticker" && options.stickerId && isValidCustomEmojiId(options.stickerId)
         ? options.stickerId.trim().toLowerCase()
         : undefined;
+    const attachment =
+      (options?.contentType === "image" || options?.contentType === "file") &&
+      options.attachment &&
+      isValidMessageId(options.attachment.id)
+        ? options.attachment
+        : undefined;
 
     const msg = {
       id: messageId,
@@ -182,6 +196,12 @@ export class IrcChatCore {
       pending: true,
       ...(replyToMessageId ? { replyToMessageId } : {}),
       ...(stickerId ? { contentType: "sticker" as const, stickerId } : {}),
+      ...(attachment
+        ? {
+            contentType: options!.contentType as "image" | "file",
+            attachment,
+          }
+        : {}),
     };
 
     this.patchState({
@@ -192,6 +212,12 @@ export class IrcChatCore {
       !this.transport.sendPublic(roomId, messageId, trimmed, {
         replyToMessageId,
         ...(stickerId ? { contentType: "sticker", stickerId } : {}),
+        ...(attachment
+          ? {
+              contentType: options?.contentType as "image" | "file",
+              attachmentId: attachment.id,
+            }
+          : {}),
       })
     ) {
       this.patchState({
@@ -202,6 +228,23 @@ export class IrcChatCore {
 
     this.scheduleReactionHydration(roomId);
     return messageId;
+  }
+
+  sendAttachmentMessage(
+    attachment: IrcMessageAttachment,
+    contentType: "image" | "file",
+    roomId = IRC_CHAT_PRODUCT_ROOM,
+    options?: { caption?: string; replyToMessageId?: string },
+  ): string | null {
+    if (!isValidMessageId(attachment.id) || !this.transport.connected) return null;
+    const caption = options?.caption?.trim() ?? "";
+    const text = caption || createAttachmentToken(attachment.id);
+    return this.sendPublicMessage(text, roomId, {
+      contentType,
+      attachment,
+      attachmentId: attachment.id,
+      replyToMessageId: options?.replyToMessageId,
+    });
   }
 
   sendStickerMessage(
@@ -410,7 +453,7 @@ export class IrcChatCore {
             ...(event.replyToMessageId
               ? { replyToMessageId: event.replyToMessageId }
               : {}),
-            ...this.stickerFieldsFromEvent(event),
+            ...this.contentFieldsFromEvent(event),
           }),
         });
         this.scheduleReactionHydration(event.room);
@@ -425,6 +468,19 @@ export class IrcChatCore {
         break;
       }
       case "public_message_sent": {
+        const prevList = this.state.messages[event.room] ?? [];
+        const prevMsg = prevList.find((m) => m.id === event.messageId);
+        const contentFields = this.contentFieldsFromEvent(event);
+        const mergedAttachment =
+          "attachment" in contentFields && contentFields.attachment
+            ? {
+                ...contentFields.attachment,
+                size:
+                  contentFields.attachment.size > 0
+                    ? contentFields.attachment.size
+                    : prevMsg?.attachment?.size ?? 0,
+              }
+            : undefined;
         this.patchState({
           messages: confirmPublicMessage(
             this.state.messages,
@@ -437,7 +493,8 @@ export class IrcChatCore {
               ...(event.replyToMessageId
                 ? { replyToMessageId: event.replyToMessageId }
                 : {}),
-              ...this.stickerFieldsFromEvent(event),
+              ...contentFields,
+              ...(mergedAttachment ? { attachment: mergedAttachment } : {}),
             },
           ),
         });
@@ -532,18 +589,29 @@ export class IrcChatCore {
     });
   }
 
-  private stickerFieldsFromEvent(event: {
+  private contentFieldsFromEvent(event: {
     text: string;
     contentType?: string;
     stickerId?: string;
-  }): { contentType?: "sticker"; stickerId?: string } {
+    attachment?: IrcMessageAttachment;
+  }):
+    | { contentType?: "sticker"; stickerId?: string }
+    | { contentType: "image" | "file"; attachment: IrcMessageAttachment }
+    | Record<string, never> {
     const stickerId = resolveStickerIdForMessage(
       event.text,
       event.stickerId,
       event.contentType,
     );
-    if (!stickerId) return {};
-    return { contentType: "sticker", stickerId };
+    if (stickerId) return { contentType: "sticker", stickerId };
+    if (
+      (event.contentType === "image" || event.contentType === "file") &&
+      event.attachment &&
+      isValidMessageId(event.attachment.id)
+    ) {
+      return { contentType: event.contentType, attachment: event.attachment };
+    }
+    return {};
   }
 
   private scheduleReactionHydration(roomId: string): void {

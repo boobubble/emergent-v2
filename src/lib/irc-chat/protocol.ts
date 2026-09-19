@@ -6,6 +6,10 @@ import {
   type IrcMessageReactions,
   type IrcReactionType,
 } from "./reactions";
+import {
+  resolveAttachmentIdForMessage,
+  type IrcMessageAttachment,
+} from "./irc-attachment";
 import { resolveStickerIdForMessage, type IrcMessageContentType } from "./irc-sticker";
 
 const UUID_RE =
@@ -55,11 +59,37 @@ export type GatewayFrame = {
   reactions?: unknown;
   contentType?: string;
   stickerId?: string;
+  attachmentId?: string;
+  attachment?: unknown;
 };
+
+function parseAttachmentFromFrame(frame: GatewayFrame): IrcMessageAttachment | undefined {
+  const raw = frame.attachment;
+  if (!raw || typeof raw !== "object") return undefined;
+  const record = raw as Record<string, unknown>;
+  const id = asNonEmptyString(record.id);
+  if (!isValidMessageId(id)) return undefined;
+  const mimeType = asNonEmptyString(record.mimeType);
+  const fileName = asNonEmptyString(record.fileName);
+  if (!mimeType || !fileName) return undefined;
+  const size =
+    typeof record.size === "number" && Number.isFinite(record.size) && record.size >= 0
+      ? Math.floor(record.size)
+      : 0;
+  const url = asNonEmptyString(record.url);
+  return {
+    id: id.toLowerCase(),
+    mimeType,
+    fileName,
+    size,
+    ...(url.startsWith("https://") ? { url } : {}),
+  };
+}
 
 export function parseOptionalMessageContentMeta(frame: GatewayFrame): {
   contentType?: IrcMessageContentType;
   stickerId?: string;
+  attachment?: IrcMessageAttachment;
 } {
   const text = typeof frame.text === "string" ? frame.text.trim() : "";
   const stickerId = resolveStickerIdForMessage(
@@ -67,8 +97,30 @@ export function parseOptionalMessageContentMeta(frame: GatewayFrame): {
     asNonEmptyString(frame.stickerId) || null,
     asNonEmptyString(frame.contentType) || null,
   );
-  if (!stickerId) return {};
-  return { contentType: "sticker", stickerId };
+  if (stickerId) return { contentType: "sticker", stickerId };
+
+  const rawType = asNonEmptyString(frame.contentType).toLowerCase();
+  const attachment = parseAttachmentFromFrame(frame);
+  if (rawType === "image" || rawType === "file") {
+    const id =
+      attachment?.id ||
+      resolveAttachmentIdForMessage(
+        text,
+        asNonEmptyString(frame.attachmentId) || null,
+        rawType,
+      );
+    if (!id) return {};
+    return {
+      contentType: rawType,
+      attachment: attachment ?? {
+        id,
+        mimeType: rawType === "image" ? "image/jpeg" : "application/octet-stream",
+        fileName: "file",
+        size: 0,
+      },
+    };
+  }
+  return {};
 }
 
 export function parseGatewayFrame(raw: string): GatewayFrame | null {
@@ -96,6 +148,7 @@ export type ParsedGatewayEvent =
       replyToMessageId?: string;
       contentType?: IrcMessageContentType;
       stickerId?: string;
+      attachment?: IrcMessageAttachment;
     }
   | {
       kind: "public_message_sent";
@@ -107,6 +160,7 @@ export type ParsedGatewayEvent =
       replyToMessageId?: string;
       contentType?: IrcMessageContentType;
       stickerId?: string;
+      attachment?: IrcMessageAttachment;
     }
   | { kind: "pm_message"; messageId: string; nick: string; text: string }
   | { kind: "pm_sent"; messageId: string; recipientNick: string; text: string }
@@ -308,19 +362,27 @@ export function buildPartFrame(room: string): { type: "room.part"; room: string 
   return { type: "room.part", room: room.trim() };
 }
 
+export type PublicSendOptions = {
+  replyToMessageId?: string;
+  contentType?: "sticker" | "image" | "file";
+  stickerId?: string;
+  attachmentId?: string;
+};
+
 export function buildPublicSendFrame(
   room: string,
   messageId: string,
   text: string,
-  options?: { replyToMessageId?: string; contentType?: "sticker"; stickerId?: string },
+  options?: PublicSendOptions,
 ): {
   type: "message.send";
   room: string;
   messageId: string;
   text: string;
   replyToMessageId?: string;
-  contentType?: "sticker";
+  contentType?: "sticker" | "image" | "file";
   stickerId?: string;
+  attachmentId?: string;
 } {
   const frame = {
     type: "message.send" as const,
@@ -330,9 +392,21 @@ export function buildPublicSendFrame(
   };
   const reply = parseOptionalReplyToMessageId(options?.replyToMessageId);
   const stickerId = options?.stickerId?.trim().toLowerCase();
+  const attachmentId = options?.attachmentId?.trim().toLowerCase();
   const withReply = reply ? { ...frame, replyToMessageId: reply } : frame;
   if (options?.contentType === "sticker" && stickerId && isValidMessageId(stickerId)) {
     return { ...withReply, contentType: "sticker", stickerId };
+  }
+  if (
+    (options?.contentType === "image" || options?.contentType === "file") &&
+    attachmentId &&
+    isValidMessageId(attachmentId)
+  ) {
+    return {
+      ...withReply,
+      contentType: options.contentType,
+      attachmentId,
+    };
   }
   return withReply;
 }

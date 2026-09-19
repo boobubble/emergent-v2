@@ -20,6 +20,7 @@ scp "${REPO_ROOT}/scripts/gateway/irc-pm.cjs" "${VPS}:${REMOTE_DIR}/lib/irc-pm.c
 scp "${REPO_ROOT}/scripts/gateway/irc-user-session.cjs" "${VPS}:${REMOTE_DIR}/lib/irc-user-session.cjs"
 scp "${REPO_ROOT}/scripts/gateway/irc-reactions.cjs" "${VPS}:${REMOTE_DIR}/lib/irc-reactions.cjs"
 scp "${REPO_ROOT}/scripts/gateway/irc-message-content.cjs" "${VPS}:${REMOTE_DIR}/lib/irc-message-content.cjs"
+scp "${REPO_ROOT}/scripts/gateway/irc-attachment.cjs" "${VPS}:${REMOTE_DIR}/lib/irc-attachment.cjs"
 scp "${REPO_ROOT}/scripts/gateway/irc-names.cjs" "${VPS}:${REMOTE_DIR}/lib/irc-names.cjs"
 
 echo "==> Syntax check"

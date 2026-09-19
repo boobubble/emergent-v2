@@ -587,6 +587,8 @@ function createIrcSessionManager(options) {
           replyToMessageId: row.replyToMessageId,
           contentType: row.contentType,
           stickerId: row.stickerId,
+          attachmentId: row.attachmentId,
+          attachment: row.attachment,
         };
       }
     }
@@ -624,6 +626,8 @@ function createIrcSessionManager(options) {
       const replyToMessageId = pending?.replyToMessageId;
       const contentType = pending?.contentType;
       const stickerId = pending?.stickerId;
+      const attachmentId = pending?.attachmentId;
+      const attachment = pending?.attachment;
 
       if (!shouldFanout(room, nick, text)) return;
 
@@ -636,6 +640,8 @@ function createIrcSessionManager(options) {
         replyToMessageId,
         contentType,
         stickerId,
+        attachmentId,
+        attachment,
         sourceSession: session,
       });
       return;

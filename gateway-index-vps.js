@@ -46,6 +46,7 @@ const {
   toggleIrcMessageReaction,
 } = require("./lib/irc-reactions.cjs");
 const { parseOutboundMessageContent } = require("./lib/irc-message-content.cjs");
+const { loadValidatedIrcAttachment } = require("./lib/irc-attachment.cjs");
 const {
   parseIrcAccountLinksJson,
   lookupIrcAccountLink,
@@ -81,9 +82,12 @@ const SUPABASE_JWKS = SUPABASE_URL
     )
   : null;
 
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+
 const supabaseEnv = {
   supabaseUrl: SUPABASE_URL,
   publishableKey: SUPABASE_PUBLISHABLE_KEY,
+  serviceRoleKey: SUPABASE_SERVICE_ROLE_KEY,
 };
 
 async function verifySupabaseToken(token) {
@@ -262,6 +266,14 @@ function broadcastChannelMessage(wss, payload) {
   if (payload.contentType === "sticker" && payload.stickerId && isValidUuid(payload.stickerId)) {
     frame.contentType = "sticker";
     frame.stickerId = payload.stickerId.trim();
+  }
+  if (
+    (payload.contentType === "image" || payload.contentType === "file") &&
+    payload.attachment &&
+    typeof payload.attachment === "object"
+  ) {
+    frame.contentType = payload.contentType;
+    frame.attachment = payload.attachment;
   }
   broadcastToAuthenticatedClients(wss, frame);
 }
@@ -912,6 +924,41 @@ wss.on("connection", async (ws) => {
         ? payload.replyToMessageId.trim()
         : undefined;
 
+    let attachmentPayload;
+    if (parsedContent.attachmentId) {
+      if (ws.identityType !== "registered") {
+        ws.send(JSON.stringify({
+          type: "error",
+          code: "AUTH_REQUIRED",
+          message: "Sign in to send attachments",
+        }));
+        return;
+      }
+      const loaded = await loadValidatedIrcAttachment(
+        supabaseEnv,
+        ws.userId,
+        room,
+        parsedContent.attachmentId,
+      );
+      if (!loaded.ok) {
+        ws.send(JSON.stringify({
+          type: "error",
+          code: loaded.code || "INVALID_ATTACHMENT",
+          message: loaded.message || "Invalid attachment",
+        }));
+        return;
+      }
+      if (loaded.contentType !== parsedContent.contentType) {
+        ws.send(JSON.stringify({
+          type: "error",
+          code: "INVALID_ATTACHMENT",
+          message: "Attachment type mismatch",
+        }));
+        return;
+      }
+      attachmentPayload = loaded.attachment;
+    }
+
     sessionManager.trackPending(payload.messageId.trim(), {
       userId: ws.userId,
       nick: ws.ircNick || ws.nick,
@@ -920,6 +967,8 @@ wss.on("connection", async (ws) => {
       replyToMessageId,
       contentType: parsedContent.contentType,
       stickerId: parsedContent.stickerId,
+      attachmentId: parsedContent.attachmentId,
+      attachment: attachmentPayload,
       ws,
     });
 
@@ -946,6 +995,10 @@ wss.on("connection", async (ws) => {
     if (parsedContent.contentType === "sticker" && parsedContent.stickerId) {
       sentFrame.contentType = "sticker";
       sentFrame.stickerId = parsedContent.stickerId;
+    }
+    if (attachmentPayload && parsedContent.contentType) {
+      sentFrame.contentType = parsedContent.contentType;
+      sentFrame.attachment = attachmentPayload;
     }
     ws.send(JSON.stringify(sentFrame));
 

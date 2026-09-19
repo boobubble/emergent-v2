@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Paperclip,
   Plus,
   Send,
   Smile,
@@ -8,6 +9,7 @@ import {
   X,
   Youtube,
 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { GiphyPicker } from "@/components/chat/GiphyPicker";
@@ -21,12 +23,40 @@ import { cn } from "@/lib/utils";
 import { useIrcChatState } from "@/lib/irc-chat";
 import type { IrcActiveView, IrcComposerReplyTarget } from "./irc-chat-types";
 import { dmComposerPlaceholder, roomComposerPlaceholder } from "./irc-chat-ui";
+import { uploadIrcChatAttachment } from "@/lib/irc-chat-attachment.functions";
+import type { IrcMessageAttachment } from "@/lib/irc-chat/irc-attachment";
+import {
+  readFileAsDataUrl,
+  sanitizeClientFileName,
+  validateClientAttachmentFile,
+  type IrcAttachmentContentType,
+} from "@/lib/irc-chat/irc-attachment";
 import "@/components/chat/message-input.css";
 import "./irc-message-input.css";
+
+type PendingComposerAttachment = {
+  contentType: IrcAttachmentContentType;
+  fileName: string;
+  mimeType: string;
+  size: number;
+  previewUrl: string;
+  assetId?: string;
+  attachment?: IrcMessageAttachment;
+  uploadState: "idle" | "uploading" | "ready" | "error";
+  uploadError?: string;
+};
 
 type IrcMessageComposerProps = {
   onSend: (text: string) => void;
   onSendSticker?: (stickerId: string) => void;
+  onSendAttachment?: (payload: {
+    attachment: IrcMessageAttachment;
+    contentType: IrcAttachmentContentType;
+    caption?: string;
+  }) => void;
+  onAttachmentAuthRequired?: () => void;
+  roomId?: string;
+  isRegisteredUser?: boolean;
   view: IrcActiveView;
   shell?: "embedded" | "footer";
   className?: string;
@@ -68,6 +98,10 @@ function ComposerIconBtn({
 export function IrcMessageComposer({
   onSend,
   onSendSticker,
+  onSendAttachment,
+  onAttachmentAuthRequired,
+  roomId,
+  isRegisteredUser = false,
   view,
   shell = "embedded",
   className,
@@ -86,7 +120,10 @@ export function IrcMessageComposer({
   const [showGiphy, setShowGiphy] = useState(false);
   const [showYoutube, setShowYoutube] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [pendingAttach, setPendingAttach] = useState<PendingComposerAttachment | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const pickerAnchorRef = useRef<HTMLDivElement>(null);
+  const uploadAttachment = useServerFn(uploadIrcChatAttachment);
 
   const connected = state.status === "authenticated";
   const compact = view.kind === "dm";
@@ -113,9 +150,99 @@ export function IrcMessageComposer({
     setShowYoutube(false);
   };
 
+  function clearPendingAttachment() {
+    if (pendingAttach?.previewUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(pendingAttach.previewUrl);
+    }
+    setPendingAttach(null);
+  }
+
+  async function startUpload(file: File, contentType: IrcAttachmentContentType) {
+    const room = roomId?.trim();
+    if (!room) return;
+    const previewUrl = URL.createObjectURL(file);
+    setPendingAttach({
+      contentType,
+      fileName: sanitizeClientFileName(file.name),
+      mimeType: file.type,
+      size: file.size,
+      previewUrl,
+      uploadState: "uploading",
+    });
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      const result = await uploadAttachment({
+        data: {
+          roomId: room,
+          name: sanitizeClientFileName(file.name),
+          mime: file.type,
+          size: file.size,
+          dataBase64: dataUrl,
+        },
+      });
+      setPendingAttach((prev) =>
+        prev
+          ? {
+              ...prev,
+              uploadState: "ready",
+              assetId: result.assetId,
+              attachment: result.attachment,
+            }
+          : null,
+      );
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Upload failed";
+      setPendingAttach((prev) =>
+        prev ? { ...prev, uploadState: "error", uploadError: msg } : null,
+      );
+    }
+  }
+
+  async function handleFileInput(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!isRegisteredUser) {
+      onAttachmentAuthRequired?.();
+      return;
+    }
+    const validated = validateClientAttachmentFile(file);
+    if (!validated.ok) {
+      setPendingAttach({
+        contentType: "file",
+        fileName: file.name,
+        mimeType: file.type,
+        size: file.size,
+        previewUrl: "",
+        uploadState: "error",
+        uploadError: validated.message,
+      });
+      return;
+    }
+    void startUpload(file, validated.contentType);
+  }
+
   function submit(textOverride?: string) {
     const text = (textOverride ?? draft).trim();
-    if (!text || !connected) return;
+    if (!connected) return;
+    if (
+      pendingAttach?.uploadState === "ready" &&
+      pendingAttach.attachment &&
+      onSendAttachment
+    ) {
+      onSendAttachment({
+        attachment: pendingAttach.attachment,
+        contentType: pendingAttach.contentType,
+        caption: text || undefined,
+      });
+      setDraft("");
+      clearPendingAttachment();
+      closePickers();
+      setMoreOpen(false);
+      return;
+    }
+    if (pendingAttach?.uploadState === "uploading") return;
+    if (!text) return;
     onSend(text);
     setDraft("");
     closePickers();
@@ -196,6 +323,7 @@ export function IrcMessageComposer({
   useEffect(() => {
     closePickers();
     setMoreOpen(false);
+    clearPendingAttachment();
   }, [view.kind, view.kind === "room" ? view.roomId : view.peerNick]);
 
   const showReplyBanner =
@@ -205,6 +333,40 @@ export function IrcMessageComposer({
 
   const bar = (
     <div ref={pickerAnchorRef} className="relative min-w-0 flex-1">
+      {pendingAttach ? (
+        <div className="irc-composer-attach-preview mb-2 flex items-center gap-2 rounded-xl border border-border/60 bg-muted/20 px-2 py-2">
+          {pendingAttach.contentType === "image" && pendingAttach.previewUrl ? (
+            <img
+              src={pendingAttach.previewUrl}
+              alt=""
+              className="h-12 w-12 shrink-0 rounded-lg object-cover"
+            />
+          ) : (
+            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-muted/40 text-xs text-muted-foreground">
+              📄
+            </div>
+          )}
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-xs font-medium text-foreground">{pendingAttach.fileName}</p>
+            <p className="text-[11px] text-muted-foreground">
+              {pendingAttach.uploadState === "uploading"
+                ? "Uploading…"
+                : pendingAttach.uploadState === "error"
+                  ? pendingAttach.uploadError || "Upload failed"
+                  : `${Math.max(1, Math.round(pendingAttach.size / 1024))} KB`}
+            </p>
+          </div>
+          <button
+            type="button"
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-muted/50"
+            aria-label="Remove attachment"
+            onClick={clearPendingAttachment}
+            disabled={pendingAttach.uploadState === "uploading"}
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      ) : null}
       {showReplyBanner ? (
         <div className="irc-composer-reply-banner mb-2 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2">
           <div className="flex items-start gap-2">
@@ -250,6 +412,21 @@ export function IrcMessageComposer({
             >
               <Smile className="h-4 w-4" />
             </ComposerIconBtn>
+            {onSendAttachment ? (
+              <ComposerIconBtn
+                label="Attach file"
+                className="mb-0.5 hidden md:grid"
+                onClick={() => {
+                  if (!isRegisteredUser) {
+                    onAttachmentAuthRequired?.();
+                    return;
+                  }
+                  fileInputRef.current?.click();
+                }}
+              >
+                <Paperclip className="h-4 w-4" />
+              </ComposerIconBtn>
+            ) : null}
             {onSendSticker ? (
               <ComposerIconBtn
                 label="Sticker"
@@ -325,7 +502,12 @@ export function IrcMessageComposer({
 
         <button
           type="submit"
-          disabled={!connected || !draft.trim()}
+          disabled={
+            !connected ||
+            pendingAttach?.uploadState === "uploading" ||
+            (!draft.trim() &&
+              !(pendingAttach?.uploadState === "ready" && pendingAttach.attachment))
+          }
           className="chat-composer-send mb-0.5 grid h-10 w-10 shrink-0 touch-manipulation place-items-center rounded-full text-primary-foreground shadow-lg transition-[transform,opacity] duration-75 ease-out hover:scale-105 active:scale-[0.94] active:opacity-90 disabled:pointer-events-none disabled:opacity-40 disabled:active:scale-100 sm:h-9 sm:w-9"
           style={{
             background: "var(--gradient-primary)",
@@ -373,6 +555,13 @@ export function IrcMessageComposer({
           />
         ) : null}
       </IrcComposerPickerPortal>
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,text/plain"
+        onChange={handleFileInput}
+      />
     </div>
   );
 

@@ -995,3 +995,16 @@
   border-left: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
   background: color-mix(in oklab, var(--card) 92%, var(--primary) 8%);
 }
+
+[data-irc-chat-app] .irc-attachment-image {
+  display: block;
+  max-width: min(100%, 420px);
+}
+
+[data-irc-chat-app] .irc-attachment-image-btn {
+  transition: box-shadow 0.15s ease;
+}
+
+[data-irc-chat-app] .irc-attachment-image-btn:hover {
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--primary) 35%, transparent);
+}

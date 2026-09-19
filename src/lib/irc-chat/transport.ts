@@ -145,7 +145,7 @@ export class IrcChatTransport {
     room: string,
     messageId: string,
     text: string,
-    options?: { replyToMessageId?: string; contentType?: "sticker"; stickerId?: string },
+    options?: import("./protocol").PublicSendOptions,
   ): boolean {
     if (!isValidMessageId(messageId)) return false;
     const trimmed = text.trim();
