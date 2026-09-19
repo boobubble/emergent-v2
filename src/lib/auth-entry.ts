@@ -28,6 +28,16 @@ export function markChatFreshEntry(): void {
   }
 }
 
+/** True while a marketing/login CTA just routed the user into /chatroom (cleared on iframe load). */
+export function isChatFreshEntryPending(): boolean {
+  if (typeof sessionStorage === "undefined") return false;
+  try {
+    return sessionStorage.getItem(CHAT_FRESH_ENTRY_KEY) !== null;
+  } catch {
+    return false;
+  }
+}
+
 export function consumeChatFreshEntry(): boolean {
   if (typeof sessionStorage === "undefined") return false;
   try {

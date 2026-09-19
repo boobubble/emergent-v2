@@ -6,7 +6,9 @@ import { checkDeviceBan, recordDevice } from "@/lib/device.functions";
 import { SIGNUP_ACCESS_DEFAULTS, type SignupAccessConfig } from "@/lib/signup-config";
 import { HOME_PAGE_KEY, type HomePageMode } from "@/lib/hero-page-config";
 import { landingPathForMode } from "@/lib/landing-path";
-import { isGuestHomePath } from "@/lib/stored-auth";
+import { hasStoredAuthToken, isGuestHomePath } from "@/lib/stored-auth";
+
+type YaarzoAuthWindow = Window & { __yaarzoSignOutPromise?: Promise<void> };
 
 async function loadSignupAccess(): Promise<SignupAccessConfig> {
   try {
@@ -239,7 +241,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [hydrateProfileBackground]);
 
   const ensureListening = useCallback(async () => {
-    if (listeningRef.current) return listeningRef.current;
+    if (unsubscribeRef.current) {
+      if (listeningRef.current) await listeningRef.current;
+      return;
+    }
+    if (listeningRef.current) await listeningRef.current;
     listeningRef.current = (async () => {
       try {
         const unsub = await attachAuthStateChange((_event, session) => {
@@ -248,10 +254,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
         unsubscribeRef.current = unsub;
       } catch (e) {
+        listeningRef.current = null;
         console.warn("[auth-store] onAuthStateChange failed to attach", e);
       }
     })();
-    return listeningRef.current;
+    await listeningRef.current;
   }, [applySession]);
 
   useEffect(() => {
@@ -356,6 +363,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user?.isDemo]);
 
   const login = useCallback(async (identifier: string, password: string) => {
+    cancelledRef.current = false;
     const id = identifier.trim();
     try {
       const { getDeviceFingerprint } = await import("@/lib/device-fingerprint");
@@ -371,6 +379,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (e) { if (e instanceof Error && e.message.startsWith("This device")) throw e; }
     await ensureListening();
     const supabase = await loadBrowserSupabase();
+    const pendingSignOut = (window as YaarzoAuthWindow).__yaarzoSignOutPromise;
+    if (pendingSignOut) await pendingSignOut.catch(() => undefined);
     const res = await loginWithIdentifier({ data: { identifier: id, password } });
     const { data: sessionData, error } = await supabase.auth.setSession({
       access_token: res.access_token,
@@ -384,7 +394,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!persisted.session) {
       throw new Error("Login session was not persisted");
     }
-  }, [ensureListening]);
+    applySession(persisted.session);
+    setReady(true);
+  }, [applySession, ensureListening]);
 
   const signup = useCallback(async (email: string, password: string, username: string, gender: "male" | "female" | "other", extras?: SignupExtras) => {
     email = email.trim();
@@ -460,8 +472,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (wasDemo) {
         try { await deleteDemoAccount(); } catch (e) { console.error("Demo cleanup failed", e); }
       }
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      const w = window as YaarzoAuthWindow;
+      const signOutWork = (async () => {
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
+        for (let i = 0; i < 20; i++) {
+          if (!hasStoredAuthToken()) break;
+          await new Promise((r) => setTimeout(r, 25));
+        }
+      })();
+      w.__yaarzoSignOutPromise = signOutWork.finally(() => {
+        delete w.__yaarzoSignOutPromise;
+      });
+      await signOutWork;
       const landing = await resolveLandingPath();
       window.location.replace(landing);
     } catch (e) {
