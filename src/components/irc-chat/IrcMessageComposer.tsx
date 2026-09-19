@@ -207,12 +207,22 @@ export function IrcMessageComposer({
         : "Write a message…"
     : "Disconnected — reconnecting…";
 
+  type ComposerPicker = "emoji" | "sticker" | "giphy" | "youtube";
+
   const closePickers = () => {
     setShowEmoji(false);
     setShowSticker(false);
     setShowGiphy(false);
     setShowYoutube(false);
   };
+
+  function openComposerPicker(picker: ComposerPicker) {
+    setShowEmoji(picker === "emoji");
+    setShowSticker(picker === "sticker");
+    setShowGiphy(picker === "giphy");
+    setShowYoutube(picker === "youtube");
+    setMentionMenuOpen(false);
+  }
 
   function clearPendingAttachment() {
     if (pendingAttach?.previewUrl.startsWith("blob:")) {
@@ -344,9 +354,8 @@ export function IrcMessageComposer({
           label: "GIF",
           icon: Sparkles,
           onClick: () => {
-            setShowGiphy((s) => !s);
-            setShowEmoji(false);
-            setShowYoutube(false);
+            if (showGiphy) closePickers();
+            else openComposerPicker("giphy");
           },
           active: showGiphy,
         },
@@ -355,9 +364,8 @@ export function IrcMessageComposer({
           label: "YouTube",
           icon: Youtube,
           onClick: () => {
-            setShowYoutube((s) => !s);
-            setShowEmoji(false);
-            setShowGiphy(false);
+            if (showYoutube) closePickers();
+            else openComposerPicker("youtube");
           },
           active: showYoutube,
         },
@@ -404,6 +412,9 @@ export function IrcMessageComposer({
   const pickerOpen = showEmoji || showSticker || showGiphy || showYoutube;
 
   useEffect(() => {
+    setDraft("");
+    setCaret(0);
+    setMentionMenuOpen(false);
     closePickers();
     setMoreOpen(false);
     clearPendingAttachment();
@@ -495,10 +506,8 @@ export function IrcMessageComposer({
               active={showEmoji}
               className="mb-0.5 hidden md:grid"
               onClick={() => {
-                setShowEmoji((s) => !s);
-                setShowSticker(false);
-                setShowGiphy(false);
-                setShowYoutube(false);
+                if (showEmoji) closePickers();
+                else openComposerPicker("emoji");
               }}
             >
               <Smile className="h-4 w-4" />
@@ -512,6 +521,7 @@ export function IrcMessageComposer({
                     onAttachmentAuthRequired?.();
                     return;
                   }
+                  closePickers();
                   fileInputRef.current?.click();
                 }}
               >
@@ -524,10 +534,8 @@ export function IrcMessageComposer({
                 active={showSticker}
                 className="mb-0.5 hidden md:grid"
                 onClick={() => {
-                  setShowSticker((s) => !s);
-                  setShowEmoji(false);
-                  setShowGiphy(false);
-                  setShowYoutube(false);
+                  if (showSticker) closePickers();
+                  else openComposerPicker("sticker");
                 }}
               >
                 <Sticker className="h-4 w-4" />
@@ -627,10 +635,8 @@ export function IrcMessageComposer({
           active={showEmoji}
           className={cn("mb-0.5", !compact && "md:hidden")}
           onClick={() => {
-            setShowEmoji((s) => !s);
-            setShowSticker(false);
-            setShowGiphy(false);
-            setShowYoutube(false);
+            if (showEmoji) closePickers();
+            else openComposerPicker("emoji");
           }}
         >
           <Smile className="h-4 w-4" />

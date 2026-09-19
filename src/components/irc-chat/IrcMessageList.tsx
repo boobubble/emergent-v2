@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Clock, Hash, Loader2 } from "lucide-react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { ChevronDown, Clock, Hash, Loader2 } from "lucide-react";
+import { isNearScrollBottom } from "@/lib/irc-chat/message-scroll";
 import { buildIrcMessageReplyPreview, indexMessagesById, resolveReplyParent } from "@/lib/irc-chat/reply";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -217,8 +218,11 @@ export function IrcMessageList({
 }: IrcMessageListProps) {
   const state = useIrcChatState();
   const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const pinnedToBottomRef = useRef(true);
   const hadAuthRef = useRef(false);
   const [highlightId, setHighlightId] = useState<string | null>(null);
+  const [showNewMessages, setShowNewMessages] = useState(false);
   if (state.status === "authenticated") hadAuthRef.current = true;
 
   const connectionLabel = ircConnectionLabel(state.status, hadAuthRef.current);
@@ -240,9 +244,45 @@ export function IrcMessageList({
     window.setTimeout(() => setHighlightId(null), 1600);
   }, []);
 
+  const getScrollViewport = useCallback((): HTMLElement | null => {
+    const root = scrollAreaRef.current;
+    if (!root) return null;
+    return root.querySelector("[data-radix-scroll-area-viewport]") as HTMLElement | null;
+  }, []);
+
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
+    const viewport = getScrollViewport();
+    if (viewport) {
+      viewport.scrollTo({ top: viewport.scrollHeight, behavior });
+      return;
+    }
+    bottomRef.current?.scrollIntoView({ behavior, block: "end" });
+  }, [getScrollViewport]);
+
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages.length, messages[messages.length - 1]?.id]);
+    const viewport = getScrollViewport();
+    if (!viewport) return;
+    const onScroll = () => {
+      const near = isNearScrollBottom(
+        viewport.scrollTop,
+        viewport.scrollHeight,
+        viewport.clientHeight,
+      );
+      pinnedToBottomRef.current = near;
+      if (near) setShowNewMessages(false);
+    };
+    viewport.addEventListener("scroll", onScroll, { passive: true });
+    return () => viewport.removeEventListener("scroll", onScroll);
+  }, [getScrollViewport, messages.length]);
+
+  useLayoutEffect(() => {
+    if (pinnedToBottomRef.current) {
+      scrollToBottom(messages.length <= 1 ? "auto" : "smooth");
+      setShowNewMessages(false);
+    } else {
+      setShowNewMessages(true);
+    }
+  }, [messages.length, messages[messages.length - 1]?.id, scrollToBottom]);
 
   const canReply = view.kind === "room" && Boolean(onReply);
   const canReact = view.kind === "room" && Boolean(onToggleReaction);
@@ -265,8 +305,33 @@ export function IrcMessageList({
   const roomTypers =
     view.kind === "room" ? state.typing[view.roomId] ?? [] : [];
 
+  useEffect(() => {
+    pinnedToBottomRef.current = true;
+    setShowNewMessages(false);
+  }, [view.kind, view.kind === "room" ? view.roomId : view.kind === "dm" ? view.peerNick : ""]);
+
   return (
-    <ScrollArea className={cn("irc-message-canvas min-h-0 flex-1", className)}>
+    <div className="relative flex min-h-0 flex-1 flex-col">
+      {showNewMessages ? (
+        <div className="pointer-events-none absolute inset-x-0 bottom-2 z-20 flex justify-center">
+          <button
+            type="button"
+            className="pointer-events-auto inline-flex items-center gap-1 rounded-full border border-primary/30 bg-background/95 px-3 py-1.5 text-xs font-medium text-primary shadow-md backdrop-blur-sm hover:bg-primary/10"
+            onClick={() => {
+              pinnedToBottomRef.current = true;
+              setShowNewMessages(false);
+              scrollToBottom("smooth");
+            }}
+          >
+            <ChevronDown className="h-3.5 w-3.5" aria-hidden />
+            New messages
+          </button>
+        </div>
+      ) : null}
+    <ScrollArea
+      ref={scrollAreaRef}
+      className={cn("irc-message-canvas min-h-0 flex-1", className)}
+    >
       <div className="irc-message-list-inner">
         {connecting && messages.length === 0 ? (
           <div className="irc-connecting-state flex flex-col items-center justify-center gap-2 py-16 text-center">
@@ -325,5 +390,6 @@ export function IrcMessageList({
         <div ref={bottomRef} aria-hidden className="h-2" />
       </div>
     </ScrollArea>
+    </div>
   );
 }
