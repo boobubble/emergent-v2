@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Search, UserPlus, Check, X, UserMinus, Ban, Users, Sparkles, Clock, Inbox, Send, ShieldOff } from "lucide-react";
 import { useAuth } from "@/lib/auth-store";
@@ -16,7 +16,12 @@ import type { User } from "@/lib/chat-types";
 import { toast } from "sonner";
 import { loadRouteSeo, headFromRouteSeo } from "@/lib/seo";
 
+const FRIEND_TABS = new Set(["suggestions", "requests", "sent", "friends", "search"]);
+
 export const Route = createFileRoute("/find-friends")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    tab: typeof search.tab === "string" && FRIEND_TABS.has(search.tab) ? search.tab : undefined,
+  }),
   loader: () => loadRouteSeo("/find-friends", "Find Friends", "Discover people, accept requests, and grow your network."),
   head: ({ loaderData }) => headFromRouteSeo(loaderData),
   component: FindFriendsPage,
@@ -33,9 +38,16 @@ type FriendshipRow = {
 type Tab = "suggestions" | "requests" | "sent" | "friends" | "search";
 
 function FindFriendsPage() {
+  const { tab: tabSearch } = Route.useSearch();
   const { user } = useAuth();
   const { profiles } = useRemoteProfiles();
   const [tab, setTab] = useState<Tab>("suggestions");
+
+  useEffect(() => {
+    if (tabSearch && FRIEND_TABS.has(tabSearch)) {
+      setTab(tabSearch as Tab);
+    }
+  }, [tabSearch]);
   const [q, setQ] = useState("");
   const meId = user?.id ?? "";
   const { friendships: rows, friendshipsLoaded: loading } = useSocialGraph();

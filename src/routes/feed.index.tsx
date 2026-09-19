@@ -215,6 +215,13 @@ function FeedPage() {
   const { savedIds } = useSavedPosts();
   const [tab, setTabState] = useState<Tab>(isVisibleFeedTab(prefs.defaultTab) ? prefs.defaultTab : "foryou");
   const initial = getInitialView();
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const sp = new URLSearchParams(window.location.search);
+    const t = sp.get("tab");
+    if (t && isVisibleFeedTab(t as Tab)) setTabState(t as Tab);
+  }, []);
   const [view, setView] = useState<View>(initial.view);
   const [profileUsername, setProfileUsername] = useState<string>(initial.username);
   const [posts, setPosts] = useState<FeedPost[]>([]);

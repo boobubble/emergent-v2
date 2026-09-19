@@ -282,7 +282,10 @@ function IrcChatAppShell() {
           </div>
         ) : null}
 
-        <main className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col">
+        <main
+          data-irc-column="center"
+          className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col"
+        >
           {chatroomSidebarToggleVisible(shellLayout, sidebarOpen) ? (
             <button
               type="button"

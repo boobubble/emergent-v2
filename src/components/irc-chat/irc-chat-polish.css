@@ -622,3 +622,93 @@
 :root:not(.light) [data-irc-chat-app] .irc-members-section-label--offline {
   color: var(--muted-foreground);
 }
+
+/* —— Phase 1B: premium left sidebar —— */
+[data-irc-chat-app] {
+  --irc-sidebar-w: 276px;
+}
+
+[data-irc-chat-app] .irc-sidebar-panel {
+  border-radius: 12px;
+}
+
+[data-irc-chat-app] .irc-sidebar-section-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--muted-foreground) 90%, var(--primary) 10%);
+}
+
+[data-irc-chat-app] .irc-sidebar-badge {
+  display: grid;
+  min-width: 1.125rem;
+  height: 1.125rem;
+  place-items: center;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--primary) 88%, #fff 12%);
+  padding: 0 0.25rem;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--primary-foreground);
+}
+
+[data-irc-chat-app] .irc-room-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 11px;
+  border: 1px solid transparent;
+  padding: 0.35rem 0.5rem;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+[data-irc-chat-app] .irc-room-row:hover {
+  background: color-mix(in oklab, var(--foreground) 4%, transparent);
+  border-color: color-mix(in oklab, var(--border) 70%, transparent);
+}
+
+[data-irc-chat-app] .irc-room-row-active {
+  background: color-mix(in oklab, var(--primary) 14%, var(--card) 86%);
+  border-color: color-mix(in oklab, var(--primary) 42%, var(--border) 58%);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--primary) 22%, transparent);
+}
+
+[data-irc-chat-app] .irc-room-row-glyph {
+  width: 1.25rem;
+  flex-shrink: 0;
+  text-align: center;
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+[data-irc-chat-app] .irc-room-online-dot {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: hsl(142 76% 45%);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--primary) 25%, transparent);
+}
+
+[data-irc-chat-app] .irc-sidebar-rooms-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+[data-irc-chat-app] .irc-radio-slot {
+  min-height: 0.25rem;
+}
+
+[data-irc-chat-app] main {
+  border-left: 1px solid color-mix(in oklab, var(--border) 75%, var(--primary) 8%);
+  background: color-mix(in oklab, var(--background) 96%, var(--primary) 4%);
+}
+
+[data-irc-chat-app] [data-irc-column="members"],
+[data-irc-chat-app] .irc-dm-info-panel {
+  border-left: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+  background: color-mix(in oklab, var(--card) 92%, var(--primary) 8%);
+}
