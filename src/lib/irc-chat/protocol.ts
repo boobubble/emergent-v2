@@ -1,5 +1,11 @@
 import type { IrcChatMember, IrcChatPresenceEvent } from "./types";
 import { parseIrcPresenceLine } from "../irc-presence";
+import {
+  parseIrcReactionType,
+  parseReactionBucketsFromUnknown,
+  type IrcMessageReactions,
+  type IrcReactionType,
+} from "./reactions";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -42,6 +48,10 @@ export type GatewayFrame = {
   members?: unknown;
   recipientNick?: string;
   code?: string;
+  reactionType?: string;
+  messageIds?: unknown;
+  items?: unknown;
+  reactions?: unknown;
 };
 
 export function parseGatewayFrame(raw: string): GatewayFrame | null {
@@ -80,7 +90,18 @@ export type ParsedGatewayEvent =
   | { kind: "pm_message"; messageId: string; nick: string; text: string }
   | { kind: "pm_sent"; messageId: string; recipientNick: string; text: string }
   | { kind: "presence"; event: IrcChatPresenceEvent }
-  | { kind: "error"; code: string; message: string };
+  | { kind: "error"; code: string; message: string }
+  | {
+      kind: "reaction_updated";
+      room: string;
+      messageId: string;
+      reactions: IrcMessageReactions;
+    }
+  | {
+      kind: "reaction_list";
+      room: string;
+      items: Array<{ messageId: string; reactions: IrcMessageReactions }>;
+    };
 
 export function parseGatewayEvent(frame: GatewayFrame): ParsedGatewayEvent | null {
   if (!frame.type) return null;
@@ -181,6 +202,29 @@ export function parseGatewayEvent(frame: GatewayFrame): ParsedGatewayEvent | nul
     };
   }
 
+  if (frame.type === "reaction.updated") {
+    const room = asNonEmptyString(frame.room);
+    const messageId = asNonEmptyString(frame.messageId);
+    const reactions = parseReactionBucketsFromUnknown(frame.reactions);
+    if (!room || !isValidMessageId(messageId) || !reactions) return null;
+    return { kind: "reaction_updated", room, messageId, reactions };
+  }
+
+  if (frame.type === "reaction.list") {
+    const room = asNonEmptyString(frame.room);
+    if (!room || !Array.isArray(frame.items)) return null;
+    const items: Array<{ messageId: string; reactions: IrcMessageReactions }> = [];
+    for (const row of frame.items) {
+      if (!row || typeof row !== "object") continue;
+      const entry = row as { messageId?: unknown; reactions?: unknown };
+      const messageId = asNonEmptyString(entry.messageId);
+      const reactions = parseReactionBucketsFromUnknown(entry.reactions);
+      if (!isValidMessageId(messageId) || !reactions) continue;
+      items.push({ messageId, reactions });
+    }
+    return { kind: "reaction_list", room, items };
+  }
+
   return null;
 }
 
@@ -256,4 +300,41 @@ export function buildPmSendFrame(
     messageId: messageId.trim(),
     text: text.trim(),
   };
+}
+
+export function buildReactionToggleFrame(
+  room: string,
+  messageId: string,
+  reactionType: IrcReactionType,
+): {
+  type: "reaction.toggle";
+  room: string;
+  messageId: string;
+  reactionType: IrcReactionType;
+} {
+  return {
+    type: "reaction.toggle",
+    room: room.trim(),
+    messageId: messageId.trim(),
+    reactionType,
+  };
+}
+
+export function buildReactionListFrame(
+  room: string,
+  messageIds: string[],
+): {
+  type: "reaction.list";
+  room: string;
+  messageIds: string[];
+} {
+  return {
+    type: "reaction.list",
+    room: room.trim(),
+    messageIds: messageIds.map((id) => id.trim()),
+  };
+}
+
+export function parseOptionalReactionType(value: unknown): IrcReactionType | null {
+  return parseIrcReactionType(value);
 }

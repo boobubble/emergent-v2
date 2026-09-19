@@ -5,10 +5,14 @@ import {
   buildPartFrame,
   buildPmSendFrame,
   buildPublicSendFrame,
+  buildReactionListFrame,
+  buildReactionToggleFrame,
   isValidMessageId,
   parseGatewayEvent,
   parseGatewayFrame,
 } from "./protocol";
+import type { IrcReactionType } from "./reactions";
+import { IRC_REACTION_LIST_BATCH_MAX } from "./reactions";
 import type { ParsedGatewayEvent } from "./protocol";
 import { isIrcChatLiveRoom } from "./rooms";
 
@@ -157,6 +161,42 @@ export class IrcChatTransport {
       return true;
     } catch {
       this.emitStatus("error", "Failed to send IRC message");
+      return false;
+    }
+  }
+
+  sendReactionToggle(
+    room: string,
+    messageId: string,
+    reactionType: IrcReactionType,
+  ): boolean {
+    if (!isValidMessageId(messageId)) return false;
+    const normalizedRoom = room.trim();
+    if (!normalizedRoom || !this.connected || !this.ws) return false;
+    if (!isIrcChatLiveRoom(normalizedRoom, this.knownRoomIds)) return false;
+    try {
+      this.ws.send(
+        JSON.stringify(buildReactionToggleFrame(normalizedRoom, messageId, reactionType)),
+      );
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  sendReactionList(room: string, messageIds: string[]): boolean {
+    const normalizedRoom = room.trim();
+    if (!normalizedRoom || !this.connected || !this.ws) return false;
+    if (!isIrcChatLiveRoom(normalizedRoom, this.knownRoomIds)) return false;
+    const ids = messageIds
+      .map((id) => id.trim())
+      .filter((id) => isValidMessageId(id))
+      .slice(0, IRC_REACTION_LIST_BATCH_MAX);
+    if (!ids.length) return false;
+    try {
+      this.ws.send(JSON.stringify(buildReactionListFrame(normalizedRoom, ids)));
+      return true;
+    } catch {
       return false;
     }
   }

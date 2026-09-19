@@ -41,6 +41,11 @@ const {
   CONNECT_TIMEOUT_MS,
 } = require("./lib/irc-user-session.cjs");
 const {
+  broadcastReactionUpdated,
+  listIrcMessageReactions,
+  toggleIrcMessageReaction,
+} = require("./lib/irc-reactions.cjs");
+const {
   parseIrcAccountLinksJson,
   lookupIrcAccountLink,
 } = require("./lib/irc-account-links.cjs");
@@ -791,6 +796,54 @@ wss.on("connection", async (ws) => {
         messageId: parsed.messageId,
         recipientNick: parsed.recipientNick,
         text: parsed.text,
+      }));
+      return;
+    }
+
+    if (payload.type === "reaction.toggle") {
+      const result = await toggleIrcMessageReaction(
+        ws,
+        payload,
+        supabaseEnv,
+        sessionManager,
+      );
+      if (!result.ok) {
+        ws.send(JSON.stringify({
+          type: "error",
+          code: result.code || "REACTION_FAILED",
+          message: result.message || "Reaction failed",
+        }));
+        return;
+      }
+      broadcastReactionUpdated(
+        wss,
+        sessionManager,
+        result.room,
+        result.messageId,
+        result.reactions,
+      );
+      return;
+    }
+
+    if (payload.type === "reaction.list") {
+      const result = await listIrcMessageReactions(
+        ws,
+        payload,
+        supabaseEnv,
+        sessionManager,
+      );
+      if (!result.ok) {
+        ws.send(JSON.stringify({
+          type: "error",
+          code: result.code || "REACTION_FAILED",
+          message: result.message || "Could not load reactions",
+        }));
+        return;
+      }
+      ws.send(JSON.stringify({
+        type: "reaction.list",
+        room: result.room,
+        items: result.items,
       }));
       return;
     }

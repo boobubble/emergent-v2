@@ -26,7 +26,14 @@ import {
   receivePublicMessage,
   shouldAcceptIncomingPublicMessage,
 } from "./messages";
-import { parseOptionalReplyToMessageId, type ParsedGatewayEvent } from "./protocol";
+import { isValidMessageId, parseOptionalReplyToMessageId, type ParsedGatewayEvent } from "./protocol";
+import {
+  applyOptimisticReactionToggle,
+  IRC_REACTION_LIST_BATCH_MAX,
+  mergeMessageReactions,
+  type IrcReactionType,
+  type IrcRoomReactionsState,
+} from "./reactions";
 import { fetchGatewayRooms } from "./rooms";
 import { IrcChatTransport } from "./transport";
 import {
@@ -66,6 +73,11 @@ export class IrcChatCore {
   /** Skip join sounds until first NAMES snapshot after room join (avoids bootstrap storms). */
   private joinSoundSuppressedRooms = new Set<string>();
   private readonly soundPlayer: IrcChatSoundPlayer;
+  private reactionHydrateTimer: ReturnType<typeof setTimeout> | null = null;
+  private pendingReactionSnapshots = new Map<
+    string,
+    IrcRoomReactionsState[string] | undefined
+  >();
 
   constructor(options: IrcChatCoreOptions) {
     this.wsUrl = options.wsUrl ?? IRC_CHAT_DEFAULT_WS_URL;
@@ -176,7 +188,57 @@ export class IrcChatCore {
       return null;
     }
 
+    this.scheduleReactionHydration(roomId);
     return messageId;
+  }
+
+  toggleReaction(
+    roomId: string,
+    messageId: string,
+    reactionType: IrcReactionType,
+  ): { ok: true } | { ok: false; code: "AUTH_REQUIRED" | "TRANSPORT_ERROR" } {
+    if (this.auth.kind !== "registered") {
+      return { ok: false, code: "AUTH_REQUIRED" };
+    }
+    const room = roomId.trim();
+    if (!room || !isValidMessageId(messageId) || !this.transport.connected) {
+      return { ok: false, code: "TRANSPORT_ERROR" };
+    }
+
+    const roomReactions = this.state.reactions[room] ?? {};
+    const previous = roomReactions[messageId];
+    const optimistic = applyOptimisticReactionToggle(previous, reactionType);
+    const pendingKey = `${room}|${messageId}|${reactionType}`;
+    this.pendingReactionSnapshots.set(pendingKey, previous);
+
+    this.patchState({
+      reactions: {
+        ...this.state.reactions,
+        [room]: {
+          ...roomReactions,
+          [messageId]: optimistic,
+        },
+      },
+    });
+
+    if (!this.transport.sendReactionToggle(room, messageId, reactionType)) {
+      this.pendingReactionSnapshots.delete(pendingKey);
+      const revertedRoom = { ...roomReactions };
+      if (previous) {
+        revertedRoom[messageId] = previous;
+      } else {
+        delete revertedRoom[messageId];
+      }
+      this.patchState({
+        reactions: {
+          ...this.state.reactions,
+          [room]: revertedRoom,
+        },
+      });
+      return { ok: false, code: "TRANSPORT_ERROR" };
+    }
+
+    return { ok: true };
   }
 
   sendPrivateMessage(recipientNick: string, text: string): string | null {
@@ -248,6 +310,16 @@ export class IrcChatCore {
 
   private handleGatewayEvent(event: ParsedGatewayEvent): void {
     switch (event.kind) {
+      case "error": {
+        if (event.code === "REACTION_FAILED") {
+          for (const key of [...this.pendingReactionSnapshots.keys()]) {
+            const [roomFromKey, messageId] = key.split("|");
+            if (!roomFromKey || !messageId) continue;
+            this.handleReactionMutationError("REACTION_FAILED", messageId, roomFromKey);
+          }
+        }
+        break;
+      }
       case "room_joined": {
         this.handleRoomJoined(event.room);
         break;
@@ -313,6 +385,7 @@ export class IrcChatCore {
               : {}),
           }),
         });
+        this.scheduleReactionHydration(event.room);
         playPublicMessageSoundEffects({
           roomId: event.room,
           activeSoundRoom: this.soundActiveRoom,
@@ -339,6 +412,7 @@ export class IrcChatCore {
             },
           ),
         });
+        this.scheduleReactionHydration(event.room);
         break;
       }
       case "pm_message": {
@@ -374,8 +448,99 @@ export class IrcChatCore {
         });
         break;
       }
+      case "reaction_updated": {
+        this.applyAuthoritativeReaction(event.room, event.messageId, event.reactions);
+        break;
+      }
+      case "reaction_list": {
+        this.applyReactionList(event.room, event.items);
+        break;
+      }
       default:
         break;
+    }
+  }
+
+  private applyAuthoritativeReaction(
+    room: string,
+    messageId: string,
+    reactions: import("./reactions").IrcMessageReactions,
+  ): void {
+    for (const key of this.pendingReactionSnapshots.keys()) {
+      if (key.startsWith(`${room}|${messageId}|`)) {
+        this.pendingReactionSnapshots.delete(key);
+      }
+    }
+    const roomReactions = this.state.reactions[room] ?? {};
+    this.patchState({
+      reactions: {
+        ...this.state.reactions,
+        [room]: {
+          ...roomReactions,
+          [messageId]: mergeMessageReactions(roomReactions[messageId], reactions),
+        },
+      },
+    });
+  }
+
+  private applyReactionList(
+    room: string,
+    items: Array<{ messageId: string; reactions: import("./reactions").IrcMessageReactions }>,
+  ): void {
+    if (!items.length) return;
+    const roomReactions = { ...(this.state.reactions[room] ?? {}) };
+    for (const item of items) {
+      roomReactions[item.messageId] = mergeMessageReactions(
+        roomReactions[item.messageId],
+        item.reactions,
+      );
+    }
+    this.patchState({
+      reactions: {
+        ...this.state.reactions,
+        [room]: roomReactions,
+      },
+    });
+  }
+
+  private scheduleReactionHydration(roomId: string): void {
+    const room = roomId.trim();
+    if (!room || !this.transport.connected) return;
+    if (this.reactionHydrateTimer) {
+      clearTimeout(this.reactionHydrateTimer);
+    }
+    this.reactionHydrateTimer = setTimeout(() => {
+      this.reactionHydrateTimer = null;
+      const msgs = this.state.messages[room] ?? [];
+      const ids = msgs.map((m) => m.id).slice(-IRC_REACTION_LIST_BATCH_MAX);
+      if (ids.length) {
+        this.transport.sendReactionList(room, ids);
+      }
+    }, 80);
+  }
+
+  private handleReactionMutationError(code: string, messageId?: string, roomId?: string): void {
+    if (code !== "REACTION_FAILED" || !messageId || !roomId) return;
+    const room = roomId.trim();
+    const roomReactions = { ...(this.state.reactions[room] ?? {}) };
+    let changed = false;
+    for (const [key, snapshot] of this.pendingReactionSnapshots) {
+      if (!key.startsWith(`${room}|${messageId}|`)) continue;
+      this.pendingReactionSnapshots.delete(key);
+      if (snapshot) {
+        roomReactions[messageId] = snapshot;
+      } else {
+        delete roomReactions[messageId];
+      }
+      changed = true;
+    }
+    if (changed) {
+      this.patchState({
+        reactions: {
+          ...this.state.reactions,
+          [room]: roomReactions,
+        },
+      });
     }
   }
 
@@ -396,6 +561,8 @@ export class IrcChatCore {
       this.transport.part(previous);
       this.clearLiveMembersForRoom(previous);
     }
+
+    this.scheduleReactionHydration(normalized);
   }
 
   private handleRoomParted(room: string): void {

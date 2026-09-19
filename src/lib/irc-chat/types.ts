@@ -1,3 +1,5 @@
+import type { IrcRoomReactionsState } from "./reactions";
+
 export type IrcChatConnectionStatus =
   | "idle"
   | "connecting"
@@ -49,6 +51,8 @@ export type IrcChatState = {
   members: Record<string, IrcChatMember[]>;
   messages: Record<string, IrcChatMessage[]>;
   privateMessages: Record<string, IrcChatMessage[]>;
+  /** Public room message reactions keyed by room then message id. */
+  reactions: Record<string, IrcRoomReactionsState>;
 };
 
 export function createInitialIrcChatState(): IrcChatState {
@@ -60,5 +64,6 @@ export function createInitialIrcChatState(): IrcChatState {
     members: {},
     messages: {},
     privateMessages: {},
+    reactions: {},
   };
 }

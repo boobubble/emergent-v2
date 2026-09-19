@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Clock, CornerDownLeft, Hash, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Clock, Hash, Loader2 } from "lucide-react";
 import { indexMessagesById, resolveReplyParent } from "@/lib/irc-chat/reply";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -16,6 +15,8 @@ import {
 } from "./irc-chat-ui";
 import { IrcMessageBody } from "./IrcMessageBody";
 import { IrcMessageReplyPreview } from "./IrcMessageReplyPreview";
+import { IrcMessageReactionsRow } from "./IrcMessageReactions";
+import type { IrcMessageReactions, IrcReactionType } from "@/lib/irc-chat/reactions";
 import "./message-list.css";
 
 type IrcMessageListProps = {
@@ -23,6 +24,8 @@ type IrcMessageListProps = {
   selfNick: string | null;
   view: IrcActiveView;
   onReply?: (msg: IrcChatMessage) => void;
+  onToggleReaction?: (msg: IrcChatMessage, type: IrcReactionType) => void;
+  reactionsByMessageId?: Record<string, IrcMessageReactions>;
   className?: string;
 };
 
@@ -33,6 +36,8 @@ function MessageRow({
   byId,
   highlight,
   onReply,
+  onToggleReaction,
+  reactions,
   onJumpToMessage,
 }: {
   msg: IrcChatMessage;
@@ -41,6 +46,8 @@ function MessageRow({
   byId: Map<string, IrcChatMessage>;
   highlight: boolean;
   onReply?: (msg: IrcChatMessage) => void;
+  onToggleReaction?: (type: IrcReactionType) => void;
+  reactions?: IrcMessageReactions;
   onJumpToMessage: (messageId: string) => void;
 }) {
   const hue = nickAvatarHue(msg.nick);
@@ -83,19 +90,6 @@ function MessageRow({
             >
               {formatMessageTime(msg.ts)}
             </time>
-            {onReply ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="irc-msg-reply-btn ml-auto h-6 shrink-0 gap-0.5 px-1.5 text-[10px] font-semibold text-muted-foreground opacity-100 md:opacity-0 md:group-hover/msg:opacity-100 md:group-focus-within/msg:opacity-100"
-                onClick={() => onReply(msg)}
-                aria-label={`Reply to ${msg.nick}`}
-              >
-                <CornerDownLeft className="h-3 w-3" aria-hidden />
-                Reply
-              </Button>
-            ) : null}
           </header>
         ) : null}
         <div
@@ -129,6 +123,14 @@ function MessageRow({
             <p className="irc-msg-status irc-msg-status--failed">Failed to send</p>
           ) : null}
         </div>
+        {onToggleReaction ? (
+          <IrcMessageReactionsRow
+            reactions={reactions}
+            showReply={Boolean(onReply)}
+            onToggle={onToggleReaction}
+            onReply={onReply ? () => onReply(msg) : undefined}
+          />
+        ) : null}
       </div>
     </article>
   );
@@ -188,6 +190,8 @@ export function IrcMessageList({
   selfNick,
   view,
   onReply,
+  onToggleReaction,
+  reactionsByMessageId,
   className,
 }: IrcMessageListProps) {
   const state = useIrcChatState();
@@ -220,6 +224,7 @@ export function IrcMessageList({
   }, [messages.length, messages[messages.length - 1]?.id]);
 
   const canReply = view.kind === "room" && Boolean(onReply);
+  const canReact = view.kind === "room" && Boolean(onToggleReaction);
 
   return (
     <ScrollArea className={cn("irc-message-canvas min-h-0 flex-1", className)}>
@@ -260,6 +265,12 @@ export function IrcMessageList({
                   byId={byId}
                   highlight={highlightId === item.msg.id}
                   onReply={canReply ? onReply : undefined}
+                  onToggleReaction={
+                    canReact && onToggleReaction
+                      ? (type) => onToggleReaction(item.msg, type)
+                      : undefined
+                  }
+                  reactions={reactionsByMessageId?.[item.msg.id]}
                   onJumpToMessage={jumpToMessage}
                 />
               );

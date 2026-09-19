@@ -3,6 +3,8 @@ import { Loader2, PanelLeftOpen } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { ChatProfilePopupHost } from "@/components/chat/ChatProfilePopupHost";
 import { useAuth } from "@/lib/auth-store";
+import { useAuthGate } from "@/lib/auth-gate";
+import type { IrcReactionType } from "@/lib/irc-chat/reactions";
 import {
   IRC_CHAT_PRODUCT_ROOM,
   useIrcChatCore,
@@ -54,6 +56,8 @@ function IrcChatCenter({
   replyingTo,
   onCancelReply,
   onReplyToMessage,
+  onToggleReaction,
+  reactionsByMessageId,
 }: {
   view: IrcActiveView;
   onBack?: () => void;
@@ -64,6 +68,11 @@ function IrcChatCenter({
   replyingTo?: IrcComposerReplyTarget | null;
   onCancelReply?: () => void;
   onReplyToMessage?: (msg: import("@/lib/irc-chat").IrcChatMessage) => void;
+  onToggleReaction?: (
+    msg: import("@/lib/irc-chat").IrcChatMessage,
+    type: IrcReactionType,
+  ) => void;
+  reactionsByMessageId?: Record<string, import("@/lib/irc-chat/reactions").IrcMessageReactions>;
 }) {
   const state = useIrcChatState();
   const selfNick = state.ircNick;
@@ -88,6 +97,10 @@ function IrcChatCenter({
           selfNick={selfNick}
           view={view}
           onReply={view.kind === "room" ? onReplyToMessage : undefined}
+          onToggleReaction={view.kind === "room" ? onToggleReaction : undefined}
+          reactionsByMessageId={
+            view.kind === "room" ? reactionsByMessageId : undefined
+          }
         />
       </div>
       {showComposer ? (
@@ -115,6 +128,7 @@ function markPeerRead(
 function IrcChatAppShell() {
   const core = useIrcChatCore();
   const state = useIrcChatState();
+  const { openSignIn } = useAuthGate();
   const shellRef = useRef<HTMLDivElement>(null);
   const sidebarPrefHydrated = useRef(false);
 
@@ -261,6 +275,22 @@ function IrcChatAppShell() {
     [activeView],
   );
 
+  const handleToggleReaction = useCallback(
+    (msg: import("@/lib/irc-chat").IrcChatMessage, type: IrcReactionType) => {
+      if (activeView.kind !== "room") return;
+      const result = core.toggleReaction(activeView.roomId, msg.id, type);
+      if (!result.ok && result.code === "AUTH_REQUIRED") {
+        openSignIn();
+      }
+    },
+    [activeView, core, openSignIn],
+  );
+
+  const roomReactions =
+    activeView.kind === "room"
+      ? state.reactions[activeView.roomId]
+      : undefined;
+
   const handleSend = useCallback(
     (text: string) => {
       if (activeView.kind === "room") {
@@ -401,6 +431,8 @@ function IrcChatAppShell() {
               replyingTo={replyingTo}
               onCancelReply={() => setReplyingTo(null)}
               onReplyToMessage={handleReplyToMessage}
+              onToggleReaction={handleToggleReaction}
+              reactionsByMessageId={roomReactions}
               onBack={
                 activeView.kind === "dm"
                   ? () => setActiveView({ kind: "room", roomId: activeRoomId })
