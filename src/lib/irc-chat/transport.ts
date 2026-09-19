@@ -7,6 +7,8 @@ import {
   buildPublicSendFrame,
   buildReactionListFrame,
   buildReactionToggleFrame,
+  buildTypingStartFrame,
+  buildTypingStopFrame,
   isValidMessageId,
   parseGatewayEvent,
   parseGatewayFrame,
@@ -193,6 +195,30 @@ export class IrcChatTransport {
     if (!ids.length) return false;
     try {
       this.ws.send(JSON.stringify(buildReactionListFrame(normalizedRoom, ids)));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  sendTypingStart(room: string): boolean {
+    const normalizedRoom = room.trim();
+    if (!normalizedRoom || !this.connected || !this.ws) return false;
+    if (!isIrcChatLiveRoom(normalizedRoom, this.knownRoomIds)) return false;
+    try {
+      this.ws.send(JSON.stringify(buildTypingStartFrame(normalizedRoom)));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  sendTypingStop(room: string): boolean {
+    const normalizedRoom = room.trim();
+    if (!normalizedRoom || !this.connected || !this.ws) return false;
+    if (!isIrcChatLiveRoom(normalizedRoom, this.knownRoomIds)) return false;
+    try {
+      this.ws.send(JSON.stringify(buildTypingStopFrame(normalizedRoom)));
       return true;
     } catch {
       return false;

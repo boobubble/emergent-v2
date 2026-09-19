@@ -147,11 +147,27 @@ export class IrcChatCore {
     const normalized = roomId.trim();
     if (!normalized) return false;
 
+    if (this.joinedPublicRoom && this.joinedPublicRoom !== normalized) {
+      this.transport.sendTypingStop(this.joinedPublicRoom);
+    }
+
     this.desiredPublicRoom = normalized;
     if (normalized === this.joinedPublicRoom) {
       return true;
     }
     return this.transport.join(normalized);
+  }
+
+  sendTypingStart(roomId: string): void {
+    const room = roomId.trim();
+    if (!room || !this.transport.connected) return;
+    this.transport.sendTypingStart(room);
+  }
+
+  sendTypingStop(roomId: string): void {
+    const room = roomId.trim();
+    if (!room || !this.transport.connected) return;
+    this.transport.sendTypingStop(room);
   }
 
   sendPublicMessage(
@@ -226,6 +242,7 @@ export class IrcChatCore {
       return null;
     }
 
+    this.transport.sendTypingStop(roomId);
     this.scheduleReactionHydration(roomId);
     return messageId;
   }
@@ -540,6 +557,15 @@ export class IrcChatCore {
       }
       case "reaction_list": {
         this.applyReactionList(event.room, event.items);
+        break;
+      }
+      case "typing_updated": {
+        this.patchState({
+          typing: {
+            ...this.state.typing,
+            [event.room]: event.users,
+          },
+        });
         break;
       }
       default:

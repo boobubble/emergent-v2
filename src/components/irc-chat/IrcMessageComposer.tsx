@@ -20,7 +20,16 @@ import { IrcStickerPicker } from "./IrcStickerPicker";
 import { useAppSettings } from "@/lib/app-settings";
 import { mergeMediaConfig } from "@/lib/media-providers-config";
 import { cn } from "@/lib/utils";
-import { useIrcChatState } from "@/lib/irc-chat";
+import { useIrcChatCore, useIrcChatState } from "@/lib/irc-chat";
+import {
+  applyMentionInsertion,
+  buildIrcMentionCandidates,
+  filterMentionCandidates,
+  findActiveMentionToken,
+} from "@/lib/irc-chat/mentions";
+import { createIrcTypingEmitter } from "@/lib/irc-chat/irc-typing-client";
+import { useRemoteProfileDirectory } from "@/lib/use-remote-profiles";
+import { IrcMentionSuggestions } from "./IrcMentionSuggestions";
 import type { IrcActiveView, IrcComposerReplyTarget } from "./irc-chat-types";
 import { dmComposerPlaceholder, roomComposerPlaceholder } from "./irc-chat-ui";
 import { uploadIrcChatAttachment } from "@/lib/irc-chat-attachment.functions";
@@ -115,6 +124,12 @@ export function IrcMessageComposer({
   const youtubeOn = media.youtube.enabled;
 
   const [draft, setDraft] = useState("");
+  const [caret, setCaret] = useState(0);
+  const [mentionIdx, setMentionIdx] = useState(0);
+  const [mentionMenuOpen, setMentionMenuOpen] = useState(true);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const core = useIrcChatCore();
+  const { profiles: directoryProfiles } = useRemoteProfileDirectory();
   const [showEmoji, setShowEmoji] = useState(false);
   const [showSticker, setShowSticker] = useState(false);
   const [showGiphy, setShowGiphy] = useState(false);
@@ -127,6 +142,55 @@ export function IrcMessageComposer({
 
   const connected = state.status === "authenticated";
   const compact = view.kind === "dm";
+  const activeRoomId = view.kind === "room" ? view.roomId : roomId;
+  const roomMembers =
+    view.kind === "room" && activeRoomId ? state.members[activeRoomId] ?? [] : [];
+
+  const mentionToken = useMemo(
+    () => findActiveMentionToken(draft, caret),
+    [draft, caret],
+  );
+  const mentionCandidates = useMemo(() => {
+    if (!mentionToken || view.kind !== "room") return [];
+    const base = buildIrcMentionCandidates(roomMembers, directoryProfiles, {
+      excludeUserId: state.userId,
+      excludeNick: state.ircNick,
+    });
+    return filterMentionCandidates(base, mentionToken.query);
+  }, [
+    mentionToken,
+    roomMembers,
+    directoryProfiles,
+    state.userId,
+    state.ircNick,
+    view.kind,
+  ]);
+
+  useEffect(() => {
+    setMentionIdx(0);
+    setMentionMenuOpen(true);
+  }, [mentionToken?.query, mentionToken?.start]);
+
+  const typingEmitterRef = useRef<ReturnType<typeof createIrcTypingEmitter> | null>(null);
+  useEffect(() => {
+    typingEmitterRef.current?.dispose();
+    typingEmitterRef.current = null;
+    if (!activeRoomId || view.kind !== "room" || !connected) return;
+    typingEmitterRef.current = createIrcTypingEmitter({
+      start: () => core.sendTypingStart(activeRoomId),
+      stop: () => core.sendTypingStop(activeRoomId),
+    });
+    return () => {
+      typingEmitterRef.current?.dispose();
+      typingEmitterRef.current = null;
+    };
+  }, [activeRoomId, view.kind, connected, core]);
+
+  useEffect(() => {
+    if (!draft.trim()) {
+      typingEmitterRef.current?.stopTyping();
+    }
+  }, [draft]);
 
   const roomName =
     view.kind === "room"
@@ -222,9 +286,28 @@ export function IrcMessageComposer({
     void startUpload(file, validated.contentType);
   }
 
+  function applyMention(candidate: { mentionKey: string }) {
+    if (!mentionToken) return;
+    const { nextText, nextCaret } = applyMentionInsertion(
+      draft,
+      caret,
+      mentionToken,
+      candidate.mentionKey,
+    );
+    setDraft(nextText);
+    setCaret(nextCaret);
+    requestAnimationFrame(() => {
+      const el = textareaRef.current;
+      if (!el) return;
+      el.focus();
+      el.setSelectionRange(nextCaret, nextCaret);
+    });
+  }
+
   function submit(textOverride?: string) {
     const text = (textOverride ?? draft).trim();
     if (!connected) return;
+    typingEmitterRef.current?.stopTyping();
     if (
       pendingAttach?.uploadState === "ready" &&
       pendingAttach.attachment &&
@@ -324,6 +407,7 @@ export function IrcMessageComposer({
     closePickers();
     setMoreOpen(false);
     clearPendingAttachment();
+    typingEmitterRef.current?.stopTyping();
   }, [view.kind, view.kind === "room" ? view.roomId : view.peerNick]);
 
   const showReplyBanner =
@@ -366,6 +450,13 @@ export function IrcMessageComposer({
             <X className="h-4 w-4" />
           </button>
         </div>
+      ) : null}
+      {mentionCandidates.length > 0 && mentionToken && mentionMenuOpen ? (
+        <IrcMentionSuggestions
+          items={mentionCandidates}
+          activeIndex={mentionIdx}
+          onPick={applyMention}
+        />
       ) : null}
       {showReplyBanner ? (
         <div className="irc-composer-reply-banner mb-2 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2">
@@ -467,9 +558,54 @@ export function IrcMessageComposer({
         ) : null}
 
         <Textarea
+          ref={textareaRef}
           value={draft}
-          onChange={(e) => setDraft(e.target.value)}
+          onChange={(e) => {
+            const next = e.target.value;
+            setDraft(next);
+            setCaret(e.target.selectionStart ?? next.length);
+            if (
+              view.kind === "room" &&
+              activeRoomId &&
+              connected &&
+              next.trim() &&
+              !showEmoji &&
+              !showSticker &&
+              !showGiphy &&
+              !showYoutube
+            ) {
+              typingEmitterRef.current?.sendTyping();
+            }
+          }}
+          onSelect={(e) => {
+            const el = e.currentTarget;
+            setCaret(el.selectionStart ?? draft.length);
+          }}
           onKeyDown={(e) => {
+            if (mentionCandidates.length > 0 && mentionMenuOpen) {
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+                setMentionIdx((i) => (i + 1) % mentionCandidates.length);
+                return;
+              }
+              if (e.key === "ArrowUp") {
+                e.preventDefault();
+                setMentionIdx(
+                  (i) => (i - 1 + mentionCandidates.length) % mentionCandidates.length,
+                );
+                return;
+              }
+              if (e.key === "Escape") {
+                e.preventDefault();
+                setMentionMenuOpen(false);
+                return;
+              }
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                applyMention(mentionCandidates[mentionIdx]);
+                return;
+              }
+            }
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
               submit();

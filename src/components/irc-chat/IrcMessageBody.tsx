@@ -16,18 +16,23 @@ import { useAppSettings } from "@/lib/app-settings";
 import { mergeMediaFromSettings, messageDisplayText } from "@/lib/media-embed-text";
 import { cn } from "@/lib/utils";
 import { IrcMessageGiphyEmbed } from "./IrcMessageGiphyEmbed";
+import { IrcMessageMentionText } from "./IrcMessageMentionText";
 
 export function IrcMessageBody({
   text,
   contentType,
   stickerId,
   attachment,
+  knownMentionKeys,
+  selfMentionKeys,
   className,
 }: {
   text: string;
   contentType?: "text" | "sticker" | "image" | "file";
   stickerId?: string;
   attachment?: IrcMessageAttachment;
+  knownMentionKeys?: ReadonlySet<string>;
+  selfMentionKeys?: ReadonlySet<string>;
   className?: string;
 }) {
   const { byId: emojiById } = useCustomEmojiCatalog();
@@ -54,7 +59,13 @@ export function IrcMessageBody({
     return (
       <div className={cn("irc-message-body min-w-0 space-y-2", className)}>
         {caption ? (
-          <span className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{caption}</span>
+          <span className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
+            <IrcMessageMentionText
+              text={caption}
+              knownMentionKeys={knownMentionKeys ?? new Set()}
+              selfMentionKeys={selfMentionKeys ?? new Set()}
+            />
+          </span>
         ) : null}
         {contentType === "file"
           ? <IrcMessageFileAttachment attachment={attachment} />
@@ -94,7 +105,14 @@ export function IrcMessageBody({
         <span className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
           {segments.map((seg, index) => {
             if (seg.type === "text") {
-              return <span key={`t-${index}`}>{seg.value}</span>;
+              return (
+                <IrcMessageMentionText
+                  key={`t-${index}`}
+                  text={seg.value}
+                  knownMentionKeys={knownMentionKeys ?? new Set()}
+                  selfMentionKeys={selfMentionKeys ?? new Set()}
+                />
+              );
             }
             const emoji = emojiById.get(seg.id);
             if (!emoji) {

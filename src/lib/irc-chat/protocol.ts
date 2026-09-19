@@ -10,6 +10,7 @@ import {
   resolveAttachmentIdForMessage,
   type IrcMessageAttachment,
 } from "./irc-attachment";
+import { parseTypingUsersPayload, type IrcTypingUser } from "./irc-typing-client";
 import { resolveStickerIdForMessage, type IrcMessageContentType } from "./irc-sticker";
 
 const UUID_RE =
@@ -61,6 +62,7 @@ export type GatewayFrame = {
   stickerId?: string;
   attachmentId?: string;
   attachment?: unknown;
+  users?: unknown;
 };
 
 function parseAttachmentFromFrame(frame: GatewayFrame): IrcMessageAttachment | undefined {
@@ -176,7 +178,8 @@ export type ParsedGatewayEvent =
       kind: "reaction_list";
       room: string;
       items: Array<{ messageId: string; reactions: IrcMessageReactions }>;
-    };
+    }
+  | { kind: "typing_updated"; room: string; users: IrcTypingUser[] };
 
 export function parseGatewayEvent(frame: GatewayFrame): ParsedGatewayEvent | null {
   if (!frame.type) return null;
@@ -320,6 +323,16 @@ export function parseGatewayEvent(frame: GatewayFrame): ParsedGatewayEvent | nul
     return { kind: "reaction_list", room, items };
   }
 
+  if (frame.type === "typing.updated") {
+    const room = asNonEmptyString(frame.room);
+    if (!room) return null;
+    return {
+      kind: "typing_updated",
+      room,
+      users: parseTypingUsersPayload(frame.users),
+    };
+  }
+
   return null;
 }
 
@@ -459,4 +472,12 @@ export function buildReactionListFrame(
 
 export function parseOptionalReactionType(value: unknown): IrcReactionType | null {
   return parseIrcReactionType(value);
+}
+
+export function buildTypingStartFrame(room: string): { type: "typing.start"; room: string } {
+  return { type: "typing.start", room: room.trim() };
+}
+
+export function buildTypingStopFrame(room: string): { type: "typing.stop"; room: string } {
+  return { type: "typing.stop", room: room.trim() };
 }

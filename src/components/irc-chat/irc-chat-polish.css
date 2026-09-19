@@ -1008,3 +1008,44 @@
 [data-irc-chat-app] .irc-attachment-image-btn:hover {
   box-shadow: 0 0 0 1px color-mix(in oklab, var(--primary) 35%, transparent);
 }
+
+[data-irc-chat-app] .irc-msg-row--mentioned .irc-msg-body-wrap {
+  border-left: 2px solid color-mix(in oklab, var(--primary) 55%, transparent);
+  padding-left: 0.35rem;
+}
+
+[data-irc-chat-app] .irc-typing-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 9999px;
+  background: color-mix(in oklab, var(--primary) 70%, var(--muted-foreground));
+  animation: irc-typing-bounce 1.2s ease-in-out infinite;
+}
+
+[data-irc-chat-app] .irc-typing-dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+[data-irc-chat-app] .irc-typing-dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes irc-typing-bounce {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.45;
+  }
+  40% {
+    transform: translateY(-2px);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-irc-chat-app] .irc-typing-dot {
+    animation: none;
+    opacity: 0.8;
+  }
+}

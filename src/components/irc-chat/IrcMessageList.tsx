@@ -17,6 +17,13 @@ import { IrcMessageBody } from "./IrcMessageBody";
 import { IrcMessageReplyPreview } from "./IrcMessageReplyPreview";
 import { IrcMessageReactionsRow } from "./IrcMessageReactions";
 import type { IrcMessageReactions, IrcReactionType } from "@/lib/irc-chat/reactions";
+import {
+  buildMentionKeySet,
+  buildSelfMentionKeys,
+  messageMentionsSelf,
+} from "@/lib/irc-chat/mentions";
+import { useRemoteProfileDirectory } from "@/lib/use-remote-profiles";
+import { IrcTypingIndicator } from "./IrcTypingIndicator";
 import "./message-list.css";
 
 type IrcMessageListProps = {
@@ -39,6 +46,9 @@ function MessageRow({
   onToggleReaction,
   reactions,
   onJumpToMessage,
+  knownMentionKeys,
+  selfMentionKeys,
+  mentionedSelf,
 }: {
   msg: IrcChatMessage;
   own: boolean;
@@ -49,6 +59,9 @@ function MessageRow({
   onToggleReaction?: (type: IrcReactionType) => void;
   reactions?: IrcMessageReactions;
   onJumpToMessage: (messageId: string) => void;
+  knownMentionKeys: ReadonlySet<string>;
+  selfMentionKeys: ReadonlySet<string>;
+  mentionedSelf: boolean;
 }) {
   const hue = nickAvatarHue(msg.nick);
   const parent = msg.replyToMessageId
@@ -63,6 +76,7 @@ function MessageRow({
         showMeta ? "irc-msg-row--start" : "irc-msg-row--grouped",
         own && "irc-msg-row--own",
         highlight && "irc-msg-row--highlight",
+        mentionedSelf && "irc-msg-row--mentioned",
       )}
       data-irc-msg-own={own ? "true" : undefined}
       data-irc-message-id={msg.id}
@@ -117,6 +131,8 @@ function MessageRow({
             contentType={msg.contentType}
             stickerId={msg.stickerId}
             attachment={msg.attachment}
+            knownMentionKeys={knownMentionKeys}
+            selfMentionKeys={selfMentionKeys}
           />
           {msg.pending ? (
             <span className="irc-msg-status irc-msg-status--pending">
@@ -231,6 +247,24 @@ export function IrcMessageList({
   const canReply = view.kind === "room" && Boolean(onReply);
   const canReact = view.kind === "room" && Boolean(onToggleReaction);
 
+  const { profiles: directoryProfiles } = useRemoteProfileDirectory();
+  const roomMembers =
+    view.kind === "room" ? state.members[view.roomId] ?? [] : [];
+  const knownMentionKeys = useMemo(
+    () => buildMentionKeySet(roomMembers, directoryProfiles),
+    [roomMembers, directoryProfiles],
+  );
+  const selfUsername =
+    state.userId && directoryProfiles[state.userId]
+      ? directoryProfiles[state.userId]?.username
+      : null;
+  const selfMentionKeys = useMemo(
+    () => buildSelfMentionKeys(selfNick, selfUsername),
+    [selfNick, selfUsername],
+  );
+  const roomTypers =
+    view.kind === "room" ? state.typing[view.roomId] ?? [] : [];
+
   return (
     <ScrollArea className={cn("irc-message-canvas min-h-0 flex-1", className)}>
       <div className="irc-message-list-inner">
@@ -277,11 +311,17 @@ export function IrcMessageList({
                   }
                   reactions={reactionsByMessageId?.[item.msg.id]}
                   onJumpToMessage={jumpToMessage}
+                  knownMentionKeys={knownMentionKeys}
+                  selfMentionKeys={selfMentionKeys}
+                  mentionedSelf={messageMentionsSelf(item.msg.text, selfMentionKeys)}
                 />
               );
             })}
           </div>
         )}
+        {view.kind === "room" ? (
+          <IrcTypingIndicator typers={roomTypers} excludeUserId={state.userId} />
+        ) : null}
         <div ref={bottomRef} aria-hidden className="h-2" />
       </div>
     </ScrollArea>

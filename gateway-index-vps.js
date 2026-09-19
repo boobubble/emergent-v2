@@ -48,6 +48,12 @@ const {
 const { parseOutboundMessageContent } = require("./lib/irc-message-content.cjs");
 const { loadValidatedIrcAttachment } = require("./lib/irc-attachment.cjs");
 const {
+  createTypingRegistry,
+  handleTypingStart,
+  handleTypingStop,
+  broadcastTypingUpdated,
+} = require("./lib/irc-typing.cjs");
+const {
   parseIrcAccountLinksJson,
   lookupIrcAccountLink,
 } = require("./lib/irc-account-links.cjs");
@@ -279,6 +285,7 @@ function broadcastChannelMessage(wss, payload) {
 }
 
 let sessionManager = null;
+const typingRegistry = createTypingRegistry();
 
 function initSessionManager(wss) {
   sessionManager = createIrcSessionManager({
@@ -783,7 +790,37 @@ wss.on("connection", async (ws) => {
         return;
       }
 
+      typingRegistry.clearWsRoom(ws, room);
+      broadcastTypingUpdated(wss, sessionManager, room, typingRegistry);
       ws.send(JSON.stringify({ type: "room.parted", room }));
+      return;
+    }
+
+    if (payload.type === "typing.start") {
+      const result = handleTypingStart(ws, payload, sessionManager, typingRegistry);
+      if (!result.ok) {
+        ws.send(JSON.stringify({
+          type: "error",
+          code: result.code || "INVALID_TYPING",
+          message: result.message || "Invalid typing event",
+        }));
+        return;
+      }
+      broadcastTypingUpdated(wss, sessionManager, result.room, typingRegistry);
+      return;
+    }
+
+    if (payload.type === "typing.stop") {
+      const result = handleTypingStop(ws, payload, sessionManager, typingRegistry);
+      if (!result.ok) {
+        ws.send(JSON.stringify({
+          type: "error",
+          code: result.code || "INVALID_TYPING",
+          message: result.message || "Invalid typing event",
+        }));
+        return;
+      }
+      broadcastTypingUpdated(wss, sessionManager, result.room, typingRegistry);
       return;
     }
 
@@ -1007,7 +1044,11 @@ wss.on("connection", async (ws) => {
 
   ws.on("close", () => {
     clearAuthTimeouts();
+    const typingRooms = typingRegistry.clearWs(ws);
     sessionManager.unregisterWs(ws);
+    for (const room of typingRooms) {
+      broadcastTypingUpdated(wss, sessionManager, room, typingRegistry);
+    }
     console.log("WebSocket client disconnected");
   });
 });

@@ -1,5 +1,6 @@
 import type { IrcRoomReactionsState } from "./reactions";
 import type { IrcMessageAttachment } from "./irc-attachment";
+import type { IrcTypingUser } from "./irc-typing-client";
 
 export type IrcChatConnectionStatus =
   | "idle"
@@ -58,6 +59,8 @@ export type IrcChatState = {
   privateMessages: Record<string, IrcChatMessage[]>;
   /** Public room message reactions keyed by room then message id. */
   reactions: Record<string, IrcRoomReactionsState>;
+  /** Ephemeral typers per public room (gateway WS). */
+  typing: Record<string, IrcTypingUser[]>;
 };
 
 export function createInitialIrcChatState(): IrcChatState {
@@ -70,5 +73,6 @@ export function createInitialIrcChatState(): IrcChatState {
     messages: {},
     privateMessages: {},
     reactions: {},
+    typing: {},
   };
 }
