@@ -142,7 +142,7 @@ async function publishWelcomePost(userId: string, email?: string) {
       .maybeSingle();
     if (!prof) return;
     const pronoun = prof.gender === "male" ? "him" : prof.gender === "female" ? "her" : "them";
-    const text = `👋 ${prof.username} just signed up! Start a chat with ${pronoun} in the chatroom.`;
+    const text = `ðŸ‘‹ ${prof.username} just signed up! Start a chat with ${pronoun} in the chatroom.`;
     const media = prof.avatar_url ? [prof.avatar_url] : [];
     const { error } = await supabase.from("posts").insert({
       author_id: userId,
@@ -372,11 +372,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await ensureListening();
     const supabase = await loadBrowserSupabase();
     const res = await loginWithIdentifier({ data: { identifier: id, password } });
-    const { error } = await supabase.auth.setSession({
+    const { data: sessionData, error } = await supabase.auth.setSession({
       access_token: res.access_token,
       refresh_token: res.refresh_token,
     });
-    if (error) throw new Error(error.message);
+    if (error || !sessionData.session) {
+      throw new Error(error?.message || "Login session could not be established");
+    }
+
+    const { data: persisted } = await supabase.auth.getSession();
+    if (!persisted.session) {
+      throw new Error("Login session was not persisted");
+    }
   }, [ensureListening]);
 
   const signup = useCallback(async (email: string, password: string, username: string, gender: "male" | "female" | "other", extras?: SignupExtras) => {
