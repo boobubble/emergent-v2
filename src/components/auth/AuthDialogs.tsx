@@ -141,7 +141,7 @@ function SignInDialog({ open, onOpenChange, onForgot, onSwitchSignup, successPat
       await login(email, password);
       if (successPath) {
         if (successPath === AUTH_ENTRY_DESTINATION) markChatFreshEntry();
-        void navigate({ to: successPath });
+        if (successPath === AUTH_ENTRY_DESTINATION) window.location.assign(successPath); else void navigate({ to: successPath });
       }
     }
     catch (e) { setErr(e instanceof Error ? e.message : "Sign in failed"); }
@@ -244,7 +244,7 @@ function SignUpDialog({ open, onOpenChange, onSwitchSignin, successPath }: { ope
       setInfo("Account created! You're being signed in…");
       if (successPath) {
         if (successPath === AUTH_ENTRY_DESTINATION) markChatFreshEntry();
-        void navigate({ to: successPath });
+        if (successPath === AUTH_ENTRY_DESTINATION) window.location.assign(successPath); else void navigate({ to: successPath });
       }
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Sign up failed");
