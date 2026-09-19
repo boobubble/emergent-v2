@@ -28,8 +28,11 @@ export function ircChatShowSidebarBackdrop(
   return sidebarOpen;
 }
 
-export function ircChatMobileNavOpenAfterRoomSelect(): { mobileNavOpen: boolean } {
-  return { mobileNavOpen: false };
+export function ircChatMobileNavOpenAfterRoomSelect(): {
+  mobileNavOpen: boolean;
+  membersOpen: boolean;
+} {
+  return { mobileNavOpen: false, membersOpen: false };
 }
 
 export function ircChatMobileMembersButtonLabel(view: IrcActiveView): string {

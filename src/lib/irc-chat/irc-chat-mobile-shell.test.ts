@@ -27,8 +27,11 @@ describe("irc-chat mobile shell", () => {
     expect(ircChatShowFloatingSidebarToggle(true, true)).toBe(false);
   });
 
-  it("closes the nav drawer after room selection", () => {
-    expect(ircChatMobileNavOpenAfterRoomSelect()).toEqual({ mobileNavOpen: false });
+  it("closes mobile sheets after room selection", () => {
+    expect(ircChatMobileNavOpenAfterRoomSelect()).toEqual({
+      mobileNavOpen: false,
+      membersOpen: false,
+    });
   });
 
   it("labels the members sheet action for rooms vs DMs", () => {

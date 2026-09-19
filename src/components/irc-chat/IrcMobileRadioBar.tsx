@@ -45,7 +45,7 @@ export function IrcMobileRadioBar({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "irc-mobile-radio-bar shrink-0 border-t border-primary/20 bg-[hsl(230_38%_9%)] px-2.5 py-2 md:hidden",
+        "irc-mobile-radio-bar shrink-0 border-t border-primary/20 bg-[hsl(230_38%_9%)] px-2.5 py-1.5 md:hidden",
         className,
       )}
       data-irc-mobile-radio-bar=""

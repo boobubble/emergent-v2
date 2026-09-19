@@ -118,6 +118,15 @@
   }
 }
 
+/* Tablet (md–lg): slightly narrower sidebar so the conversation column breathes. */
+@media (min-width: 768px) and (max-width: 1023.98px) {
+  [data-irc-chat-app][data-chatroom-layout="desktop"]
+    [data-chatroom-sidebar][data-sidebar-open="true"] {
+    width: 13.75rem !important;
+    max-width: 13.75rem !important;
+  }
+}
+
 [data-irc-chat-app] .irc-message-stream {
   display: flex;
   flex-direction: column;
@@ -1272,5 +1281,17 @@
 }
 
 [data-irc-chat-app] .irc-mobile-radio-bar {
-  padding-bottom: max(0.35rem, env(safe-area-inset-bottom, 0px));
+  padding-top: 0.35rem;
+  padding-bottom: max(0.25rem, env(safe-area-inset-bottom, 0px));
 }
+
+[data-irc-mobile-shell] .irc-mobile-radio-bar .h-10.w-10 {
+  height: 2.25rem;
+  width: 2.25rem;
+}
+
+/*
+ * Overlay stacking (low → high): sidebar backdrop z-30, reaction picker z-40,
+ * nav/members sheets z-50 (Sheet), mentions z-50, composer pickers z-100–101,
+ * image lightbox z-200.
+ */

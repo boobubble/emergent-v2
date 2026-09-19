@@ -45,6 +45,7 @@ import { buildIrcMessageReplyPreview } from "@/lib/irc-chat/reply";
 import {
   ircChatShowCenterColumnHeader,
   ircChatShowSidebarBackdrop,
+  ircChatMobileNavOpenAfterRoomSelect,
 } from "@/lib/irc-chat/irc-chat-mobile-shell";
 import { DjPlayerHost } from "@/components/chat/DjFooter";
 import "./irc-chat-polish.css";
@@ -180,9 +181,11 @@ function IrcChatAppShell() {
     const onShell = () => setShellLayout(readChatroomShellLayout());
     md.addEventListener("change", onShell);
     lg.addEventListener("change", onShell);
+    window.addEventListener("resize", onShell);
     return () => {
       md.removeEventListener("change", onShell);
       lg.removeEventListener("change", onShell);
+      window.removeEventListener("resize", onShell);
     };
   }, []);
 
@@ -245,9 +248,21 @@ function IrcChatAppShell() {
   function selectRoom(roomId: string) {
     core.joinRoom(roomId);
     setActiveView({ kind: "room", roomId });
-    setMobileNavOpen(false);
+    const sheets = ircChatMobileNavOpenAfterRoomSelect();
+    setMobileNavOpen(sheets.mobileNavOpen);
+    setMembersOpen(sheets.membersOpen);
     setSidebarOpen(false);
   }
+
+  const onMobileNavOpenChange = (open: boolean) => {
+    setMobileNavOpen(open);
+    if (open) setMembersOpen(false);
+  };
+
+  const onMembersOpenChange = (open: boolean) => {
+    setMembersOpen(open);
+    if (open) setMobileNavOpen(false);
+  };
 
   function openDm(peerNick: string) {
     setOpenDmPeers((prev) => {
@@ -440,7 +455,7 @@ function IrcChatAppShell() {
               sidebarOpen={sidebarOpen}
               onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
               showMembersButton={!isLargeDesktop && activeView.kind === "room"}
-              onOpenMembers={() => setMembersOpen(true)}
+              onOpenMembers={() => onMembersOpenChange(true)}
             />
           ) : null}
 
@@ -463,8 +478,8 @@ function IrcChatAppShell() {
             <IrcMobileNav
               view={activeView}
               roomName={activeRoomName}
-              onOpenMenu={() => setMobileNavOpen(true)}
-              onOpenMembers={() => setMembersOpen(true)}
+              onOpenMenu={() => onMobileNavOpenChange(true)}
+              onOpenMembers={() => onMembersOpenChange(true)}
               onBack={
                 activeView.kind === "dm"
                   ? () => setActiveView({ kind: "room", roomId: activeRoomId })
@@ -547,7 +562,7 @@ function IrcChatAppShell() {
 
       {!isDesktopShell ? (
         <>
-          <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+          <Sheet open={mobileNavOpen} onOpenChange={onMobileNavOpenChange}>
             <SheetContent
               side="left"
               className="irc-mobile-nav-sheet w-[min(100vw,320px)] max-w-[320px] border-r border-border/50 bg-background p-0"
@@ -562,7 +577,7 @@ function IrcChatAppShell() {
               />
             </SheetContent>
           </Sheet>
-            <Sheet open={membersOpen} onOpenChange={setMembersOpen}>
+            <Sheet open={membersOpen} onOpenChange={onMembersOpenChange}>
             <SheetContent
               side="right"
               className="irc-mobile-members-sheet w-[min(100vw,300px)] max-w-[300px] border-l border-border/50 p-0"
@@ -588,7 +603,7 @@ function IrcChatAppShell() {
           </Sheet>
         </>
       ) : !isLargeDesktop ? (
-        <Sheet open={membersOpen} onOpenChange={setMembersOpen}>
+        <Sheet open={membersOpen} onOpenChange={onMembersOpenChange}>
           <SheetContent side="right" className="w-[min(100vw,260px)] p-0">
             {activeView.kind === "dm" ? (
               <IrcDmInfoPanel
