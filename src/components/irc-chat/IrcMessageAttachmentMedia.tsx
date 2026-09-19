@@ -180,7 +180,8 @@ export function IrcMessageFileAttachment({
             className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
           >
             <Download className="h-3.5 w-3.5" aria-hidden />
-            Open / Download
+            <span className="sm:hidden">Open</span>
+            <span className="hidden sm:inline">Open / Download</span>
           </a>
         ) : (
           <span className="mt-1 text-xs text-muted-foreground">Preparing link…</span>

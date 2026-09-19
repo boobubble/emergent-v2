@@ -1,5 +1,10 @@
+import { useEffect, useState } from "react";
 import { CornerDownRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  IRC_CHAT_BELOW_MD_MQ,
+  mobileReplyPreviewMaxChars,
+} from "@/lib/irc-chat/irc-chat-mobile-conversation";
 import { buildReplyPreviewText } from "@/lib/irc-chat/reply";
 
 type IrcMessageReplyPreviewProps = {
@@ -18,14 +23,28 @@ export function IrcMessageReplyPreview({
   className,
 }: IrcMessageReplyPreviewProps) {
   const label = unavailable ? "Original message unavailable" : authorNick;
-  const body = unavailable ? "" : buildReplyPreviewText(previewText, 160);
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia(IRC_CHAT_BELOW_MD_MQ);
+    const apply = () => setIsMobileViewport(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+
+  const body = unavailable
+    ? ""
+    : buildReplyPreviewText(
+        previewText,
+        mobileReplyPreviewMaxChars(isMobileViewport),
+      );
 
   const interactive = Boolean(onNavigate && !unavailable);
 
   return (
     <div
       className={cn(
-        "irc-msg-reply-preview mb-1 max-w-full border-l-2 border-primary/35 pl-2",
+        "irc-msg-reply-preview mb-1 max-w-full min-w-0 border-l-2 border-primary/35 pl-2",
         interactive && "cursor-pointer rounded-sm hover:bg-primary/5",
         className,
       )}

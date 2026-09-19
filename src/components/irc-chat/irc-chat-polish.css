@@ -301,6 +301,16 @@
   background: color-mix(in oklab, var(--primary) 14%, transparent);
 }
 
+[data-irc-chat-app] .irc-reaction-picker--align-end {
+  left: auto;
+  right: 0;
+}
+
+[data-irc-chat-app] .irc-reaction-picker--below {
+  bottom: auto;
+  top: calc(100% + 0.35rem);
+}
+
 [data-irc-chat-app] .irc-sticker-picker {
   border-radius: 0.85rem;
   border: 1px solid color-mix(in oklab, var(--primary) 22%, var(--border));
@@ -1089,4 +1099,157 @@
 [data-irc-chat-app] .irc-mobile-members-sheet {
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* —— Mobile conversation (Phase 1G-B): compact stream below md —— */
+
+[data-irc-chat-app][data-irc-mobile-shell] .irc-message-canvas {
+  background: color-mix(in oklab, hsl(230 38% 7%) 88%, var(--primary) 12%);
+}
+
+[data-irc-chat-app][data-irc-mobile-shell] .irc-message-list-inner {
+  max-width: none;
+  padding: 0.5rem 0.55rem 0.35rem;
+}
+
+[data-irc-chat-app][data-irc-mobile-shell] .irc-message-list-inner--new-pill {
+  padding-bottom: 2.75rem;
+}
+
+[data-irc-chat-app][data-irc-mobile-shell] .irc-msg-row {
+  gap: 0.5rem;
+  padding: 0.05rem 0;
+}
+
+[data-irc-chat-app][data-irc-mobile-shell] .irc-msg-row--start {
+  margin-top: 0.45rem;
+}
+
+[data-irc-chat-app][data-irc-mobile-shell] .irc-msg-avatar-col {
+  width: 2.125rem;
+}
+
+[data-irc-chat-app][data-irc-mobile-shell] .irc-msg-avatar {
+  height: 2.125rem;
+  width: 2.125rem;
+  font-size: 10px;
+}
+
+[data-irc-chat-app][data-irc-mobile-shell] .irc-msg-meta {
+  justify-content: space-between;
+  gap: 0.35rem;
+}
+
+[data-irc-chat-app][data-irc-mobile-shell] .irc-msg-body-wrap {
+  max-width: 100%;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+[data-irc-chat-app][data-irc-mobile-shell] .irc-msg-body-wrap--own {
+  max-width: 100%;
+  margin-left: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+[data-irc-chat-app][data-irc-mobile-shell] .irc-msg-reply-preview {
+  padding-top: 0.1rem;
+  padding-bottom: 0.1rem;
+  border-left-width: 2px;
+}
+
+[data-irc-chat-app][data-irc-mobile-shell] .irc-msg-reply-preview p:last-child {
+  -webkit-line-clamp: 2;
+}
+
+[data-irc-chat-app][data-irc-mobile-shell] .irc-mention-pill {
+  padding-inline: 0.2rem;
+  line-height: 1.35;
+}
+
+[data-irc-chat-app][data-irc-mobile-shell] .irc-reaction-chip {
+  min-height: 1.75rem;
+  padding: 0.15rem 0.5rem;
+}
+
+[data-irc-chat-app][data-irc-mobile-shell] .irc-msg-react-btn,
+[data-irc-chat-app][data-irc-mobile-shell] .irc-msg-reply-btn {
+  min-height: 1.75rem;
+  min-width: 1.75rem;
+}
+
+[data-irc-chat-app][data-irc-mobile-shell] .irc-reaction-picker-item {
+  width: 2.125rem;
+  height: 2.125rem;
+}
+
+[data-irc-chat-app][data-irc-mobile-shell] .irc-msg-giphy {
+  max-width: 100%;
+}
+
+[data-irc-chat-app][data-irc-mobile-shell] .irc-msg-giphy img {
+  max-height: min(52vw, 220px);
+}
+
+[data-irc-chat-app][data-irc-mobile-shell] .irc-attachment-image {
+  max-height: min(70vw, 280px);
+}
+
+[data-irc-chat-app][data-irc-mobile-shell] .irc-msg-sticker--large {
+  max-height: 120px;
+  max-width: 120px;
+}
+
+[data-irc-chat-app][data-irc-mobile-shell] .irc-msg-sticker--small {
+  max-height: 88px;
+  max-width: 88px;
+}
+
+[data-irc-chat-app][data-irc-mobile-shell] .irc-attachment-file {
+  padding: 0.45rem 0.6rem;
+  gap: 0.5rem;
+}
+
+[data-irc-chat-app][data-irc-mobile-shell] .irc-typing-indicator {
+  min-height: 1.35rem;
+  padding-inline: 0.55rem;
+  font-size: 10px;
+}
+
+[data-irc-chat-app][data-irc-mobile-shell] .irc-new-messages-pill {
+  border-color: color-mix(in oklab, var(--primary) 45%, var(--border));
+  background: color-mix(in oklab, hsl(230 38% 10%) 92%, var(--background) 8%);
+  box-shadow:
+    0 4px 18px -6px color-mix(in oklab, var(--primary) 35%, transparent),
+    0 0 0 1px color-mix(in oklab, var(--primary) 18%, transparent);
+}
+
+[data-irc-chat-app][data-irc-mobile-shell] .irc-date-divider {
+  padding: 0.35rem 0 0.45rem;
+}
+
+[data-irc-chat-app][data-irc-mobile-shell] .irc-date-divider span {
+  font-size: 9px;
+  padding: 0.1rem 0.45rem;
+}
+
+[data-irc-chat-app][data-irc-mobile-shell] .irc-empty-conversation {
+  padding: 1.25rem 1rem 2rem;
+}
+
+[data-irc-chat-app][data-irc-mobile-shell] .irc-empty-icon-shell {
+  width: 2.5rem;
+  height: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+[data-irc-chat-app][data-irc-mobile-shell] .irc-empty-room-title {
+  font-size: 0.9rem;
+}
+
+[data-irc-chat-app][data-irc-mobile-shell] .irc-connecting-state {
+  min-height: 9rem;
+  padding: 1.5rem 1rem;
 }

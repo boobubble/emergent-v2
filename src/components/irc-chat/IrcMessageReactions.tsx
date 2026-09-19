@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { CornerDownLeft, SmilePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { computeReactionPickerPlacement } from "@/lib/irc-chat/irc-chat-mobile-conversation";
 import { cn } from "@/lib/utils";
 import {
   hasVisibleReactions,
@@ -24,8 +25,30 @@ export function IrcMessageReactionsRow({
   onReply,
 }: IrcMessageReactionsRowProps) {
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerPlacement, setPickerPlacement] = useState({
+    alignEnd: false,
+    openBelow: false,
+  });
   const pickerRef = useRef<HTMLDivElement>(null);
   const visible = hasVisibleReactions(reactions);
+
+  useLayoutEffect(() => {
+    if (!pickerOpen || !pickerRef.current) return;
+    const anchor = pickerRef.current.getBoundingClientRect();
+    const pickerWidth = 168;
+    const pickerHeight = 44;
+    setPickerPlacement(
+      computeReactionPickerPlacement({
+        anchorLeft: anchor.left,
+        anchorTop: anchor.top,
+        anchorBottom: anchor.bottom,
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
+        pickerWidth,
+        pickerHeight,
+      }),
+    );
+  }, [pickerOpen]);
 
   useEffect(() => {
     if (!pickerOpen) return;
@@ -81,7 +104,14 @@ export function IrcMessageReactionsRow({
             <SmilePlus className="h-3.5 w-3.5" aria-hidden />
           </Button>
           {pickerOpen ? (
-            <div className="irc-reaction-picker" role="menu">
+            <div
+              className={cn(
+                "irc-reaction-picker",
+                pickerPlacement.alignEnd && "irc-reaction-picker--align-end",
+                pickerPlacement.openBelow && "irc-reaction-picker--below",
+              )}
+              role="menu"
+            >
               {IRC_REACTION_TYPES.map((type) => (
                 <button
                   key={type}

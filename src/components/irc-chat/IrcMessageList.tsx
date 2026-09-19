@@ -96,11 +96,11 @@ function MessageRow({
       <div className="irc-msg-content min-w-0 max-w-full flex-1">
         {showMeta ? (
           <header className="irc-msg-meta mb-0.5 flex min-w-0 items-baseline gap-x-2">
-            <span className="truncate text-[13px] font-semibold text-foreground sm:text-sm">
+            <span className="min-w-0 truncate text-[13px] font-semibold text-foreground sm:text-sm">
               {msg.nick}
             </span>
             <time
-              className="shrink-0 text-[10px] tabular-nums text-muted-foreground"
+              className="shrink-0 text-[10px] tabular-nums text-muted-foreground/90"
               dateTime={new Date(msg.ts).toISOString()}
             >
               {formatMessageTime(msg.ts)}
@@ -313,10 +313,11 @@ export function IrcMessageList({
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
       {showNewMessages ? (
-        <div className="pointer-events-none absolute inset-x-0 bottom-2 z-20 flex justify-center">
+        <div className="pointer-events-none absolute inset-x-0 bottom-2 z-20 flex justify-center px-2">
           <button
             type="button"
-            className="pointer-events-auto inline-flex items-center gap-1 rounded-full border border-primary/30 bg-background/95 px-3 py-1.5 text-xs font-medium text-primary shadow-md backdrop-blur-sm hover:bg-primary/10"
+            className="irc-new-messages-pill pointer-events-auto inline-flex min-h-9 items-center gap-1 rounded-full border border-primary/35 bg-background/95 px-3 py-1.5 text-xs font-semibold text-primary shadow-md backdrop-blur-sm hover:bg-primary/10"
+            aria-label="Scroll to new messages"
             onClick={() => {
               pinnedToBottomRef.current = true;
               setShowNewMessages(false);
@@ -332,7 +333,12 @@ export function IrcMessageList({
       ref={scrollAreaRef}
       className={cn("irc-message-canvas min-h-0 flex-1", className)}
     >
-      <div className="irc-message-list-inner">
+      <div
+        className={cn(
+          "irc-message-list-inner",
+          showNewMessages && "irc-message-list-inner--new-pill",
+        )}
+      >
         {connecting && messages.length === 0 ? (
           <div className="irc-connecting-state flex flex-col items-center justify-center gap-2 py-16 text-center">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground motion-reduce:animate-none" aria-hidden />

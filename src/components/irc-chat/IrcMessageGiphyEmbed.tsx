@@ -34,7 +34,7 @@ export function IrcMessageGiphyEmbed({ text }: { text: string }) {
       href={resolved.url}
       target="_blank"
       rel="noreferrer noopener"
-      className="irc-msg-giphy mt-1 block max-w-[min(100%,280px)] overflow-hidden rounded-xl border border-border/80 bg-black/20"
+      className="irc-msg-giphy mt-1 block w-full max-w-[min(100%,280px)] overflow-hidden rounded-xl border border-border/80 bg-black/20"
     >
       <img
         src={imgSrc}
