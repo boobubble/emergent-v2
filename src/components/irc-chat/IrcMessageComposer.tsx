@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  CornerDownRight,
   Paperclip,
   Plus,
   Send,
@@ -32,6 +33,12 @@ import { useRemoteProfileDirectory } from "@/lib/use-remote-profiles";
 import { IrcMentionSuggestions } from "./IrcMentionSuggestions";
 import type { IrcActiveView, IrcComposerReplyTarget } from "./irc-chat-types";
 import { dmComposerPlaceholder, roomComposerPlaceholder } from "./irc-chat-ui";
+import {
+  activeComposerPicker,
+  resolveExclusiveComposerPicker,
+  shouldComposerEmitTyping,
+  type ComposerPickerKind,
+} from "@/lib/irc-chat/irc-chat-mobile-composer";
 import { uploadIrcChatAttachment } from "@/lib/irc-chat-attachment.functions";
 import type { IrcMessageAttachment } from "@/lib/irc-chat/irc-attachment";
 import {
@@ -207,7 +214,12 @@ export function IrcMessageComposer({
         : "Write a message…"
     : "Disconnected — reconnecting…";
 
-  type ComposerPicker = "emoji" | "sticker" | "giphy" | "youtube";
+  const pickerFlags = () => ({
+    emoji: showEmoji,
+    sticker: showSticker,
+    giphy: showGiphy,
+    youtube: showYoutube,
+  });
 
   const closePickers = () => {
     setShowEmoji(false);
@@ -216,12 +228,25 @@ export function IrcMessageComposer({
     setShowYoutube(false);
   };
 
-  function openComposerPicker(picker: ComposerPicker) {
-    setShowEmoji(picker === "emoji");
-    setShowSticker(picker === "sticker");
-    setShowGiphy(picker === "giphy");
-    setShowYoutube(picker === "youtube");
+  function openComposerPicker(picker: ComposerPickerKind) {
+    const next = resolveExclusiveComposerPicker(activeComposerPicker(pickerFlags()), picker);
+    setShowEmoji(next.emoji);
+    setShowSticker(next.sticker);
+    setShowGiphy(next.giphy);
+    setShowYoutube(next.youtube);
     setMentionMenuOpen(false);
+    setMoreOpen(false);
+  }
+
+  function openAttachmentPicker() {
+    closePickers();
+    setMoreOpen(false);
+    setMentionMenuOpen(false);
+    if (!isRegisteredUser) {
+      onAttachmentAuthRequired?.();
+      return;
+    }
+    fileInputRef.current?.click();
   }
 
   function clearPendingAttachment() {
@@ -306,6 +331,7 @@ export function IrcMessageComposer({
     );
     setDraft(nextText);
     setCaret(nextCaret);
+    setMentionMenuOpen(false);
     requestAnimationFrame(() => {
       const el = textareaRef.current;
       if (!el) return;
@@ -379,37 +405,39 @@ export function IrcMessageComposer({
     [giphyOn, youtubeOn, showGiphy, showYoutube],
   );
 
-  const mobileMoreActions = useMemo(
-    () =>
-      [
-        giphyOn && {
-          id: "gif",
-          label: "GIF",
-          icon: Sparkles,
-          onClick: () => {
-            setMoreOpen(false);
-            setShowGiphy(true);
-          },
-        },
-        youtubeOn && {
-          id: "yt",
-          label: "YouTube",
-          icon: Youtube,
-          onClick: () => {
-            setMoreOpen(false);
-            setShowYoutube(true);
-          },
-        },
-      ].filter(Boolean) as Array<{
-        id: string;
-        label: string;
-        icon: typeof Sparkles;
-        onClick: () => void;
-      }>,
-    [giphyOn, youtubeOn],
-  );
-
   const pickerOpen = showEmoji || showSticker || showGiphy || showYoutube;
+
+  const mobileSheetActions = [
+    onSendSticker && {
+      id: "sticker",
+      label: "Sticker",
+      icon: Sticker,
+      onClick: () => openComposerPicker("sticker"),
+    },
+    giphyOn && {
+      id: "gif",
+      label: "GIF",
+      icon: Sparkles,
+      onClick: () => openComposerPicker("giphy"),
+    },
+    onSendAttachment && {
+      id: "attach",
+      label: "Attach",
+      icon: Paperclip,
+      onClick: () => openAttachmentPicker(),
+    },
+    youtubeOn && {
+      id: "yt",
+      label: "YouTube",
+      icon: Youtube,
+      onClick: () => openComposerPicker("youtube"),
+    },
+  ].filter(Boolean) as Array<{
+    id: string;
+    label: string;
+    icon: typeof Sparkles;
+    onClick: () => void;
+  }>;
 
   useEffect(() => {
     setDraft("");
@@ -425,6 +453,14 @@ export function IrcMessageComposer({
     view.kind === "room" &&
     replyingTo &&
     replyingTo.roomId === view.roomId;
+
+  useEffect(() => {
+    if (!showReplyBanner) return;
+    const id = requestAnimationFrame(() => {
+      textareaRef.current?.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [showReplyBanner, replyingTo?.messageId]);
 
   const bar = (
     <div ref={pickerAnchorRef} className="relative min-w-0 flex-1">
@@ -470,23 +506,24 @@ export function IrcMessageComposer({
         />
       ) : null}
       {showReplyBanner ? (
-        <div className="irc-composer-reply-banner mb-2 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2">
+        <div className="irc-composer-reply-banner mb-2 rounded-xl border border-primary/25 bg-primary/[0.07] px-2.5 py-2 sm:px-3">
           <div className="flex items-start gap-2">
             <div className="min-w-0 flex-1">
-              <p className="text-[11px] font-semibold text-foreground">
-                Replying to {replyingTo.authorNick}
+              <p className="flex items-center gap-1 text-[11px] font-semibold text-foreground">
+                <CornerDownRight className="h-3 w-3 shrink-0 text-primary/80" aria-hidden />
+                <span className="truncate">Replying to {replyingTo.authorNick}</span>
               </p>
-              <p className="line-clamp-2 text-[11px] text-muted-foreground">
+              <p className="line-clamp-2 text-[11px] leading-snug text-muted-foreground">
                 {replyingTo.textPreview}
               </p>
             </div>
             <button
               type="button"
-              className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-muted/60 hover:text-foreground"
               onClick={onCancelReply}
               aria-label="Cancel reply"
             >
-              <X className="h-3.5 w-3.5" />
+              <X className="h-4 w-4" />
             </button>
           </div>
         </div>
@@ -555,11 +592,16 @@ export function IrcMessageComposer({
           </>
         ) : null}
 
-        {!compact && mobileMoreActions.length > 0 ? (
+        {!compact && mobileSheetActions.length > 0 ? (
           <ComposerIconBtn
             label="More actions"
+            active={moreOpen}
             className="mb-0.5 md:hidden"
-            onClick={() => setMoreOpen(true)}
+            aria-expanded={moreOpen}
+            onClick={() => {
+              closePickers();
+              setMoreOpen(true);
+            }}
           >
             <Plus className="h-4 w-4" />
           </ComposerIconBtn>
@@ -573,14 +615,13 @@ export function IrcMessageComposer({
             setDraft(next);
             setCaret(e.target.selectionStart ?? next.length);
             if (
-              view.kind === "room" &&
               activeRoomId &&
-              connected &&
-              next.trim() &&
-              !showEmoji &&
-              !showSticker &&
-              !showGiphy &&
-              !showYoutube
+              shouldComposerEmitTyping({
+                isRoom: view.kind === "room",
+                connected,
+                draftTrimmed: Boolean(next.trim()),
+                pickerOpen,
+              })
             ) {
               typingEmitterRef.current?.sendTyping();
             }
@@ -666,36 +707,41 @@ export function IrcMessageComposer({
         onClose={closePickers}
         anchorRef={pickerAnchorRef}
       >
-        {showEmoji ? (
-          <IrcEmojiPicker
-            onPick={(token) => insertText(token)}
-            onClose={() => setShowEmoji(false)}
-          />
-        ) : null}
-        {showSticker && onSendSticker ? (
-          <IrcStickerPicker
-            onPick={(id) => {
-              onSendSticker(id);
-              closePickers();
-              setMoreOpen(false);
-            }}
-            onClose={() => setShowSticker(false)}
-          />
-        ) : null}
-        {showGiphy ? (
-          <GiphyPicker
-            onPick={(g) => {
-              submit(g.fullUrl);
-            }}
-          />
-        ) : null}
-        {showYoutube ? (
-          <YoutubePicker
-            onPick={(url) => {
-              submit(url);
-            }}
-          />
-        ) : null}
+        <div className="irc-composer-picker-body min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          {showEmoji ? (
+            <IrcEmojiPicker
+              onPick={(token) => {
+                insertText(token);
+                textareaRef.current?.focus();
+              }}
+              onClose={() => setShowEmoji(false)}
+            />
+          ) : null}
+          {showSticker && onSendSticker ? (
+            <IrcStickerPicker
+              onPick={(id) => {
+                onSendSticker(id);
+                closePickers();
+                setMoreOpen(false);
+              }}
+              onClose={() => setShowSticker(false)}
+            />
+          ) : null}
+          {showGiphy ? (
+            <GiphyPicker
+              onPick={(g) => {
+                submit(g.fullUrl);
+              }}
+            />
+          ) : null}
+          {showYoutube ? (
+            <YoutubePicker
+              onPick={(url) => {
+                submit(url);
+              }}
+            />
+          ) : null}
+        </div>
       </IrcComposerPickerPortal>
       <input
         ref={fileInputRef}
@@ -730,24 +776,27 @@ export function IrcMessageComposer({
 
   const moreSheet = (
     <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
-      <SheetContent side="bottom" className="rounded-t-2xl border-t px-4 pb-6 pt-3">
+      <SheetContent
+        side="bottom"
+        className="irc-composer-more-sheet rounded-t-2xl border-t border-primary/25 bg-[hsl(228_32%_11%)] px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3"
+      >
         <p className="mb-3 text-center text-xs font-bold uppercase tracking-wide text-muted-foreground">
           Share something
         </p>
-        <div className="grid grid-cols-2 gap-2">
-          {mobileMoreActions.map((a) => (
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {mobileSheetActions.map((a) => (
             <button
               key={a.id}
               type="button"
-              className="flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl border border-border/70 bg-card/50 text-[12px] font-medium hover:bg-muted/40"
+              className="flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl border border-primary/20 bg-white/[0.04] text-[12px] font-medium text-foreground hover:bg-primary/10"
               onClick={a.onClick}
             >
-              <a.icon className="h-5 w-5 text-primary" />
+              <a.icon className="h-5 w-5 text-primary" aria-hidden />
               {a.label}
             </button>
           ))}
         </div>
-        {mobileMoreActions.length === 0 ? (
+        {mobileSheetActions.length === 0 ? (
           <p className="text-center text-xs text-muted-foreground">
             No extra media actions are configured for this chatroom.
           </p>

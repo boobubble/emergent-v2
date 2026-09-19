@@ -4,19 +4,47 @@
   field-sizing: fixed;
 }
 
+[data-irc-chat-composer] .irc-composer-bar-surface {
+  background: color-mix(in oklab, hsl(230 38% 10%) 88%, var(--background) 12%);
+  border-color: color-mix(in oklab, var(--primary) 22%, var(--border) 78%);
+}
+
+[data-irc-chat-composer] .irc-composer-picker-body .rounded-xl,
+[data-irc-chat-composer] .irc-composer-picker-body .rounded-2xl,
+[data-irc-chat-composer] .irc-composer-picker-body .irc-sticker-picker {
+  border-color: color-mix(in oklab, var(--primary) 18%, transparent);
+  background: transparent;
+  box-shadow: none;
+}
+
+[data-irc-chat-composer] .irc-composer-picker-sheet {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
+}
+
+[data-irc-chat-composer] .irc-composer-picker-sheet .irc-composer-picker-body {
+  padding: 0.35rem 0.5rem 0.5rem;
+}
+
 @media (max-width: 767px) {
   [data-irc-chat-composer].chat-composer-root {
     overflow-x: hidden;
-    padding-top: 0.4rem;
-    padding-bottom: 0.4rem;
+    padding-top: 0.35rem;
+    padding-bottom: max(0.35rem, env(safe-area-inset-bottom, 0px));
+  }
+
+  [data-irc-chat-composer] .irc-composer-action-btn {
+    height: 2.75rem;
+    width: 2.75rem;
+    min-height: 2.75rem;
+    min-width: 2.75rem;
   }
 
   [data-irc-chat-composer] .chat-composer-send {
     display: grid;
-    height: 48px;
-    width: 48px;
-    min-height: 48px;
-    min-width: 48px;
+    height: 2.75rem;
+    width: 2.75rem;
+    min-height: 2.75rem;
+    min-width: 2.75rem;
     flex-shrink: 0;
     border-radius: 999px;
     place-items: center;
@@ -25,9 +53,41 @@
   }
 
   [data-irc-chat-composer] .chat-composer-input {
-    min-height: 48px;
-    max-height: 96px;
-    padding-top: 0.75rem;
-    padding-bottom: 0.75rem;
+    min-height: 2.75rem;
+    max-height: 7.5rem;
+    padding-top: 0.65rem;
+    padding-bottom: 0.65rem;
   }
+
+  [data-irc-chat-composer] .irc-composer-attach-preview img,
+  [data-irc-chat-composer] .irc-composer-attach-preview .grid.h-12 {
+    height: 2.5rem;
+    width: 2.5rem;
+  }
+
+  [data-irc-chat-composer] .irc-mention-popover {
+    max-height: min(40dvh, 220px);
+  }
+
+  [data-irc-chat-composer] .irc-mention-popover ul {
+    max-height: min(38dvh, 200px);
+  }
+
+  [data-irc-chat-composer] .irc-composer-picker-body .max-h-72 {
+    max-height: min(42dvh, 280px);
+  }
+
+  [data-irc-chat-composer] .irc-composer-picker-body .grid-cols-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+[data-irc-chat-app][data-irc-mobile-shell] .chat-composer-footer {
+  padding-bottom: 0;
+  border-top-color: color-mix(in oklab, var(--primary) 18%, var(--border) 82%);
+  background: color-mix(in oklab, hsl(230 38% 9%) 92%, var(--background) 8%);
+}
+
+[data-irc-chat-app][data-irc-mobile-shell] .irc-chat-center .chat-composer-root {
+  padding-bottom: max(0.35rem, env(safe-area-inset-bottom, 0px));
 }

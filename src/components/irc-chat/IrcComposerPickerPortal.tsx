@@ -1,5 +1,9 @@
-import { useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { createPortal } from "react-dom";
+import {
+  composerMobilePickerMaxHeightPx,
+  IRC_CHAT_BELOW_MD_MQ,
+} from "@/lib/irc-chat/irc-chat-mobile-composer";
 import { cn } from "@/lib/utils";
 
 const VIEWPORT_MARGIN = 8;
@@ -67,10 +71,26 @@ export function IrcComposerPickerPortal({
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const [placement, setPlacement] = useState<PanelPlacement | null>(null);
+  const [mobileSheet, setMobileSheet] = useState(false);
+  const [mobileMaxH, setMobileMaxH] = useState(360);
+
+  useEffect(() => {
+    const mq = window.matchMedia(IRC_CHAT_BELOW_MD_MQ);
+    const apply = () => setMobileSheet(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
 
   useLayoutEffect(() => {
     if (!open) {
       setPlacement(null);
+      return;
+    }
+    if (mobileSheet) {
+      const vv = window.visualViewport?.height ?? window.innerHeight;
+      setMobileMaxH(composerMobilePickerMaxHeightPx(vv));
+      setPlacement({ left: 0, top: 0, transform: "none" });
       return;
     }
     const anchor = anchorRef.current;
@@ -105,10 +125,39 @@ export function IrcComposerPickerPortal({
       window.removeEventListener("scroll", update, true);
       ro?.disconnect();
     };
-  }, [open, anchorRef]);
+  }, [open, anchorRef, mobileSheet]);
 
   if (!open || !placement || typeof document === "undefined") {
     return null;
+  }
+
+  if (mobileSheet) {
+    return createPortal(
+      <>
+        <div
+          className="fixed inset-0 z-[100] bg-black/55"
+          aria-hidden
+          onPointerDown={(ev) => {
+            ev.preventDefault();
+            onClose();
+          }}
+        />
+        <div
+          ref={panelRef}
+          className={cn(
+            "irc-composer-picker-sheet fixed inset-x-0 bottom-0 z-[101] flex max-h-[min(52dvh,420px)] flex-col overflow-hidden rounded-t-2xl border border-primary/25 bg-[hsl(228_32%_11%)] shadow-[0_-12px_40px_-12px_hsl(var(--primary)/0.35)]",
+            className,
+          )}
+          style={{ maxHeight: mobileMaxH }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Composer picker"
+        >
+          {children}
+        </div>
+      </>,
+      document.body,
+    );
   }
 
   return createPortal(
@@ -123,7 +172,10 @@ export function IrcComposerPickerPortal({
       />
       <div
         ref={panelRef}
-        className={cn("fixed z-[101] w-[min(100vw-1rem,340px)]", className)}
+        className={cn(
+          "irc-composer-picker-panel fixed z-[101] w-[min(100vw-1rem,340px)]",
+          className,
+        )}
         style={{
           left: placement.left,
           top: placement.top,

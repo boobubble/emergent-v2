@@ -15,7 +15,7 @@ export function IrcMentionSuggestions({
   if (!items.length) return null;
   return (
     <div
-      className="irc-mention-popover absolute bottom-full left-0 z-50 mb-2 w-[min(100%,18rem)] overflow-hidden rounded-xl border border-primary/25 bg-[hsl(228_32%_11%)] shadow-[0_12px_40px_-12px_hsl(var(--primary)/0.45)]"
+      className="irc-mention-popover absolute bottom-full left-0 right-0 z-50 mb-2 w-full max-w-[min(100%,18rem)] overflow-hidden rounded-xl border border-primary/25 bg-[hsl(228_32%_11%)] shadow-[0_12px_40px_-12px_hsl(var(--primary)/0.45)] sm:right-auto"
       role="listbox"
       aria-label="Mention suggestions"
     >

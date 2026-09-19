@@ -1086,10 +1086,6 @@
   background: color-mix(in oklab, var(--primary) 18%, transparent);
 }
 
-[data-irc-chat-app][data-irc-mobile-shell] .irc-chat-center .chat-composer-root {
-  padding-bottom: max(0.35rem, env(safe-area-inset-bottom, 0px));
-}
-
 [data-irc-chat-app] .irc-mobile-nav-sheet {
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
