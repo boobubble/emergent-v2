@@ -48,7 +48,7 @@ function CodyChatPage() {
     <iframe
       src={chatUrl}
       title="Yaarzo Chat"
-      className="h-[calc(100vh-4rem)] w-full border-0"
+      className="block h-[calc(100dvh-7.75rem)] w-full border-0"
       allow="camera; microphone; autoplay; clipboard-write"
     />
   );
