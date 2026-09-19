@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useRef } from "react";
-import { Clock, Hash, Loader2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Clock, CornerDownLeft, Hash, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { indexMessagesById, resolveReplyParent } from "@/lib/irc-chat/reply";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { ircConnectionLabel, useIrcChatState, type IrcChatMessage } from "@/lib/irc-chat";
@@ -13,12 +15,14 @@ import {
   nickInitial,
 } from "./irc-chat-ui";
 import { IrcMessageBody } from "./IrcMessageBody";
+import { IrcMessageReplyPreview } from "./IrcMessageReplyPreview";
 import "./message-list.css";
 
 type IrcMessageListProps = {
   messages: IrcChatMessage[];
   selfNick: string | null;
   view: IrcActiveView;
+  onReply?: (msg: IrcChatMessage) => void;
   className?: string;
 };
 
@@ -26,12 +30,24 @@ function MessageRow({
   msg,
   own,
   showMeta,
+  byId,
+  highlight,
+  onReply,
+  onJumpToMessage,
 }: {
   msg: IrcChatMessage;
   own: boolean;
   showMeta: boolean;
+  byId: Map<string, IrcChatMessage>;
+  highlight: boolean;
+  onReply?: (msg: IrcChatMessage) => void;
+  onJumpToMessage: (messageId: string) => void;
 }) {
   const hue = nickAvatarHue(msg.nick);
+  const parent = msg.replyToMessageId
+    ? resolveReplyParent(msg.replyToMessageId, byId)
+    : null;
+  const replyUnavailable = Boolean(msg.replyToMessageId && !parent);
 
   return (
     <article
@@ -39,8 +55,11 @@ function MessageRow({
         "irc-msg-row group/msg max-w-full irc-msg-in",
         showMeta ? "irc-msg-row--start" : "irc-msg-row--grouped",
         own && "irc-msg-row--own",
+        highlight && "irc-msg-row--highlight",
       )}
       data-irc-msg-own={own ? "true" : undefined}
+      data-irc-message-id={msg.id}
+      id={`irc-msg-${msg.id}`}
     >
       <div className="irc-msg-avatar-col" aria-hidden>
         {showMeta ? (
@@ -64,6 +83,19 @@ function MessageRow({
             >
               {formatMessageTime(msg.ts)}
             </time>
+            {onReply ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="irc-msg-reply-btn ml-auto h-6 shrink-0 gap-0.5 px-1.5 text-[10px] font-semibold text-muted-foreground opacity-100 md:opacity-0 md:group-hover/msg:opacity-100 md:group-focus-within/msg:opacity-100"
+                onClick={() => onReply(msg)}
+                aria-label={`Reply to ${msg.nick}`}
+              >
+                <CornerDownLeft className="h-3 w-3" aria-hidden />
+                Reply
+              </Button>
+            ) : null}
           </header>
         ) : null}
         <div
@@ -74,6 +106,18 @@ function MessageRow({
             msg.failed && "irc-msg-body-wrap--failed",
           )}
         >
+          {msg.replyToMessageId ? (
+            <IrcMessageReplyPreview
+              authorNick={parent?.nick ?? ""}
+              previewText={parent?.text ?? ""}
+              unavailable={replyUnavailable}
+              onNavigate={
+                parent && msg.replyToMessageId
+                  ? () => onJumpToMessage(msg.replyToMessageId!)
+                  : undefined
+              }
+            />
+          ) : null}
           <IrcMessageBody text={msg.text} />
           {msg.pending ? (
             <span className="irc-msg-status irc-msg-status--pending">
@@ -139,24 +183,43 @@ function EmptyConversation({
   );
 }
 
-export function IrcMessageList({ messages, selfNick, view, className }: IrcMessageListProps) {
+export function IrcMessageList({
+  messages,
+  selfNick,
+  view,
+  onReply,
+  className,
+}: IrcMessageListProps) {
   const state = useIrcChatState();
   const bottomRef = useRef<HTMLDivElement>(null);
   const hadAuthRef = useRef(false);
+  const [highlightId, setHighlightId] = useState<string | null>(null);
   if (state.status === "authenticated") hadAuthRef.current = true;
 
   const connectionLabel = ircConnectionLabel(state.status, hadAuthRef.current);
   const connecting = connectionLabel === "Connecting" || connectionLabel === "Reconnecting";
   const connected = connectionLabel === "Connected";
 
+  const byId = useMemo(() => indexMessagesById(messages), [messages]);
+
   const items = useMemo(
     () => buildMessageListItems(messages, selfNick),
     [messages, selfNick],
   );
 
+  const jumpToMessage = useCallback((messageId: string) => {
+    const el = document.getElementById(`irc-msg-${messageId}`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    setHighlightId(messageId);
+    window.setTimeout(() => setHighlightId(null), 1600);
+  }, []);
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages.length, messages[messages.length - 1]?.id]);
+
+  const canReply = view.kind === "room" && Boolean(onReply);
 
   return (
     <ScrollArea className={cn("irc-message-canvas min-h-0 flex-1", className)}>
@@ -194,6 +257,10 @@ export function IrcMessageList({ messages, selfNick, view, className }: IrcMessa
                   msg={item.msg}
                   own={item.own}
                   showMeta={item.showMeta}
+                  byId={byId}
+                  highlight={highlightId === item.msg.id}
+                  onReply={canReply ? onReply : undefined}
+                  onJumpToMessage={jumpToMessage}
                 />
               );
             })}

@@ -517,7 +517,7 @@ function createIrcSessionManager(options) {
   const nickToWs = new Map();
   /** @type {Map<string, { userId: string, nick: string, identityType: string }>} nick lower -> identity */
   const nickRegistry = new Map();
-  /** @type {Map<string, { messageId: string, userId: string, nick: string, room: string, text: string, ws: object, ts: number }>} */
+  /** @type {Map<string, { messageId: string, userId: string, nick: string, room: string, text: string, replyToMessageId?: string, ws: object, ts: number }>} */
   const pendingOutbound = new Map();
   /** @type {Map<string, number>} dedup key -> ts */
   const recentFanout = new Map();
@@ -581,7 +581,11 @@ function createIrcSessionManager(options) {
         row.text === text
       ) {
         pendingOutbound.delete(messageId);
-        return { messageId, userId: row.userId };
+        return {
+          messageId,
+          userId: row.userId,
+          replyToMessageId: row.replyToMessageId,
+        };
       }
     }
     return null;
@@ -615,6 +619,7 @@ function createIrcSessionManager(options) {
       const pending = matchPending(nick, room, text);
       const userId = pending?.userId ?? lookupUserIdByNick(nick) ?? `irc:${nick}`;
       const messageId = pending?.messageId ?? randomUUID();
+      const replyToMessageId = pending?.replyToMessageId;
 
       if (!shouldFanout(room, nick, text)) return;
 
@@ -624,6 +629,7 @@ function createIrcSessionManager(options) {
         userId,
         text,
         messageId,
+        replyToMessageId,
         sourceSession: session,
       });
       return;

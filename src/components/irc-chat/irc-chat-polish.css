@@ -226,6 +226,22 @@
   color: var(--destructive);
 }
 
+[data-irc-chat-app] .irc-msg-row--highlight {
+  background: color-mix(in oklab, var(--primary) 12%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--primary) 22%, transparent);
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-irc-chat-app] .irc-msg-row--highlight {
+    transition: none;
+  }
+}
+
+[data-irc-chat-app] .irc-composer-reply-banner {
+  box-shadow: inset 3px 0 0 color-mix(in oklab, var(--primary) 55%, transparent);
+}
+
 [data-irc-chat-app] .irc-connecting-state {
   min-height: 12rem;
 }

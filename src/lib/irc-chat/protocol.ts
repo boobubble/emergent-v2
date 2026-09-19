@@ -8,6 +8,12 @@ export function isValidMessageId(value: unknown): value is string {
   return typeof value === "string" && UUID_RE.test(value.trim());
 }
 
+export function parseOptionalReplyToMessageId(value: unknown): string | undefined {
+  if (value === undefined || value === null || value === "") return undefined;
+  if (!isValidMessageId(value)) return undefined;
+  return String(value).trim();
+}
+
 export function isValidIrcUserId(value: string): boolean {
   if (!value) return false;
   if (UUID_RE.test(value)) return true;
@@ -25,6 +31,7 @@ export type GatewayFrame = {
   event?: string;
   room?: string;
   messageId?: string;
+  replyToMessageId?: string;
   nick?: string;
   userId?: string;
   text?: string;
@@ -52,8 +59,24 @@ export type ParsedGatewayEvent =
   | { kind: "room_joined"; room: string }
   | { kind: "room_parted"; room: string }
   | { kind: "room_names"; room: string; members: IrcChatMember[] }
-  | { kind: "public_message"; room: string; messageId: string; nick: string; userId: string; text: string }
-  | { kind: "public_message_sent"; room: string; messageId: string; nick: string; userId: string; text: string }
+  | {
+      kind: "public_message";
+      room: string;
+      messageId: string;
+      nick: string;
+      userId: string;
+      text: string;
+      replyToMessageId?: string;
+    }
+  | {
+      kind: "public_message_sent";
+      room: string;
+      messageId: string;
+      nick: string;
+      userId: string;
+      text: string;
+      replyToMessageId?: string;
+    }
   | { kind: "pm_message"; messageId: string; nick: string; text: string }
   | { kind: "pm_sent"; messageId: string; recipientNick: string; text: string }
   | { kind: "presence"; event: IrcChatPresenceEvent }
@@ -99,7 +122,8 @@ export function parseGatewayEvent(frame: GatewayFrame): ParsedGatewayEvent | nul
     if (!room || !isValidMessageId(messageId) || !nick || !isValidIrcUserId(userId) || !text) {
       return null;
     }
-    return { kind: "public_message", room, messageId, nick, userId, text };
+    const replyToMessageId = parseOptionalReplyToMessageId(frame.replyToMessageId);
+    return { kind: "public_message", room, messageId, nick, userId, text, replyToMessageId };
   }
 
   if (frame.type === "message.sent") {
@@ -109,7 +133,10 @@ export function parseGatewayEvent(frame: GatewayFrame): ParsedGatewayEvent | nul
     const userId = asNonEmptyString(frame.userId);
     const text = typeof frame.text === "string" ? frame.text.trim() : "";
     if (!room || !isValidMessageId(messageId) || !nick || !userId || !text) return null;
-    return { kind: "public_message_sent", room, messageId, nick, userId, text };
+    const replyToMessageId = parseOptionalReplyToMessageId(
+      (frame as GatewayFrame).replyToMessageId,
+    );
+    return { kind: "public_message_sent", room, messageId, nick, userId, text, replyToMessageId };
   }
 
   if (frame.type === "pm.message") {
@@ -200,13 +227,22 @@ export function buildPublicSendFrame(
   room: string,
   messageId: string,
   text: string,
-): { type: "message.send"; room: string; messageId: string; text: string } {
-  return {
-    type: "message.send",
+  replyToMessageId?: string,
+): {
+  type: "message.send";
+  room: string;
+  messageId: string;
+  text: string;
+  replyToMessageId?: string;
+} {
+  const frame = {
+    type: "message.send" as const,
     room: room.trim(),
     messageId: messageId.trim(),
     text: text.trim(),
   };
+  const reply = parseOptionalReplyToMessageId(replyToMessageId);
+  return reply ? { ...frame, replyToMessageId: reply } : frame;
 }
 
 export function buildPmSendFrame(

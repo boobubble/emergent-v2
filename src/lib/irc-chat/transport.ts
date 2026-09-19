@@ -137,14 +137,23 @@ export class IrcChatTransport {
     }
   }
 
-  sendPublic(room: string, messageId: string, text: string): boolean {
+  sendPublic(
+    room: string,
+    messageId: string,
+    text: string,
+    replyToMessageId?: string,
+  ): boolean {
     if (!isValidMessageId(messageId)) return false;
     const trimmed = text.trim();
     const normalizedRoom = room.trim();
     if (!trimmed || !normalizedRoom || !this.connected || !this.ws) return false;
     if (!isIrcChatLiveRoom(normalizedRoom, this.knownRoomIds)) return false;
     try {
-      this.ws.send(JSON.stringify(buildPublicSendFrame(normalizedRoom, messageId, trimmed)));
+      this.ws.send(
+        JSON.stringify(
+          buildPublicSendFrame(normalizedRoom, messageId, trimmed, replyToMessageId),
+        ),
+      );
       return true;
     } catch {
       this.emitStatus("error", "Failed to send IRC message");

@@ -242,14 +242,18 @@ function broadcastIrcLine(wss, line) {
 }
 
 function broadcastChannelMessage(wss, payload) {
-  broadcastToAuthenticatedClients(wss, {
+  const frame = {
     type: "message",
     room: payload.room,
     messageId: payload.messageId,
     nick: payload.nick,
     userId: payload.userId,
     text: payload.text,
-  });
+  };
+  if (payload.replyToMessageId && isValidUuid(payload.replyToMessageId)) {
+    frame.replyToMessageId = payload.replyToMessageId.trim();
+  }
+  broadcastToAuthenticatedClients(wss, frame);
 }
 
 let sessionManager = null;
@@ -837,11 +841,18 @@ wss.on("connection", async (ws) => {
       return;
     }
 
+    const replyToMessageId =
+      typeof payload.replyToMessageId === "string" &&
+      isValidUuid(payload.replyToMessageId.trim())
+        ? payload.replyToMessageId.trim()
+        : undefined;
+
     sessionManager.trackPending(payload.messageId.trim(), {
       userId: ws.userId,
       nick: ws.ircNick || ws.nick,
       room,
       text: safeText,
+      replyToMessageId,
       ws,
     });
 
@@ -854,14 +865,18 @@ wss.on("connection", async (ws) => {
       return;
     }
 
-    ws.send(JSON.stringify({
+    const sentFrame = {
       type: "message.sent",
       room,
       messageId: payload.messageId.trim(),
       nick: ws.ircNick || ws.nick,
       userId: ws.userId,
-      text: safeText
-    }));
+      text: safeText,
+    };
+    if (replyToMessageId) {
+      sentFrame.replyToMessageId = replyToMessageId;
+    }
+    ws.send(JSON.stringify(sentFrame));
 
     console.log(`IRC user PRIVMSG ${room} (${ws.ircNick}): ${safeText}`);
   });

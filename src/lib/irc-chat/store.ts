@@ -26,7 +26,7 @@ import {
   receivePublicMessage,
   shouldAcceptIncomingPublicMessage,
 } from "./messages";
-import type { ParsedGatewayEvent } from "./protocol";
+import { parseOptionalReplyToMessageId, type ParsedGatewayEvent } from "./protocol";
 import { fetchGatewayRooms } from "./rooms";
 import { IrcChatTransport } from "./transport";
 import {
@@ -138,7 +138,11 @@ export class IrcChatCore {
     return this.transport.join(normalized);
   }
 
-  sendPublicMessage(text: string, roomId = IRC_CHAT_PRODUCT_ROOM): string | null {
+  sendPublicMessage(
+    text: string,
+    roomId = IRC_CHAT_PRODUCT_ROOM,
+    options?: { replyToMessageId?: string },
+  ): string | null {
     const trimmed = text.trim();
     if (!trimmed || !this.transport.connected) return null;
 
@@ -148,6 +152,8 @@ export class IrcChatCore {
       this.state.userId ??
       (this.auth.kind === "guest" ? this.auth.guest.visitorId : "");
 
+    const replyToMessageId = parseOptionalReplyToMessageId(options?.replyToMessageId);
+
     const msg = {
       id: messageId,
       roomId,
@@ -156,13 +162,14 @@ export class IrcChatCore {
       text: trimmed,
       ts: Date.now(),
       pending: true,
+      ...(replyToMessageId ? { replyToMessageId } : {}),
     };
 
     this.patchState({
       messages: receivePublicMessage(this.state.messages, roomId, msg),
     });
 
-    if (!this.transport.sendPublic(roomId, messageId, trimmed)) {
+    if (!this.transport.sendPublic(roomId, messageId, trimmed, replyToMessageId)) {
       this.patchState({
         messages: markPublicMessageFailed(this.state.messages, roomId, messageId),
       });
@@ -301,6 +308,9 @@ export class IrcChatCore {
             nick: event.nick,
             text: event.text,
             ts: Date.now(),
+            ...(event.replyToMessageId
+              ? { replyToMessageId: event.replyToMessageId }
+              : {}),
           }),
         });
         playPublicMessageSoundEffects({
@@ -323,6 +333,9 @@ export class IrcChatCore {
               authorId: event.userId,
               nick: event.nick,
               text: event.text,
+              ...(event.replyToMessageId
+                ? { replyToMessageId: event.replyToMessageId }
+                : {}),
             },
           ),
         });

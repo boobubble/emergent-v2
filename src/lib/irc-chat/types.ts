@@ -28,6 +28,8 @@ export type IrcChatMessage = {
   ts: number;
   pending?: boolean;
   failed?: boolean;
+  /** References another message in the same room (gateway metadata, not IRC text). */
+  replyToMessageId?: string;
 };
 
 export type IrcChatPresenceEvent = {

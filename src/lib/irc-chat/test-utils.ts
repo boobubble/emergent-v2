@@ -110,6 +110,7 @@ export function publicMessageFrame(opts: {
   nick: string;
   userId: string;
   text: string;
+  replyToMessageId?: string;
 }): string {
   return JSON.stringify({ type: "message", ...opts });
 }
@@ -120,6 +121,7 @@ export function publicSentFrame(opts: {
   nick: string;
   userId: string;
   text: string;
+  replyToMessageId?: string;
 }): string {
   return JSON.stringify({ type: "message.sent", ...opts });
 }

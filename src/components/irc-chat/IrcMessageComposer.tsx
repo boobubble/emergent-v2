@@ -4,6 +4,7 @@ import {
   Send,
   Smile,
   Sparkles,
+  X,
   Youtube,
 } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -16,7 +17,7 @@ import { useAppSettings } from "@/lib/app-settings";
 import { mergeMediaConfig } from "@/lib/media-providers-config";
 import { cn } from "@/lib/utils";
 import { useIrcChatState } from "@/lib/irc-chat";
-import type { IrcActiveView } from "./irc-chat-types";
+import type { IrcActiveView, IrcComposerReplyTarget } from "./irc-chat-types";
 import { dmComposerPlaceholder, roomComposerPlaceholder } from "./irc-chat-ui";
 import "@/components/chat/message-input.css";
 import "./irc-message-input.css";
@@ -26,6 +27,8 @@ type IrcMessageComposerProps = {
   view: IrcActiveView;
   shell?: "embedded" | "footer";
   className?: string;
+  replyingTo?: IrcComposerReplyTarget | null;
+  onCancelReply?: () => void;
 };
 
 function ComposerIconBtn({
@@ -64,6 +67,8 @@ export function IrcMessageComposer({
   view,
   shell = "embedded",
   className,
+  replyingTo,
+  onCancelReply,
 }: IrcMessageComposerProps) {
   const state = useIrcChatState();
   const { raw: appRaw } = useAppSettings();
@@ -182,8 +187,35 @@ export function IrcMessageComposer({
 
   const pickerOpen = showEmoji || showGiphy || showYoutube;
 
+  const showReplyBanner =
+    view.kind === "room" &&
+    replyingTo &&
+    replyingTo.roomId === view.roomId;
+
   const bar = (
     <div ref={pickerAnchorRef} className="relative min-w-0 flex-1">
+      {showReplyBanner ? (
+        <div className="irc-composer-reply-banner mb-2 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2">
+          <div className="flex items-start gap-2">
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-semibold text-foreground">
+                Replying to {replyingTo.authorNick}
+              </p>
+              <p className="line-clamp-2 text-[11px] text-muted-foreground">
+                {replyingTo.textPreview}
+              </p>
+            </div>
+            <button
+              type="button"
+              className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+              onClick={onCancelReply}
+              aria-label="Cancel reply"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      ) : null}
       <div
         className={cn(
           "chat-composer-glow chat-composer-bar irc-composer-bar-surface group relative flex min-w-0 items-end gap-0.5 rounded-[1.35rem] border border-border/70 pb-0 pt-1 pr-0.5 shadow-[0_4px_20px_-10px_hsl(var(--foreground)/0.12)] backdrop-blur-md transition-[border-color,box-shadow] duration-150",
