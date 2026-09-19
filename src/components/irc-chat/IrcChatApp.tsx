@@ -38,6 +38,7 @@ import { IrcMembersPanel } from "./IrcMembersPanel";
 import { IrcMessageComposer } from "./IrcMessageComposer";
 import { IrcMessageList } from "./IrcMessageList";
 import { IrcMobileNav } from "./IrcMobileNav";
+import { IrcMobileRadioBar } from "./IrcMobileRadioBar";
 import { IrcMobileDmDock } from "./IrcMobileDmDock";
 import type { IrcActiveView, IrcComposerReplyTarget } from "./irc-chat-types";
 import { buildIrcMessageReplyPreview } from "@/lib/irc-chat/reply";
@@ -53,6 +54,7 @@ function IrcChatCenter({
   onBack,
   showHeader = true,
   showComposer = true,
+  showMobileRadio = false,
   onMinimizeDm,
   onSend,
   onSendSticker,
@@ -70,6 +72,7 @@ function IrcChatCenter({
   onBack?: () => void;
   showHeader?: boolean;
   showComposer?: boolean;
+  showMobileRadio?: boolean;
   onMinimizeDm?: () => void;
   onSend: (text: string) => void;
   onSendSticker?: (stickerId: string) => void;
@@ -119,6 +122,7 @@ function IrcChatCenter({
           }
         />
       </div>
+      {showMobileRadio ? <IrcMobileRadioBar /> : null}
       {showComposer ? (
         <IrcMessageComposer
           onSend={onSend}
@@ -477,6 +481,7 @@ function IrcChatAppShell() {
               view={activeView}
               showHeader={showCenterHeader}
               showComposer={!isDesktopShell}
+              showMobileRadio={showMobileNav}
               onSend={handleSend}
               replyingTo={replyingTo}
               onCancelReply={() => setReplyingTo(null)}
@@ -575,6 +580,7 @@ function IrcChatAppShell() {
                   selfNick={selfNick}
                   onDm={openDm}
                   onClose={() => setMembersOpen(false)}
+                  sheetActive={membersOpen}
                   className="w-full border-l-0 shadow-none"
                 />
               )}
@@ -597,6 +603,7 @@ function IrcChatAppShell() {
                 selfNick={selfNick}
                 onDm={openDm}
                 onClose={() => setMembersOpen(false)}
+                sheetActive={membersOpen}
                 className="w-full border-l-0 shadow-none"
               />
             )}

@@ -1249,3 +1249,28 @@
   min-height: 9rem;
   padding: 1.5rem 1rem;
 }
+
+/* —— Mobile members / DM info / radio (Phase 1G-D) —— */
+
+[data-irc-chat-app] .irc-members-panel--sheet,
+[data-irc-chat-app] .irc-dm-info-panel--sheet {
+  background: color-mix(in oklab, hsl(230 38% 9%) 94%, var(--background) 6%);
+}
+
+[data-irc-chat-app] .irc-mobile-members-sheet {
+  background: color-mix(in oklab, hsl(230 38% 9%) 96%, var(--background) 4%);
+}
+
+[data-irc-chat-app] .irc-member-quick-card {
+  color: var(--foreground);
+}
+
+[data-irc-chat-app] .irc-radio-widget-card--drawer {
+  max-height: 132px;
+  padding: 0.5rem 0.55rem;
+  background: color-mix(in oklab, hsl(230 38% 11%) 92%, var(--primary) 8%);
+}
+
+[data-irc-chat-app] .irc-mobile-radio-bar {
+  padding-bottom: max(0.35rem, env(safe-area-inset-bottom, 0px));
+}

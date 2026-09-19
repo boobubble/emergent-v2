@@ -1,5 +1,9 @@
-import { useMemo, useState } from "react";
-import { MessageCircle, Search, User, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowLeft, ChevronRight, MessageCircle, Search, User, X } from "lucide-react";
+import {
+  formatMembersInRoomCount,
+  memberProfileBioSnippet,
+} from "@/lib/irc-chat/irc-chat-mobile-members";
 import { IrcProfileAvatarTrigger } from "./IrcChatSettingsMenu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -25,6 +29,7 @@ type IrcMembersPanelProps = {
   selfNick: string | null;
   onDm: (nick: string) => void;
   onClose?: () => void;
+  sheetActive?: boolean;
   forceDesktopColumn?: boolean;
   className?: string;
 };
@@ -99,6 +104,7 @@ function MemberQuickActions({
   onDm,
   onProfile,
   onClose,
+  bioSnippet,
 }: {
   member: IrcChatMember;
   profile: RemoteProfile | null;
@@ -106,6 +112,7 @@ function MemberQuickActions({
   onDm: (nick: string) => void;
   onProfile: (userId: string) => void;
   onClose: () => void;
+  bioSnippet?: string | null;
 }) {
   const profileId = profileUserIdForMember(member);
   const secondary = memberSecondaryLine(member, profile);
@@ -118,6 +125,11 @@ function MemberQuickActions({
       <p className="mt-3 max-w-full truncate text-sm font-bold text-foreground">{member.nick}</p>
       {secondary ? (
         <p className="mt-0.5 max-w-full truncate text-xs text-muted-foreground">{secondary}</p>
+      ) : null}
+      {bioSnippet ? (
+        <p className="mt-2 max-w-full line-clamp-3 text-[11px] leading-snug text-muted-foreground">
+          {bioSnippet}
+        </p>
       ) : null}
       {isSelf ? (
         <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
@@ -165,12 +177,16 @@ function OnlineMemberRow({
   isSelf,
   onDm,
   onProfile,
+  sheetMode,
+  onOpenContext,
 }: {
   member: IrcChatMember;
   profile: RemoteProfile | null;
   isSelf: boolean;
   onDm: (nick: string) => void;
   onProfile: (userId: string) => void;
+  sheetMode?: boolean;
+  onOpenContext?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const hue = nickAvatarHue(member.nick);
@@ -178,75 +194,88 @@ function OnlineMemberRow({
   const secondary = memberSecondaryLine(member, profile);
   const avatarUrl = profile?.avatar_url ?? undefined;
 
-  return (
-    <li className="irc-member-row irc-member-row--interactive group">
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <button
-            type="button"
-            className="flex min-w-0 flex-1 items-center gap-2 rounded-lg py-0.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary/35"
-            aria-label={`${member.nick}${secondary ? `, ${secondary}` : ""}`}
-          >
-            <MemberAvatar label={member.nick} hue={hue} avatarUrl={avatarUrl} />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-[13px] font-semibold leading-tight text-foreground">
-                {member.nick}
-                {isSelf ? (
-                  <span className="ml-1.5 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">
-                    You
-                  </span>
-                ) : null}
-              </p>
-              {secondary ? (
-                <p className="truncate text-[11px] text-muted-foreground">{secondary}</p>
-              ) : null}
-            </div>
-          </button>
-        </PopoverTrigger>
-        <PopoverContent
-          side="left"
-          align="start"
-          className="irc-member-quick-popover w-56 p-3"
-          onOpenAutoFocus={(e) => e.preventDefault()}
-        >
-          <MemberQuickActions
-            member={member}
-            profile={profile}
-            isSelf={isSelf}
-            onDm={onDm}
-            onProfile={onProfile}
-            onClose={() => setOpen(false)}
-          />
-        </PopoverContent>
-      </Popover>
-      <div
-        className="flex shrink-0 items-center gap-0.5 opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
-      >
-        {profileId ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 rounded-lg"
-            aria-label={`View profile for ${member.nick}`}
-            onClick={() => onProfile(profileId)}
-          >
-            <User className="h-3.5 w-3.5" />
-          </Button>
-        ) : null}
-        {!isSelf ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 rounded-lg text-muted-foreground hover:text-primary"
-            aria-label={`Direct message ${member.nick}`}
-            onClick={() => onDm(member.nick)}
-          >
-            <MessageCircle className="h-3.5 w-3.5" />
-          </Button>
+  const rowButton = (
+    <button
+      type="button"
+      className="flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-lg py-1 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary/35"
+      aria-label={`${member.nick}${secondary ? `, ${secondary}` : ""}`}
+      onClick={sheetMode ? onOpenContext : undefined}
+    >
+      <MemberAvatar label={member.nick} hue={hue} avatarUrl={avatarUrl} />
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[13px] font-semibold leading-tight text-foreground">
+          {member.nick}
+          {isSelf ? (
+            <span className="ml-1.5 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">
+              You
+            </span>
+          ) : null}
+        </p>
+        {secondary ? (
+          <p className="truncate text-[11px] text-muted-foreground">{secondary}</p>
         ) : null}
       </div>
+      {sheetMode ? (
+        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+      ) : null}
+    </button>
+  );
+
+  return (
+    <li className="irc-member-row irc-member-row--interactive group">
+      {sheetMode ? (
+        rowButton
+      ) : (
+        <>
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>{rowButton}</PopoverTrigger>
+            <PopoverContent
+              side="left"
+              align="start"
+              className="irc-member-quick-popover w-56 p-3"
+              onOpenAutoFocus={(e) => e.preventDefault()}
+            >
+              <MemberQuickActions
+                member={member}
+                profile={profile}
+                isSelf={isSelf}
+                onDm={onDm}
+                onProfile={onProfile}
+                onClose={() => setOpen(false)}
+                bioSnippet={memberProfileBioSnippet(profile)}
+              />
+            </PopoverContent>
+          </Popover>
+          <div
+            className="flex shrink-0 items-center gap-0.5 opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
+          >
+            {profileId ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-lg"
+                aria-label={`View profile for ${member.nick}`}
+                onClick={() => onProfile(profileId)}
+              >
+                <User className="h-3.5 w-3.5" />
+              </Button>
+            ) : null}
+            {!isSelf ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-lg text-muted-foreground hover:text-primary"
+                aria-label={`Direct message ${member.nick}`}
+                onClick={() => onDm(member.nick)}
+              >
+                <MessageCircle className="h-3.5 w-3.5" />
+              </Button>
+            ) : null}
+          </div>
+        </>
+      )}
     </li>
   );
 }
@@ -305,6 +334,7 @@ export function IrcMembersPanel({
   selfNick,
   onDm,
   onClose,
+  sheetActive = true,
   forceDesktopColumn = false,
   className,
 }: IrcMembersPanelProps) {
@@ -312,7 +342,17 @@ export function IrcMembersPanel({
   const { openProfile } = useProfilePopup();
   const { profiles: directoryProfiles, loading: directoryLoading } = useRemoteProfileDirectory();
   const [query, setQuery] = useState("");
+  const [contextMember, setContextMember] = useState<IrcChatMember | null>(null);
   const members = state.members[roomId] ?? [];
+
+  useEffect(() => {
+    setContextMember(null);
+    setQuery("");
+  }, [roomId]);
+
+  useEffect(() => {
+    if (!sheetActive) setContextMember(null);
+  }, [sheetActive]);
 
   const onlineFiltered = useMemo(() => {
     const filtered = filterIrcOnlineMembers(members, query, directoryProfiles);
@@ -330,8 +370,22 @@ export function IrcMembersPanel({
   );
 
   const inSheet = Boolean(onClose);
-  const roomCountLabel =
-    members.length === 1 ? "1 in room" : `${members.length} in room`;
+  const roomCountLabel = formatMembersInRoomCount(members.length);
+
+  const handleDm = (nick: string) => {
+    onDm(nick);
+    onClose?.();
+    setContextMember(null);
+  };
+
+  const contextProfile = contextMember
+    ? directoryProfileForMember(contextMember, directoryProfiles)
+    : null;
+  const contextIsSelf = Boolean(
+    contextMember &&
+      selfNick &&
+      contextMember.nick.toLowerCase() === selfNick.toLowerCase(),
+  );
 
   return (
     <aside
@@ -340,19 +394,62 @@ export function IrcMembersPanel({
       className={cn(
         "irc-members-panel flex h-full shrink-0 flex-col overflow-hidden border-l border-border/60",
         !forceDesktopColumn && !inSheet && "hidden lg:flex",
-        inSheet && "w-full max-w-none border-l-0 shadow-none",
+        inSheet && "irc-members-panel--sheet w-full max-w-none border-l-0 shadow-none",
         className,
       )}
       style={forceDesktopColumn ? { display: "flex" } : undefined}
     >
       <div className="flex h-full min-h-0 flex-col overflow-hidden">
+        {contextMember && inSheet ? (
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            <header className="irc-members-header shrink-0 border-b border-border/50 px-2 pb-2 pt-2">
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setContextMember(null)}
+                  className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-white/5 hover:text-foreground"
+                  aria-label="Back to members list"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </button>
+                <h2 className="min-w-0 flex-1 truncate text-sm font-bold text-foreground">
+                  {contextMember.nick}
+                </h2>
+                {onClose ? (
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-white/5 hover:text-foreground"
+                    aria-label="Close members panel"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                ) : null}
+              </div>
+            </header>
+            <ScrollArea className="min-h-0 flex-1">
+              <div className="px-4 py-6">
+                <MemberQuickActions
+                  member={contextMember}
+                  profile={contextProfile}
+                  isSelf={contextIsSelf}
+                  onDm={handleDm}
+                  onProfile={openProfile}
+                  onClose={() => setContextMember(null)}
+                  bioSnippet={memberProfileBioSnippet(contextProfile)}
+                />
+              </div>
+            </ScrollArea>
+          </div>
+        ) : (
+          <>
         <header className="irc-members-header shrink-0 border-b border-border/50 px-3 pb-2 pt-2.5">
           <div className="flex items-start gap-2">
             {onClose ? (
               <button
                 type="button"
                 onClick={onClose}
-                className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground lg:hidden"
+                className="mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
                 aria-label="Close members panel"
               >
                 <X className="h-4 w-4" />
@@ -423,8 +520,10 @@ export function IrcMembersPanel({
                       member={member}
                       profile={profile}
                       isSelf={isSelf}
-                      onDm={onDm}
+                      onDm={handleDm}
                       onProfile={openProfile}
+                      sheetMode={inSheet}
+                      onOpenContext={() => setContextMember(member)}
                     />
                   );
                 })}
@@ -453,6 +552,8 @@ export function IrcMembersPanel({
             )}
           </div>
         </ScrollArea>
+          </>
+        )}
       </div>
     </aside>
   );

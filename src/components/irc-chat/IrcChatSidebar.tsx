@@ -433,7 +433,7 @@ export function IrcChatSidebar({
             className="irc-radio-slot shrink-0 border-t border-border/45 px-2 py-2"
             data-irc-radio-slot=""
           >
-            <IrcChatRadioWidget />
+            <IrcChatRadioWidget variant={onClose ? "drawer" : "sidebar"} />
           </div>
 
           <div className="sidebar-bottom-panel shrink-0 border-t border-border/40 bg-card/20 px-1.5 pt-1 pb-1.5 backdrop-blur-sm">

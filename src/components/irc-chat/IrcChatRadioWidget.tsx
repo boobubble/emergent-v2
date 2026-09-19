@@ -4,19 +4,35 @@ import { Pause, Play, Radio, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useChatRadioSource } from "@/lib/dj-store";
 import { djMediaControlsRef, useDjListenerPrefs } from "@/components/chat/DjFooter";
+import {
+  formatIrcRadioNowPlaying,
+  formatIrcRadioSubtitle,
+  ircRadioLiveAccessibleLabel,
+} from "@/lib/irc-chat/irc-chat-radio-present";
 import { cn } from "@/lib/utils";
 
 /**
  * IRC sidebar radio presentation — controls the shared DjPlayerHost sink only.
  */
-export function IrcChatRadioWidget({ className }: { className?: string }) {
+export function IrcChatRadioWidget({
+  className,
+  variant = "sidebar",
+}: {
+  className?: string;
+  variant?: "sidebar" | "drawer";
+}) {
+  const cardClass = cn(
+    "irc-radio-widget-card",
+    variant === "drawer" && "irc-radio-widget-card--drawer",
+    className,
+  );
   const { ready, radio } = useChatRadioSource();
   const prefs = useDjListenerPrefs();
   const volumeRef = useRef<HTMLDivElement>(null);
 
   if (!ready) {
     return (
-      <div className={cn("irc-radio-widget-card", className)} data-irc-radio-widget="">
+      <div className={cardClass} data-irc-radio-widget="">
         <p className="irc-radio-widget-title">
           <Radio className="h-3.5 w-3.5" aria-hidden />
           Yaarzo Radio
@@ -28,7 +44,7 @@ export function IrcChatRadioWidget({ className }: { className?: string }) {
 
   if (!radio.visible) {
     return (
-      <div className={cn("irc-radio-widget-card", className)} data-irc-radio-widget="">
+      <div className={cardClass} data-irc-radio-widget="">
         <p className="irc-radio-widget-title">
           <Radio className="h-3.5 w-3.5" aria-hidden />
           Yaarzo Radio
@@ -40,10 +56,19 @@ export function IrcChatRadioWidget({ className }: { className?: string }) {
 
   const { state } = radio;
   const muted = state.allowListenerMute && prefs.listenerMuted;
-  const trackTitle = radio.trackLabel ?? state.track?.title ?? null;
-  const djLabel = state.djName?.trim() || null;
-  const showLive = radio.isLive && state.track;
+  const showLive = radio.isLive && Boolean(state.track);
+  const trackTitle = formatIrcRadioNowPlaying({
+    trackLabel: radio.trackLabel,
+    trackTitle: state.track?.title,
+    isLive: radio.isLive,
+    hasTrack: Boolean(state.track),
+  });
+  const djLabel = formatIrcRadioSubtitle({
+    djName: state.djName,
+    stationName: radio.stationName,
+  });
   const canPlayPause = Boolean(state.playing && state.track);
+  const liveA11y = ircRadioLiveAccessibleLabel(showLive, prefs.listenerPaused);
 
   const togglePlayPause = () => {
     const willPause = !prefs.listenerPaused;
@@ -53,17 +78,19 @@ export function IrcChatRadioWidget({ className }: { className?: string }) {
   };
 
   return (
-    <div className={cn("irc-radio-widget-card", className)} data-irc-radio-widget="">
+    <div className={cardClass} data-irc-radio-widget="">
       <div className="flex items-start justify-between gap-2">
         <p className="irc-radio-widget-title min-w-0 flex-1">
           <Radio className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden />
           <span className="truncate">Yaarzo Radio</span>
         </p>
         {showLive && !prefs.listenerPaused ? (
-          <span className="irc-radio-live-badge shrink-0">● LIVE</span>
+          <span className="irc-radio-live-badge shrink-0" title={liveA11y}>
+            <span aria-hidden>●</span> LIVE
+          </span>
         ) : (
           <span className="shrink-0 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
-            Radio
+            {liveA11y}
           </span>
         )}
       </div>
@@ -72,16 +99,12 @@ export function IrcChatRadioWidget({ className }: { className?: string }) {
         <p className="text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
           Now playing
         </p>
-        <p className="truncate text-[11px] font-semibold text-foreground" title={trackTitle ?? undefined}>
-          {trackTitle ?? (showLive ? "Live stream" : "Off air")}
+        <p className="truncate text-[11px] font-semibold text-foreground" title={trackTitle}>
+          {trackTitle}
         </p>
         {djLabel ? (
           <p className="truncate text-[10px] text-muted-foreground" title={djLabel}>
             {djLabel}
-          </p>
-        ) : radio.stationName ? (
-          <p className="truncate text-[10px] text-muted-foreground" title={radio.stationName}>
-            {radio.stationName}
           </p>
         ) : null}
       </div>
