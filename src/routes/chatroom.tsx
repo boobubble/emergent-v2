@@ -1,14 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { RouteErrorBoundary } from "@/components/AppErrorBoundary";
+import { CodyChatShell } from "@/components/codychat/CodyChatShell";
 import { useAuth } from "@/lib/auth-store";
 import { useServerFn } from "@tanstack/react-start";
 import { getCodyChatSsoUrl } from "@/lib/codychat-sso.functions";
-import { isYaarzoLogoutMessage } from "@/lib/codychat-sso-core";
+import { isYaarzoLogoutMessage } from "@/lib/codychat-sso-messages";
 import { loadRouteSeo, headFromRouteSeo } from "@/lib/seo";
 import { consumeChatFreshEntry, isChatFreshEntryPending } from "@/lib/auth-entry";
 
-const CHAT_ORIGIN = "https://chat.yaarzo.com";
 const YAARZO_ORIGINS = ["https://yaarzo.com", "https://www.yaarzo.com"] as const;
 
 function CodyChatPage() {
@@ -58,7 +58,7 @@ function CodyChatPage() {
 
   if (ssoError) {
     return (
-      <div className="fixed inset-0 z-50 flex h-dvh w-screen items-center justify-center bg-background px-6">
+      <div className="flex h-dvh w-full items-center justify-center bg-background px-6">
         <div className="max-w-md text-center">
           <div className="text-lg font-semibold">Chat unavailable</div>
           <p className="mt-2 text-sm text-muted-foreground">{ssoError}</p>
@@ -67,27 +67,12 @@ function CodyChatPage() {
     );
   }
 
-  if (!chatUrl) {
-    return (
-      <div className="fixed inset-0 z-50 flex h-dvh w-screen items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="text-lg font-semibold">Opening Chatroom?</div>
-          <div className="mt-2 text-sm text-muted-foreground">
-            Connecting you to Yaarzo Chat.
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <iframe
-      ref={iframeRef}
-      src={chatUrl}
-      title="Yaarzo Chat"
-      className="fixed inset-0 z-50 h-dvh w-screen border-0"
-      allow="camera; microphone; autoplay; clipboard-write"
-      onLoad={() => {
+    <CodyChatShell
+      chatUrl={chatUrl}
+      loading={!chatUrl}
+      iframeRef={iframeRef}
+      onIframeLoad={() => {
         consumeChatFreshEntry();
       }}
     />

@@ -1,0 +1,547 @@
+[data-codychat-shell] {
+  --cody-shell-bg: color-mix(in oklab, #0b0e14 88%, var(--background) 12%);
+  --cody-panel-bg: color-mix(in oklab, #121826 92%, var(--card) 8%);
+  --cody-panel-elevated: color-mix(in oklab, #1a2236 90%, var(--card) 10%);
+  --cody-panel-border: color-mix(in oklab, #8a3ffc 14%, var(--border) 86%);
+  --cody-accent: color-mix(in oklab, #8a3ffc 78%, #ec4899 22%);
+  --cody-sidebar-w: 252px;
+  --cody-members-w: 268px;
+  --cody-profile-w: 300px;
+  --cody-toolbar-h: 2.5rem;
+  background: var(--cody-shell-bg);
+  color: var(--foreground);
+}
+
+[data-codychat-shell] [data-cody-column="sidebar"][data-sidebar-open="true"] {
+  width: var(--cody-sidebar-w) !important;
+  max-width: var(--cody-sidebar-w) !important;
+}
+
+[data-codychat-shell] .cody-sidebar-panel {
+  background: var(--cody-panel-bg);
+  border: 1px solid var(--cody-panel-border);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+@media (min-width: 768px) {
+  [data-codychat-shell] .cody-sidebar-panel {
+    border-radius: 0;
+    border-top: 0;
+    border-bottom: 0;
+    border-left: 0;
+  }
+}
+
+[data-codychat-shell] .cody-brand-block {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.625rem 0.75rem;
+}
+
+[data-codychat-shell] .cody-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.125rem;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--muted-foreground);
+}
+
+[data-codychat-shell] .cody-status-dot {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--muted-foreground) 55%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--muted-foreground) 18%, transparent);
+}
+
+[data-codychat-shell] .cody-status-dot-live {
+  background: color-mix(in oklab, var(--chart-2, oklch(0.72 0.17 145)) 90%, white 10%);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--chart-2, oklch(0.72 0.17 145)) 35%, transparent);
+}
+
+[data-codychat-shell] .cody-nav-row {
+  display: flex;
+  width: 100%;
+  min-height: 2.125rem;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 8px;
+  padding: 0.3125rem 0.5rem;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+  color: color-mix(in oklab, var(--foreground) 88%, var(--muted-foreground) 12%);
+  transition:
+    background 0.12s ease,
+    color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+[data-codychat-shell] .cody-nav-row:hover {
+  background: color-mix(in oklab, var(--foreground) 5%, transparent);
+}
+
+[data-codychat-shell] .cody-nav-row:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--ring) 80%, transparent);
+  outline-offset: 1px;
+}
+
+[data-codychat-shell] .cody-nav-row-active {
+  background: color-mix(in oklab, var(--primary) 12%, transparent);
+  color: var(--foreground);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--primary) 20%, transparent);
+}
+
+[data-codychat-shell] .cody-nav-row-active svg {
+  color: var(--primary);
+}
+
+[data-codychat-shell] .cody-nav-badge {
+  margin-left: auto;
+  min-width: 1.125rem;
+  border-radius: 999px;
+  background: var(--primary);
+  padding: 0 0.35rem;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.25rem;
+  color: var(--primary-foreground);
+}
+
+[data-codychat-shell] .cody-section-label {
+  padding: 0.375rem 0.5rem 0.125rem;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+[data-codychat-shell] .cody-center-column {
+  background: color-mix(in oklab, var(--background) 94%, black 6%);
+}
+
+[data-codychat-shell] .cody-center-frame {
+  border: 0;
+  border-radius: 0;
+  background: var(--background);
+  overflow: hidden;
+  box-shadow: none;
+}
+
+[data-codychat-shell] .cody-tablet-toolbar {
+  min-height: var(--cody-toolbar-h);
+  border-bottom: 1px solid var(--cody-panel-border);
+  background: color-mix(in oklab, var(--cody-panel-bg) 90%, var(--background) 10%);
+}
+
+[data-codychat-shell] .cody-sidebar-fab {
+  position: absolute;
+  left: 0.5rem;
+  top: 0.5rem;
+  z-index: 15;
+  height: 2rem;
+  width: 2rem;
+  border-radius: 8px;
+  border: 1px solid var(--cody-panel-border);
+  background: color-mix(in oklab, var(--cody-panel-elevated) 85%, transparent);
+  box-shadow: 0 4px 16px -6px color-mix(in oklab, black 45%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+[data-codychat-shell] .cody-sidebar-fab:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+[data-codychat-shell] .cody-members-panel {
+  width: var(--cody-members-w);
+  max-width: var(--cody-members-w);
+  background: var(--cody-panel-bg);
+  border-left: 1px solid var(--cody-panel-border);
+}
+
+[data-codychat-shell] .cody-profile-panel {
+  width: var(--cody-profile-w);
+  max-width: var(--cody-profile-w);
+  background: var(--cody-panel-bg);
+  border-left: 1px solid var(--cody-panel-border);
+}
+
+[data-codychat-shell] .cody-members-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid color-mix(in oklab, var(--cody-panel-border) 80%, transparent);
+  padding: 0.625rem 0.75rem;
+}
+
+[data-codychat-shell] .cody-member-search,
+[data-codychat-shell] .cody-sidebar-search {
+  border-radius: 10px;
+  border-color: var(--cody-panel-border);
+  background: color-mix(in oklab, var(--background) 35%, transparent);
+}
+
+[data-codychat-shell] .cody-kbd-hint {
+  border-radius: 6px;
+  border: 1px solid var(--cody-panel-border);
+  padding: 0.1rem 0.35rem;
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  line-height: 1.2;
+}
+
+[data-codychat-shell] .cody-mini-profile {
+  display: flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 12px;
+  border: 1px solid var(--cody-panel-border);
+  background: color-mix(in oklab, var(--background) 30%, transparent);
+  padding: 0.375rem 0.5rem;
+  transition: background 0.12s ease;
+}
+
+[data-codychat-shell] .cody-mini-profile:hover {
+  background: color-mix(in oklab, var(--foreground) 5%, transparent);
+}
+
+[data-codychat-shell] .cody-nav-badge-live {
+  background: color-mix(in oklab, #ef4444 85%, #8a3ffc 15%);
+}
+
+[data-codychat-shell] .cody-room-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--cody-panel-border);
+  background: color-mix(in oklab, var(--cody-panel-bg) 88%, var(--background) 12%);
+  padding: 0.5rem 0.75rem;
+}
+
+[data-codychat-shell] .cody-room-header-compact {
+  padding-top: 0.375rem;
+  padding-bottom: 0.375rem;
+}
+
+[data-codychat-shell] .cody-room-header-main {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 12rem;
+  align-items: flex-start;
+  gap: 0.625rem;
+}
+
+[data-codychat-shell] .cody-room-avatar {
+  display: grid;
+  height: 2.25rem;
+  width: 2.25rem;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 12px;
+  border: 1px solid color-mix(in oklab, var(--cody-accent) 35%, transparent);
+  background: linear-gradient(
+    145deg,
+    color-mix(in oklab, var(--cody-accent) 22%, transparent),
+    color-mix(in oklab, var(--background) 70%, transparent)
+  );
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--foreground);
+}
+
+[data-codychat-shell] .cody-room-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.25rem;
+}
+
+[data-codychat-shell] .cody-room-icon-btn {
+  height: 2rem;
+  width: 2rem;
+  border-radius: 10px;
+  color: var(--muted-foreground);
+}
+
+[data-codychat-shell] .cody-join-voice-btn {
+  border-radius: 999px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--cody-accent) 92%, white 8%),
+    color-mix(in oklab, #ec4899 70%, var(--cody-accent) 30%)
+  );
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--cody-accent) 35%, transparent),
+    0 8px 24px -12px color-mix(in oklab, var(--cody-accent) 55%, transparent);
+  color: white;
+}
+
+[data-codychat-shell] .cody-trending-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid color-mix(in oklab, var(--cody-panel-border) 65%, transparent);
+  background: color-mix(in oklab, var(--cody-panel-bg) 75%, transparent);
+  padding: 0.375rem 0.75rem;
+  min-width: 0;
+}
+
+[data-codychat-shell] .cody-trending-label {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+[data-codychat-shell] .cody-trending-scroll {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  gap: 0.375rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+[data-codychat-shell] .cody-trending-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+[data-codychat-shell] .cody-trend-chip {
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--cody-accent) 22%, var(--border));
+  background: color-mix(in oklab, var(--background) 40%, transparent);
+  padding: 0.2rem 0.55rem;
+  font-size: 10px;
+  font-weight: 600;
+  color: color-mix(in oklab, var(--foreground) 90%, var(--muted-foreground));
+}
+
+[data-codychat-shell] .cody-member-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 10px;
+  padding: 0.3125rem 0.375rem;
+  transition: background 0.12s ease;
+}
+
+[data-codychat-shell] .cody-member-row:hover {
+  background: color-mix(in oklab, var(--foreground) 5%, transparent);
+}
+
+[data-codychat-shell] .cody-member-online-dot {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  height: 0.55rem;
+  width: 0.55rem;
+  border-radius: 999px;
+  border: 2px solid var(--cody-panel-bg);
+  background: color-mix(in oklab, var(--chart-2, oklch(0.72 0.17 145)) 90%, white);
+}
+
+[data-codychat-shell] .cody-member-section-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  padding: 0.25rem 0.125rem;
+}
+
+[data-codychat-shell] .cody-radio-card {
+  border-radius: 14px;
+  border: 1px solid var(--cody-panel-border);
+  background: color-mix(in oklab, var(--cody-panel-elevated) 80%, transparent);
+  padding: 0.625rem 0.75rem;
+}
+
+[data-codychat-shell] .cody-radio-card-compact {
+  padding: 0.5rem 0.625rem;
+}
+
+[data-codychat-shell] .cody-radio-disc {
+  display: grid;
+  height: 2rem;
+  width: 2rem;
+  place-items: center;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--cody-accent) 18%, transparent);
+  color: var(--primary);
+}
+
+[data-codychat-shell] .cody-radio-cta,
+[data-codychat-shell] .cody-competition-cta {
+  display: inline-flex;
+  margin-top: 0.5rem;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+[data-codychat-shell] .cody-competition-card {
+  border-radius: 14px;
+  border: 1px solid var(--cody-panel-border);
+  background: color-mix(in oklab, var(--background) 35%, transparent);
+  padding: 0.625rem 0.75rem;
+}
+
+[data-codychat-shell] .cody-live-pill {
+  border-radius: 999px;
+  background: color-mix(in oklab, #ef4444 20%, transparent);
+  padding: 0.125rem 0.45rem;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #fca5a5;
+}
+
+[data-codychat-shell] .cody-highlights-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.375rem;
+}
+
+[data-codychat-shell] .cody-highlight-tile {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: 12px;
+  border: 1px solid var(--cody-panel-border);
+  background: color-mix(in oklab, var(--background) 30%, transparent);
+  padding: 0.45rem 0.5rem;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+
+[data-codychat-shell] .cody-highlight-tile:hover {
+  border-color: color-mix(in oklab, var(--cody-accent) 30%, var(--border));
+  background: color-mix(in oklab, var(--foreground) 4%, transparent);
+}
+
+[data-codychat-shell] .cody-profile-avatar-ring {
+  border-radius: 999px;
+  padding: 3px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--cody-accent) 70%, transparent),
+    color-mix(in oklab, #ec4899 55%, transparent)
+  );
+  box-shadow: 0 0 24px -8px color-mix(in oklab, var(--cody-accent) 55%, transparent);
+}
+
+[data-codychat-shell] .cody-brand-footer {
+  border-top: 1px solid var(--cody-panel-border);
+  padding-top: 0.75rem;
+  text-align: center;
+}
+
+[data-codychat-shell] .cody-stat-chip {
+  flex: 1;
+  min-width: 0;
+  border-radius: 8px;
+  border: 1px solid var(--cody-panel-border);
+  background: color-mix(in oklab, var(--background) 55%, transparent);
+  padding: 0.375rem 0.5rem;
+  text-align: center;
+}
+
+[data-codychat-shell] .cody-stat-chip dt {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+[data-codychat-shell] .cody-stat-chip dd {
+  margin-top: 0.125rem;
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--foreground);
+}
+
+[data-codychat-shell] .cody-shortcut-btn {
+  display: flex;
+  min-height: 2.5rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  border-radius: 10px;
+  border: 1px solid var(--cody-panel-border);
+  background: color-mix(in oklab, var(--background) 40%, transparent);
+  padding: 0.375rem 0.25rem;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+[data-codychat-shell] .cody-shortcut-btn:hover {
+  background: color-mix(in oklab, var(--foreground) 6%, transparent);
+  color: var(--foreground);
+  border-color: color-mix(in oklab, var(--primary) 25%, var(--border));
+}
+
+[data-codychat-shell] .cody-shortcut-btn:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+[data-codychat-shell] .cody-mobile-bar {
+  min-height: var(--cody-toolbar-h);
+  border-bottom: 1px solid var(--cody-panel-border);
+  background: color-mix(in oklab, var(--cody-panel-bg) 92%, var(--background) 8%);
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+[data-codychat-shell] .cody-iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
+  border: 0;
+  background: var(--background);
+}
+
+[data-codychat-shell] .cody-scroll-area [data-radix-scroll-area-viewport] {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--muted-foreground) 35%, transparent) transparent;
+}
+
+@media (min-width: 1024px) {
+  [data-codychat-shell] .cody-center-column {
+    border-right: 1px solid var(--cody-panel-border);
+  }
+}
+
+@media (max-width: 767px) {
+  [data-codychat-shell] {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  [data-codychat-shell] .cody-center-frame {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
