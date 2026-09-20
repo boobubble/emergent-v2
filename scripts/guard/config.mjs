@@ -269,6 +269,9 @@ export const MODULES = {
     paths: [
       "src/routes/chatroom.tsx",
       "src/routes/chatrooms.tsx",
+      "src/lib/codychat-sso-core.ts",
+      "src/lib/codychat-sso.functions.ts",
+      "src/lib/codychat-sso.test.ts",
       "src/components/chat/",
       "src/lib/chat-store.tsx",
       "src/lib/chat-optimistic.ts",
@@ -322,6 +325,7 @@ export const MODULES = {
       "supabase/migrations/20260909120000_guest_dm.sql",
     ],
     tests: [
+      "src/lib/codychat-sso.test.ts",
       "src/lib/desktop-app-layout.test.ts",
       "src/lib/guest-chat.test.ts",
       "src/lib/chat-provider-safety.test.ts",

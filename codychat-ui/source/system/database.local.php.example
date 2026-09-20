@@ -1,0 +1,12 @@
+<?php
+/**
+ * Copy to database.local.php on the CodyChat server (not committed).
+ * Or set BOOM_DHOST, BOOM_DUSER, BOOM_DPASS, BOOM_DNAME in the web server environment.
+ *
+ * SSO env (/etc/yaarzo/codychat-sso.env) may also define:
+ * CODYCHAT_SSO_SECRET, YAARZO_PARENT_ORIGINS (comma-separated https origins)
+ */
+define('BOOM_DHOST', 'localhost');
+define('BOOM_DUSER', 'codychat');
+define('BOOM_DPASS', 'REPLACE_WITH_SERVER_SECRET');
+define('BOOM_DNAME', 'codychat');
