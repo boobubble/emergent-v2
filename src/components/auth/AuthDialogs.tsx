@@ -18,7 +18,7 @@ function UsernameHint({ status }: { status: UsernameStatus }) {
   return <p className="mt-1 text-[10px] font-semibold text-destructive">{status.message}</p>;
 }
 
-export type AuthPopup = null | "choice" | "signin" | "signup" | "forgot";
+export type AuthPopup = null | "choice" | "signin" | "signup" | "forgot" | "guest";
 
 /**
  * Embeddable auth dialogs. Intentionally excludes /login page chrome
@@ -46,6 +46,7 @@ export function AuthDialogs({
         onOpenChange={(v) => setPopup(v ? "choice" : null)}
         onLogin={() => setPopup("signin")}
         onRegister={() => signupEnabled && setPopup("signup")}
+        onGuest={() => setPopup("guest")}
         signupEnabled={signupEnabled}
       />
       <SignInDialog
@@ -53,6 +54,7 @@ export function AuthDialogs({
         onOpenChange={(v) => setPopup(v ? "signin" : null)}
         onForgot={() => setPopup("forgot")}
         onSwitchSignup={() => signupEnabled && setPopup("signup")}
+        onGuest={() => setPopup("guest")}
         successPath={successPath}
       />
       {signupEnabled && (
@@ -60,9 +62,15 @@ export function AuthDialogs({
           open={popup === "signup"}
           onOpenChange={(v) => setPopup(v ? "signup" : null)}
           onSwitchSignin={() => setPopup("signin")}
+          onGuest={() => setPopup("guest")}
           successPath={successPath}
         />
       )}
+      <LoginAsGuestButton
+        open={popup === "guest"}
+        onOpenChange={(v) => setPopup(v ? "guest" : null)}
+        hideTrigger
+      />
       <ForgotDialog
         open={popup === "forgot"}
         onOpenChange={(v) => setPopup(v ? "forgot" : null)}
@@ -77,12 +85,14 @@ function AuthChoiceDialog({
   onOpenChange,
   onLogin,
   onRegister,
+  onGuest,
   signupEnabled,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onLogin: () => void;
   onRegister: () => void;
+  onGuest: () => void;
   signupEnabled: boolean;
 }) {
   const brand = useBrand();
@@ -105,10 +115,13 @@ function AuthChoiceDialog({
             Login
           </button>
           {guestChat.enabled && (
-            <LoginAsGuestButton
-              label="Guest Login"
-              onBeforeOpen={() => onOpenChange(false)}
-            />
+            <button
+              type="button"
+              onClick={onGuest}
+              className="w-full rounded-full border border-border bg-background px-4 py-2.5 text-sm font-bold text-foreground hover:bg-accent"
+            >
+              Guest Login
+            </button>
           )}
         </div>
         {signupEnabled && (
@@ -124,7 +137,7 @@ function AuthChoiceDialog({
   );
 }
 
-function SignInDialog({ open, onOpenChange, onForgot, onSwitchSignup, successPath }: { open: boolean; onOpenChange: (v: boolean) => void; onForgot: () => void; onSwitchSignup: () => void; successPath?: string }) {
+function SignInDialog({ open, onOpenChange, onForgot, onSwitchSignup, onGuest, successPath }: { open: boolean; onOpenChange: (v: boolean) => void; onForgot: () => void; onSwitchSignup: () => void; onGuest: () => void; successPath?: string }) {
   const { login } = useAuth();
   const brand = useBrand();
   const navigate = useNavigate();
@@ -180,7 +193,7 @@ function SignInDialog({ open, onOpenChange, onForgot, onSwitchSignup, successPat
               <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">OR</span>
               <div className="h-px flex-1 bg-border" />
             </div>
-            <LoginAsGuestButton onBeforeOpen={() => onOpenChange(false)} />
+            <button type="button" onClick={onGuest} className="w-full rounded-full border border-border bg-background px-4 py-2.5 text-sm font-bold text-foreground hover:bg-accent">Login as Guest</button>
           </div>
         )}
 
@@ -193,7 +206,7 @@ function SignInDialog({ open, onOpenChange, onForgot, onSwitchSignup, successPat
   );
 }
 
-function SignUpDialog({ open, onOpenChange, onSwitchSignin, successPath }: { open: boolean; onOpenChange: (v: boolean) => void; onSwitchSignin: () => void; successPath?: string }) {
+function SignUpDialog({ open, onOpenChange, onSwitchSignin, onGuest, successPath }: { open: boolean; onOpenChange: (v: boolean) => void; onSwitchSignin: () => void; onGuest: () => void; successPath?: string }) {
   const { signup } = useAuth();
   const brand = useBrand();
   const navigate = useNavigate();
@@ -274,7 +287,7 @@ function SignUpDialog({ open, onOpenChange, onSwitchSignin, successPath }: { ope
                 <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">OR</span>
                 <div className="h-px flex-1 bg-border" />
               </div>
-              <LoginAsGuestButton onBeforeOpen={() => onOpenChange(false)} />
+              <button type="button" onClick={onGuest} className="w-full rounded-full border border-border bg-background px-4 py-2.5 text-sm font-bold text-foreground hover:bg-accent">Login as Guest</button>
             </div>
           )}
         </div>
