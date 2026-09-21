@@ -11,6 +11,12 @@ import {
 } from "@tanstack/react-router";
 import { AuthProvider, useAuth } from "@/lib/auth-store";
 import { AuthGateProvider } from "@/lib/auth-gate";
+import { AuthSessionHydrationRecovery } from "@/components/auth/AuthSessionHydrationRecovery";
+import {
+  isConfirmedSignedOut,
+  shouldBlockAuthGateRedirect,
+  shouldShowAuthHydrationRecovery,
+} from "@/lib/auth-session-hydration";
 import { AppSettingsProvider } from "@/lib/app-settings";
 
 import { lazy, Suspense, useEffect } from "react";
@@ -208,12 +214,20 @@ function hasStoredAuthSession() {
 }
 
 function AuthGate() {
-  const { user, ready, loggingOut } = useAuth();
+  const {
+    user,
+    ready,
+    hydrationSlow,
+    hydrationError,
+    retrySessionHydration,
+    loggingOut,
+  } = useAuth();
   const location = useLocation();
   const path = location.pathname;
   const hasStoredSession = hasStoredAuthSession();
   const { mode: homeMode, ready: homeReady } = useHomePageMode();
   const landingPath = landingPathForMode(homeMode);
+  const hydrationState = { ready, hydrationSlow, hydrationError };
 
   if (loggingOut) {
     return (
@@ -223,12 +237,22 @@ function AuthGate() {
     );
   }
 
+  if (shouldShowAuthHydrationRecovery(hydrationState)) {
+    return (
+      <AuthSessionHydrationRecovery
+        hydrationSlow={hydrationSlow}
+        hydrationError={hydrationError}
+        onRetry={retrySessionHydration}
+      />
+    );
+  }
+
   if (!user && isPublicPath(path)) {
     return <PublicOutlet pathname={path} readOnlyApp={isReadOnlyPublicAppPath(path)} />;
   }
 
   // No stored session at all → send guests to landing immediately.
-  if (!ready && !hasStoredSession) {
+  if (shouldBlockAuthGateRedirect(hydrationState) && !hasStoredSession) {
     if (isPrivateUtilityPath(path)) {
       return <Navigate to="/login" replace />;
     }
@@ -242,7 +266,7 @@ function AuthGate() {
     return <Navigate to={landingPath} replace />;
   }
 
-  if (!ready) {
+  if (shouldBlockAuthGateRedirect(hydrationState) && hasStoredSession) {
     // Stored session is being restored — wait without auto-redirecting.
     return (
       <div className="grid min-h-screen place-items-center bg-background px-4 text-center text-muted-foreground">
@@ -251,8 +275,7 @@ function AuthGate() {
     );
   }
 
-
-  if (!user) {
+  if (isConfirmedSignedOut(hydrationState, user)) {
     // Public, self-contained routes (landing, login, password reset, public post pages) render normally.
     if (isPublicPath(path)) return <PublicOutlet pathname={path} readOnlyApp={isReadOnlyPublicAppPath(path)} />;
     // Wait for the home_page setting before redirecting so guests don't get

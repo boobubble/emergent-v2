@@ -7,6 +7,7 @@ import { SIGNUP_ACCESS_DEFAULTS, type SignupAccessConfig } from "@/lib/signup-co
 import { HOME_PAGE_KEY, type HomePageMode } from "@/lib/hero-page-config";
 import { landingPathForMode } from "@/lib/landing-path";
 import { hasStoredAuthToken, isGuestHomePath } from "@/lib/stored-auth";
+import { SESSION_HYDRATION_FALLBACK_MS } from "@/lib/auth-session-hydration";
 
 type YaarzoAuthWindow = Window & { __yaarzoSignOutPromise?: Promise<void> };
 
@@ -42,6 +43,9 @@ interface SignupExtras {
 interface Ctx {
   user: AuthUser | null;
   ready: boolean;
+  hydrationSlow: boolean;
+  hydrationError: string | null;
+  retrySessionHydration: () => void;
   loggingOut: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, username: string, gender: "male" | "female" | "other", extras?: SignupExtras) => Promise<void>;
@@ -190,6 +194,9 @@ function userFromSession(session: Session): AuthUser {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [ready, setReady] = useState(false);
+  const [hydrationSlow, setHydrationSlow] = useState(false);
+  const [hydrationError, setHydrationError] = useState<string | null>(null);
+  const [hydrationAttempt, setHydrationAttempt] = useState(0);
   const [loggingOut, setLoggingOut] = useState(false);
   const loggingOutRef = useRef(false);
   const lastUidRef = useRef<string | null>(null);
@@ -250,6 +257,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const unsub = await attachAuthStateChange((_event, session) => {
           applySession(session);
+          setHydrationSlow(false);
+          setHydrationError(null);
           setReady(true);
         });
         unsubscribeRef.current = unsub;
@@ -261,15 +270,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await listeningRef.current;
   }, [applySession]);
 
+  const retrySessionHydration = useCallback(() => {
+    setHydrationSlow(false);
+    setHydrationError(null);
+    setReady(false);
+    setHydrationAttempt((n) => n + 1);
+  }, []);
+
   useEffect(() => {
     cancelledRef.current = false;
-    let isReady = false;
+    let hydrationSettled = false;
     let readyTimer: ReturnType<typeof setTimeout> | undefined;
 
-    function markReady() {
-      if (cancelledRef.current || isReady) return;
-      isReady = true;
+    function markHydrationSuccess() {
+      if (cancelledRef.current || hydrationSettled) return;
+      hydrationSettled = true;
       if (readyTimer !== undefined) window.clearTimeout(readyTimer);
+      setHydrationSlow(false);
+      setHydrationError(null);
       setReady(true);
     }
 
@@ -277,7 +295,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
     );
     if (!supabaseConfigured) {
-      markReady();
+      markHydrationSuccess();
       return () => {
         cancelledRef.current = true;
         if (readyTimer !== undefined) window.clearTimeout(readyTimer);
@@ -288,7 +306,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     if (isGuestHomePath()) {
-      markReady();
+      markHydrationSuccess();
       return () => {
         cancelledRef.current = true;
         if (readyTimer !== undefined) window.clearTimeout(readyTimer);
@@ -298,27 +316,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
     }
 
-    /** Slow getSession must finish before `ready`; avoid a short timer racing hydration. */
-    const SESSION_HYDRATION_FALLBACK_MS = 15_000;
     readyTimer = window.setTimeout(() => {
+      if (hydrationSettled || cancelledRef.current) return;
       console.warn("[auth-store] session hydration exceeded fallback window");
-      markReady();
+      setHydrationSlow(true);
     }, SESSION_HYDRATION_FALLBACK_MS);
 
     void (async () => {
       try {
         await ensureListening();
-        try {
-          const supabase = await loadBrowserSupabase();
-          const { data } = await supabase.auth.getSession();
-          applySession(data.session);
-        } catch (e) {
-          console.warn("getSession failed", e);
+        const supabase = await loadBrowserSupabase();
+        const { data, error } = await supabase.auth.getSession();
+        if (cancelledRef.current) return;
+        if (error) {
+          console.warn("[auth-store] getSession returned error", error.message);
+          setHydrationError(error.message || "Could not restore your session.");
+          return;
         }
+        applySession(data.session);
+        markHydrationSuccess();
       } catch (e) {
-        console.warn("getSession failed", e);
-      } finally {
-        markReady();
+        if (cancelledRef.current) return;
+        const message = e instanceof Error ? e.message : "Could not restore your session.";
+        console.warn("[auth-store] getSession failed", e);
+        setHydrationError(message);
       }
     })();
 
@@ -329,7 +350,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       unsubscribeRef.current?.();
       unsubscribeRef.current = null;
     };
-  }, [applySession, ensureListening]);
+  }, [applySession, ensureListening, hydrationAttempt]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -515,7 +536,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser((prev) => prev ? { ...prev, username: next } : prev);
   }, []);
 
-  const value = useMemo<Ctx>(() => ({ user, ready, loggingOut, login, signup, loginWithGoogle, logout, refreshUsername }), [user, ready, loggingOut, login, signup, loginWithGoogle, logout, refreshUsername]);
+  const value = useMemo<Ctx>(() => ({
+    user,
+    ready,
+    hydrationSlow,
+    hydrationError,
+    retrySessionHydration,
+    loggingOut,
+    login,
+    signup,
+    loginWithGoogle,
+    logout,
+    refreshUsername,
+  }), [user, ready, hydrationSlow, hydrationError, retrySessionHydration, loggingOut, login, signup, loginWithGoogle, logout, refreshUsername]);
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
 }
 

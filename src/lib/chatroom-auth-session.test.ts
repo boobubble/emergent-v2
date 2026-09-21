@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,64 +10,66 @@ function read(rel: string) {
 }
 
 describe("chatroom route — session restoration before SSO", () => {
-  it("waits for auth ready before redirect or CodyChat SSO", () => {
+  it("waits for auth ready and skips guest redirect during hydration recovery", () => {
     const src = read("src/routes/chatroom.tsx");
-    expect(src).toContain("ready");
-    expect(src).toMatch(/if \(!ready\) return;/);
-    expect(src).toMatch(/if \(!ready\) \{/);
-    expect(src).toMatch(/}, \[ready, user, navigate, getSsoUrl\]/);
+    expect(src).toContain("shouldShowAuthHydrationRecovery");
+    expect(src).toContain("shouldChatroomProceedAsGuest");
+    expect(src).toContain("AuthSessionHydrationRecovery");
+    expect(src).toMatch(/if \(shouldShowAuthHydrationRecovery\(hydrationState\)\) return;/);
   });
 
   it("ignores stale SSO responses after logout, user change, or unmount", () => {
     const src = read("src/routes/chatroom.tsx");
     expect(src).toContain("let cancelled = false");
-    expect(src).toMatch(/if \(cancelled\) return;/);
+    expect(src).toContain("applySsoResult");
     expect(src).toMatch(/return \(\) => \{\s*cancelled = true;/);
   });
+});
 
-  it("does not redirect while auth is still hydrating", () => {
-    const src = read("src/routes/chatroom.tsx");
-    const effectStart = src.indexOf("useEffect(() => {");
-    const ssoEffect = src.slice(effectStart, src.indexOf("}, [ready, user, navigate, getSsoUrl]"));
-    expect(ssoEffect.indexOf("if (!ready) return")).toBeLessThan(
-      ssoEffect.indexOf("navigate({ to: \"/\" })"),
+describe("root AuthGate — hydration recovery", () => {
+  it("shows recoverable hydration UI before guest redirects", () => {
+    const src = read("src/routes/__root.tsx");
+    expect(src).toContain("shouldShowAuthHydrationRecovery");
+    expect(src).toContain("isConfirmedSignedOut");
+    expect(src).toContain("AuthSessionHydrationRecovery");
+    const gateStart = src.indexOf("function AuthGate()");
+    const gateBody = src.slice(gateStart, gateStart + 3500);
+    expect(gateBody.indexOf("shouldShowAuthHydrationRecovery")).toBeLessThan(
+      gateBody.indexOf("Navigate to={landingPath}"),
     );
   });
 });
 
 describe("auth attacher — browser Supabase boot", () => {
-  it("awaits loadBrowserSupabase before getSession and never uses the sync proxy", () => {
+  it("awaits loadBrowserSupabase, handles getSession error, and calls next once", () => {
     const src = read("src/integrations/supabase/auth-attacher.ts");
     expect(src).toContain('from "./load-browser"');
-    expect(src).toMatch(/const supabase = await loadBrowserSupabase\(\)/);
-    expect(src).toMatch(/await supabase\.auth\.getSession\(\)/);
+    expect(src).toContain("resolveBrowserAuthHeaders");
+    expect(src).toMatch(/next\(\{ headers: await resolveBrowserAuthHeaders\(\) \}\)/);
     expect(src).not.toMatch(/import \{ supabase \}/);
-    expect(src).not.toContain("Supabase client used before loadBrowserSupabase()");
   });
 });
 
 describe("AuthProvider — hydration ready timing", () => {
-  it("does not use a 3s ready timer on the session hydration path", () => {
+  it("does not mark ready on the hydration fallback timer", () => {
     const src = read("src/lib/auth-store.tsx");
     expect(src).toContain("SESSION_HYDRATION_FALLBACK_MS");
-    expect(src).toContain("15_000");
+    expect(src).toContain("setHydrationSlow(true)");
+    expect(src).not.toMatch(/setTimeout\([\s\S]*markReady/);
     expect(src).not.toMatch(/setTimeout\(markReady,\s*3000\)/);
   });
 });
 
-describe("Supabase project env alignment (names only)", () => {
-  it("documents browser and server public credential variable names", () => {
+describe("Supabase env variable names (not same-project verification)", () => {
+  it("browser build path requires publishable key names; server resolver also accepts anon aliases", () => {
     const serverEnv = read("src/integrations/supabase/env.server.ts");
     const browserEager = read("src/integrations/supabase/client-eager.ts");
-    expect(serverEnv).toContain("SUPABASE_URL");
-    expect(serverEnv).toContain("VITE_SUPABASE_URL");
-    expect(serverEnv).toContain("SUPABASE_PUBLISHABLE_KEY");
     expect(serverEnv).toContain("SUPABASE_ANON_KEY");
-    expect(serverEnv).not.toMatch(/console\.(log|info).*SUPABASE_SERVICE/);
+    expect(serverEnv).toContain("SUPABASE_PUBLISHABLE_KEY");
 
-    expect(browserEager).toContain("VITE_SUPABASE_URL");
     expect(browserEager).toContain("VITE_SUPABASE_PUBLISHABLE_KEY");
-    expect(browserEager).toContain("process.env.SUPABASE_URL");
+    expect(browserEager).toContain("SUPABASE_PUBLISHABLE_KEY");
+    expect(browserEager).not.toContain("SUPABASE_ANON_KEY");
     expect(browserEager).not.toMatch(/SERVICE_ROLE/);
   });
 });

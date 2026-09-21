@@ -2,8 +2,14 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { RouteErrorBoundary } from "@/components/AppErrorBoundary";
+import { AuthSessionHydrationRecovery } from "@/components/auth/AuthSessionHydrationRecovery";
 import { CodyChatShell } from "@/components/codychat/CodyChatShell";
 import { useAuth } from "@/lib/auth-store";
+import {
+  applySsoResult,
+  shouldChatroomProceedAsGuest,
+  shouldShowAuthHydrationRecovery,
+} from "@/lib/auth-session-hydration";
 import { useServerFn } from "@tanstack/react-start";
 import { getCodyChatSsoUrl } from "@/lib/codychat-sso.functions";
 import { isYaarzoLogoutMessage } from "@/lib/codychat-sso-messages";
@@ -13,17 +19,28 @@ import { consumeChatFreshEntry, isChatFreshEntryPending } from "@/lib/auth-entry
 const YAARZO_ORIGINS = ["https://yaarzo.com", "https://www.yaarzo.com"] as const;
 
 function CodyChatPage() {
-  const { user, ready, logout, loggingOut } = useAuth();
+  const {
+    user,
+    ready,
+    hydrationSlow,
+    hydrationError,
+    retrySessionHydration,
+    logout,
+    loggingOut,
+  } = useAuth();
   const navigate = useNavigate();
   const getSsoUrl = useServerFn(getCodyChatSsoUrl);
   const [chatUrl, setChatUrl] = useState<string | null>(null);
   const [ssoError, setSsoError] = useState<string | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
+  const hydrationState = { ready, hydrationSlow, hydrationError };
+
   useEffect(() => {
+    if (shouldShowAuthHydrationRecovery(hydrationState)) return;
     if (!ready) return;
 
-    if (!user || user.isGuest) {
+    if (shouldChatroomProceedAsGuest(hydrationState, user)) {
       setChatUrl(null);
       void navigate({ to: "/" });
       return;
@@ -35,21 +52,21 @@ function CodyChatPage() {
 
     void getSsoUrl()
       .then(({ url }) => {
-        if (cancelled) return;
-        setChatUrl(url);
+        applySsoResult(cancelled, () => setChatUrl(url));
       })
       .catch((error: unknown) => {
-        if (cancelled) return;
-        const message =
-          error instanceof Error ? error.message : "Unable to open chat.";
-        setSsoError(message);
-        console.error("CodyChat SSO failed:", error);
+        applySsoResult(cancelled, () => {
+          const message =
+            error instanceof Error ? error.message : "Unable to open chat.";
+          setSsoError(message);
+          console.error("CodyChat SSO failed:", error);
+        });
       });
 
     return () => {
       cancelled = true;
     };
-  }, [ready, user, navigate, getSsoUrl]);
+  }, [ready, hydrationSlow, hydrationError, user, navigate, getSsoUrl]);
 
   useEffect(() => {
     const handleCodyChatMessage = (event: MessageEvent) => {
@@ -64,6 +81,17 @@ function CodyChatPage() {
     return () => window.removeEventListener("message", handleCodyChatMessage);
   }, [logout, loggingOut, user]);
 
+  if (shouldShowAuthHydrationRecovery(hydrationState)) {
+    return (
+      <AuthSessionHydrationRecovery
+        compact
+        hydrationSlow={hydrationSlow}
+        hydrationError={hydrationError}
+        onRetry={retrySessionHydration}
+      />
+    );
+  }
+
   if (!ready) {
     return (
       <div className="flex h-dvh w-full items-center justify-center bg-background px-6">
@@ -72,7 +100,7 @@ function CodyChatPage() {
     );
   }
 
-  if (!user || user.isGuest) {
+  if (shouldChatroomProceedAsGuest(hydrationState, user)) {
     return null;
   }
 

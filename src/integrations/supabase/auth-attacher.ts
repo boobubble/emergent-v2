@@ -3,17 +3,23 @@
 import { createMiddleware } from "@tanstack/react-start";
 import { loadBrowserSupabase } from "./load-browser";
 
-export const attachSupabaseAuth = createMiddleware({ type: "function" }).client(
-  async ({ next }) => {
-    try {
-      const supabase = await loadBrowserSupabase();
-      const { data } = await supabase.auth.getSession();
-      const token = data.session?.access_token;
-      return next({
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-    } catch {
-      return next({ headers: {} });
+export async function resolveBrowserAuthHeaders(): Promise<Record<string, string>> {
+  try {
+    const supabase = await loadBrowserSupabase();
+    const { data, error } = await supabase.auth.getSession();
+    if (error) {
+      console.warn("[auth-attacher] getSession error:", error.message);
+      return {};
     }
-  },
+    const token = data.session?.access_token;
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Supabase client unavailable";
+    console.warn("[auth-attacher] initialization failed:", message);
+    return {};
+  }
+}
+
+export const attachSupabaseAuth = createMiddleware({ type: "function" }).client(
+  async ({ next }) => next({ headers: await resolveBrowserAuthHeaders() }),
 );
