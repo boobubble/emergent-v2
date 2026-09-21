@@ -264,13 +264,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     cancelledRef.current = false;
     let isReady = false;
+    let readyTimer: ReturnType<typeof setTimeout> | undefined;
+
     function markReady() {
       if (cancelledRef.current || isReady) return;
       isReady = true;
-      window.clearTimeout(readyTimer);
+      if (readyTimer !== undefined) window.clearTimeout(readyTimer);
       setReady(true);
     }
-    const readyTimer = window.setTimeout(markReady, 3000);
 
     const supabaseConfigured = Boolean(
       import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
@@ -279,7 +280,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       markReady();
       return () => {
         cancelledRef.current = true;
-        window.clearTimeout(readyTimer);
+        if (readyTimer !== undefined) window.clearTimeout(readyTimer);
         listeningRef.current = null;
         unsubscribeRef.current?.();
         unsubscribeRef.current = null;
@@ -290,12 +291,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       markReady();
       return () => {
         cancelledRef.current = true;
-        window.clearTimeout(readyTimer);
+        if (readyTimer !== undefined) window.clearTimeout(readyTimer);
         listeningRef.current = null;
         unsubscribeRef.current?.();
         unsubscribeRef.current = null;
       };
     }
+
+    /** Slow getSession must finish before `ready`; avoid a short timer racing hydration. */
+    const SESSION_HYDRATION_FALLBACK_MS = 15_000;
+    readyTimer = window.setTimeout(() => {
+      console.warn("[auth-store] session hydration exceeded fallback window");
+      markReady();
+    }, SESSION_HYDRATION_FALLBACK_MS);
 
     void (async () => {
       try {
@@ -316,7 +324,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       cancelledRef.current = true;
-      window.clearTimeout(readyTimer);
+      if (readyTimer !== undefined) window.clearTimeout(readyTimer);
       listeningRef.current = null;
       unsubscribeRef.current?.();
       unsubscribeRef.current = null;
