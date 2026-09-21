@@ -6,6 +6,7 @@ import {
   buildCodyChatSsoToken,
   resolveSsoUsername,
 } from "./codychat-sso-core";
+import { getCodyChatPublicBaseUrl } from "./codychat-public-url";
 
 export class CodyChatSsoDeniedError extends Error {
   readonly code = "CHAT_ACCESS_DENIED" as const;
@@ -40,9 +41,7 @@ export const getCodyChatSsoUrl = createServerFn({ method: "GET" })
       throw new Error("CodyChat SSO is not configured.");
     }
 
-    const chatBase =
-      process.env.CODYCHAT_PUBLIC_URL?.trim().replace(/\/+$/, "") ||
-      "https://chat.yaarzo.com";
+    const chatBase = getCodyChatPublicBaseUrl();
 
     const { supabaseAdmin } = await import(
       "@/integrations/supabase/client.server"

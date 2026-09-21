@@ -5,11 +5,14 @@ import { RouteErrorBoundary } from "@/components/AppErrorBoundary";
 import { AuthSessionHydrationRecovery } from "@/components/auth/AuthSessionHydrationRecovery";
 import { CodyChatShell } from "@/components/codychat/CodyChatShell";
 import { useAuth } from "@/lib/auth-store";
+import { applySsoResult, shouldShowAuthHydrationRecovery } from "@/lib/auth-session-hydration";
 import {
-  applySsoResult,
-  shouldChatroomProceedAsGuest,
-  shouldShowAuthHydrationRecovery,
-} from "@/lib/auth-session-hydration";
+  parseChatroomGuestIntent,
+  shouldRedirectSignedOutFromChatroom,
+  shouldRequestChatroomHmacSso,
+  shouldUseNativeCodyChatGuestEntry,
+} from "@/lib/chatroom-guest-entry";
+import { getCodyChatNativeGuestEntryUrl } from "@/lib/codychat-public-url";
 import { useServerFn } from "@tanstack/react-start";
 import { getCodyChatSsoUrl } from "@/lib/codychat-sso.functions";
 import { isYaarzoLogoutMessage } from "@/lib/codychat-sso-messages";
@@ -28,6 +31,8 @@ function CodyChatPage() {
     logout,
     loggingOut,
   } = useAuth();
+  const { guest: guestSearch } = Route.useSearch();
+  const guestIntent = parseChatroomGuestIntent({ guest: guestSearch });
   const navigate = useNavigate();
   const getSsoUrl = useServerFn(getCodyChatSsoUrl);
   const [chatUrl, setChatUrl] = useState<string | null>(null);
@@ -40,9 +45,19 @@ function CodyChatPage() {
     if (shouldShowAuthHydrationRecovery(hydrationState)) return;
     if (!ready) return;
 
-    if (shouldChatroomProceedAsGuest(hydrationState, user)) {
+    if (shouldRedirectSignedOutFromChatroom(hydrationState, user, guestIntent)) {
       setChatUrl(null);
       void navigate({ to: "/" });
+      return;
+    }
+
+    if (shouldUseNativeCodyChatGuestEntry(hydrationState, user, guestIntent)) {
+      setSsoError(null);
+      setChatUrl(getCodyChatNativeGuestEntryUrl());
+      return;
+    }
+
+    if (!shouldRequestChatroomHmacSso(hydrationState, user)) {
       return;
     }
 
@@ -66,7 +81,7 @@ function CodyChatPage() {
     return () => {
       cancelled = true;
     };
-  }, [ready, hydrationSlow, hydrationError, user, navigate, getSsoUrl]);
+  }, [ready, hydrationSlow, hydrationError, user, guestIntent, navigate, getSsoUrl]);
 
   useEffect(() => {
     const handleCodyChatMessage = (event: MessageEvent) => {
@@ -100,7 +115,7 @@ function CodyChatPage() {
     );
   }
 
-  if (shouldChatroomProceedAsGuest(hydrationState, user)) {
+  if (shouldRedirectSignedOutFromChatroom(hydrationState, user, guestIntent)) {
     return null;
   }
 
@@ -128,6 +143,13 @@ function CodyChatPage() {
 }
 
 export const Route = createFileRoute("/chatroom")({
+  validateSearch: (search: Record<string, unknown>) => {
+    const raw = search.guest;
+    if (raw === "1" || raw === 1 || raw === true) {
+      return { guest: "1" as const };
+    }
+    return {};
+  },
   loader: () =>
     loadRouteSeo(
       "/chatroom",
