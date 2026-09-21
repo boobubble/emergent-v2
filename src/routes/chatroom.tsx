@@ -137,6 +137,34 @@ function CodyChatPage() {
       iframeRef={iframeRef}
       onIframeLoad={() => {
         consumeChatFreshEntry();
+
+        if (guestIntent) {
+          const rawGuestDetails = sessionStorage.getItem("yaarzo:codychat:guest-details");
+
+          if (rawGuestDetails) {
+            try {
+              const details = JSON.parse(rawGuestDetails) as {
+                name?: string;
+                gender?: "male" | "female" | "other";
+              };
+
+              if (details.name && details.gender) {
+                iframeRef.current?.contentWindow?.postMessage(
+                  {
+                    type: "YAARZO_CODY_GUEST_LOGIN",
+                    name: details.name,
+                    gender: details.gender,
+                  },
+                  "https://chat.yaarzo.com",
+                );
+
+                sessionStorage.removeItem("yaarzo:codychat:guest-details");
+              }
+            } catch {
+              sessionStorage.removeItem("yaarzo:codychat:guest-details");
+            }
+          }
+        }
       }}
     />
   );
