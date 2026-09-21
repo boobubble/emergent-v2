@@ -17,5 +17,6 @@ export function getCodyChatPublicBaseUrl(): string {
 
 /** Signed-out native CodyChat guest login entry (iframe loads CodyChat login + Guest login). */
 export function getCodyChatNativeGuestEntryUrl(): string {
-  return `${getCodyChatPublicBaseUrl()}/`;
+  return `${getCodyChatPublicBaseUrl()}/?guest=1`;
 }
+

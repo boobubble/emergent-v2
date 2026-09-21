@@ -24,7 +24,7 @@ export function LoginAsGuestButton({
       type="button"
       onClick={() => {
         onBeforeOpen?.();
-        void navigate({ to: "/chatroom", search: { guest: "1" } });
+        void navigate({ to: "/chatroom", search: { guest: 1 } });
       }}
       className={
         className
@@ -38,3 +38,4 @@ export function LoginAsGuestButton({
 
 /** @deprecated Use LoginAsGuestButton — kept as alias for older imports. */
 export const ContinueAsGuestButton = LoginAsGuestButton;
+
