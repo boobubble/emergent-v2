@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import type { AuthPopup } from "@/components/auth/AuthDialogs";
+import { LoginAsGuestButton } from "@/components/auth/ContinueAsGuestButton";
 import { HomeSeoContent } from "@/components/home/HomeSeoContent";
 import { WelcomeCard, SectionTitle } from "@/components/home/welcome-primitives";
 import { AUTH_ENTRY_DESTINATION } from "@/lib/auth-entry";
@@ -48,6 +49,7 @@ export function HomeGuestShell() {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [authPopup, setAuthPopup] = useState<AuthPopup>(null);
   const [authMounted, setAuthMounted] = useState(false);
+  const [guestOpen, setGuestOpen] = useState(false);
 
   useEffect(() => {
     try {
@@ -118,10 +120,11 @@ export function HomeGuestShell() {
         }}
         onLogin={() => openAuth("signin")}
         onSignup={() => openAuth("choice")}
-        onStartChat={() => openAuth("choice")}
+        onStartChat={() => setGuestOpen(true)}
         onPollChoice={setPollChoice}
         poetryExtra={<PoetryWidgetIsland />}
       />
+      <LoginAsGuestButton open={guestOpen} onOpenChange={setGuestOpen} hideTrigger />
       {authMounted && (
         <Suspense fallback={null}>
           <AuthDialogs popup={authPopup} setPopup={setAuthPopup} successPath={AUTH_ENTRY_DESTINATION} />

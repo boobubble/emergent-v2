@@ -17,14 +17,22 @@ export function LoginAsGuestButton({
   className,
   onBeforeOpen,
   label = "Login as Guest",
+  hideTrigger = false,
+  open: controlledOpen,
+  onOpenChange,
 }: {
   className?: string;
   onBeforeOpen?: () => void;
   label?: string;
+  hideTrigger?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
   const guestChat = useGuestChat();
   const navigate = useNavigate();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = onOpenChange ?? setInternalOpen;
   const [name, setName] = useState("");
   const [gender, setGender] = useState<GuestGender | "">("");
   const [ageConfirmed, setAgeConfirmed] = useState(false);
@@ -72,6 +80,7 @@ export function LoginAsGuestButton({
 
   return (
     <>
+      {!hideTrigger && (
       <button
         type="button"
         onClick={openGuestForm}
@@ -82,6 +91,7 @@ export function LoginAsGuestButton({
       >
         {label}
       </button>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-sm rounded-3xl">
