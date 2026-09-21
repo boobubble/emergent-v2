@@ -26,6 +26,11 @@ import { CodyChatMobileBar } from "./CodyChatMobileBar";
 import { CodyChatRoomHeader } from "./CodyChatRoomHeader";
 import { CodyChatTrendingBar } from "./CodyChatTrendingBar";
 import { useCodyChatCommunity } from "./use-codychat-community";
+import {
+  type CodyChatAction,
+  YAARZO_CODY_ACTION_MESSAGE,
+  resolveCodyChatTargetOrigin,
+} from "./codychat-actions";
 import "./codychat-shell.css";
 
 const CHATROOM_XL_MQ = "(min-width: 1440px)";
@@ -53,7 +58,7 @@ export function CodyChatShell({
   const [membersOpen, setMembersOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
-  const { room, topicLabels, enabledWidgets } = useCodyChatCommunity();
+  const { room, topicLabels } = useCodyChatCommunity();
 
   const isDesktopShell = isClientDesktopShell(shellLayout);
   const isLargeDesktop = isClientLargeDesktopShell(shellLayout);
@@ -100,6 +105,20 @@ export function CodyChatShell({
       writeSidebarOpenPreference(next);
     }
   }, []);
+
+  const sendCodyChatAction = useCallback(
+    (action: CodyChatAction) => {
+      const targetOrigin = resolveCodyChatTargetOrigin(chatUrl);
+      if (!targetOrigin) return;
+      const iframeWindow = iframeRef.current?.contentWindow;
+      if (!iframeWindow) return;
+      iframeWindow.postMessage(
+        { type: YAARZO_CODY_ACTION_MESSAGE, action },
+        targetOrigin,
+      );
+    },
+    [chatUrl, iframeRef],
+  );
 
   const showInlineSidebar = isDesktopShell;
   const showInlineMembers = isLargeDesktop;
@@ -195,15 +214,12 @@ export function CodyChatShell({
               onOpenNav={() => setMobileNavOpen(true)}
               onOpenMembers={() => setMembersOpen(true)}
             />
-          ) : null}
-
-          <CodyChatRoomHeader
-            room={room}
-            connected={chatConnected}
-            showJoinVoice={enabledWidgets.length > 0}
-            className={cn(showMobileChrome && "cody-room-header-compact")}
-          />
-          <CodyChatTrendingBar topics={topicLabels} />
+          ) : (
+            <>
+              <CodyChatRoomHeader room={room} connected={chatConnected} />
+              <CodyChatTrendingBar topics={topicLabels} />
+            </>
+          )}
 
           <div className="cody-center-frame relative flex min-h-0 flex-1 flex-col overflow-hidden">
             {showSidebarFab ? (
@@ -241,7 +257,7 @@ export function CodyChatShell({
         </main>
 
         {showInlineMembers ? (
-          <CodyChatMemberPanel forceDesktopColumn />
+          <CodyChatMemberPanel forceDesktopColumn onCodyAction={sendCodyChatAction} />
         ) : null}
 
         {showInlineProfile ? (
@@ -270,6 +286,7 @@ export function CodyChatShell({
             >
               <CodyChatMemberPanel
                 onClose={() => setMembersOpen(false)}
+                onCodyAction={sendCodyChatAction}
                 className="w-full max-w-none border-l-0"
               />
             </SheetContent>
@@ -295,6 +312,7 @@ export function CodyChatShell({
             >
               <CodyChatMemberPanel
                 onClose={() => setMembersOpen(false)}
+                onCodyAction={sendCodyChatAction}
                 className="flex w-full max-w-none border-l-0"
               />
             </SheetContent>

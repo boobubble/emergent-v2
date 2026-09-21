@@ -1,5 +1,4 @@
-import { Link } from "@tanstack/react-router";
-import { MoreHorizontal, Radio, Share2, Star } from "lucide-react";
+import { MoreHorizontal, Share2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { CodyChatRoomMeta } from "./codychat-room-meta";
@@ -7,14 +6,12 @@ import type { CodyChatRoomMeta } from "./codychat-room-meta";
 type CodyChatRoomHeaderProps = {
   room: CodyChatRoomMeta;
   connected?: boolean;
-  showJoinVoice?: boolean;
   className?: string;
 };
 
 export function CodyChatRoomHeader({
   room,
   connected = false,
-  showJoinVoice = false,
   className,
 }: CodyChatRoomHeaderProps) {
   const onShare = async () => {
@@ -96,14 +93,6 @@ export function CodyChatRoomHeader({
         >
           <MoreHorizontal className="h-4 w-4" />
         </Button>
-        {showJoinVoice ? (
-          <Button type="button" asChild className="cody-join-voice-btn h-8 shrink-0 gap-1.5 px-3 text-xs">
-            <Link to="/radio">
-              <Radio className="h-3.5 w-3.5" aria-hidden />
-              Radio
-            </Link>
-          </Button>
-        ) : null}
       </div>
     </header>
   );

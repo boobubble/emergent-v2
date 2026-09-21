@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { BadgeCheck, Search, X } from "lucide-react";
+import { BadgeCheck, Bell, CircleUserRound, Mail, Search, UserPlus, X } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar } from "@/components/chat/Avatar";
 import { Input } from "@/components/ui/input";
@@ -9,12 +9,50 @@ import {
   useMemberSearchFilter,
   type CodyCommunityMember,
 } from "./use-codychat-community";
+import type { CodyChatAction } from "./codychat-actions";
+import { useAuth } from "@/lib/auth-store";
+
+export type { CodyChatAction };
 
 type CodyChatMemberPanelProps = {
   onClose?: () => void;
+  onCodyAction?: (action: CodyChatAction) => void;
   forceDesktopColumn?: boolean;
   className?: string;
 };
+
+/** CodyChat iframe bridge actions (not used for Yaarzo master profile). */
+const CODY_IFRAME_ACTIONS: {
+  action: CodyChatAction;
+  label: string;
+  Icon: typeof Mail;
+}[] = [
+  { action: "private", label: "Messages", Icon: Mail },
+  { action: "friends", label: "Friend requests", Icon: UserPlus },
+  { action: "notifications", label: "Notifications", Icon: Bell },
+];
+
+function CodyNativeActionButton({
+  label,
+  Icon,
+  onClick,
+}: {
+  label: string;
+  Icon: typeof Mail;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className="cody-members-action-btn"
+      aria-label={label}
+      title={label}
+      onClick={onClick}
+    >
+      <Icon className="h-4 w-4 shrink-0" aria-hidden />
+    </button>
+  );
+}
 
 function MemberRow({ member }: { member: CodyCommunityMember }) {
   return (
@@ -67,9 +105,11 @@ function MemberSection({
 
 export function CodyChatMemberPanel({
   onClose,
+  onCodyAction,
   forceDesktopColumn,
   className,
 }: CodyChatMemberPanelProps) {
+  const { user } = useAuth();
   const { onlineMembers, onlineCount, profilesLoading } = useCodyChatCommunity();
   const { query, setQuery, filtered } = useMemberSearchFilter(onlineMembers);
 
@@ -88,7 +128,7 @@ export function CodyChatMemberPanel({
       style={forceDesktopColumn ? { display: "flex" } : undefined}
     >
       <header className="cody-members-header">
-        <div className="min-w-0 flex-1">
+        <div className="cody-members-header-main min-w-0 flex-1">
           <h2 className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
             Members
           </h2>
@@ -100,6 +140,30 @@ export function CodyChatMemberPanel({
             <p className="text-[10px] text-muted-foreground">Yaarzo presence</p>
           )}
         </div>
+        {onCodyAction ? (
+          <div className="cody-members-native-actions" role="group" aria-label="Chat actions">
+            {CODY_IFRAME_ACTIONS.map(({ action, label, Icon }) => (
+              <CodyNativeActionButton
+                key={action}
+                label={label}
+                Icon={Icon}
+                onClick={() => onCodyAction(action)}
+              />
+            ))}
+            {user ? (
+              <Link
+                to="/feed/"
+                search={{ tab: "account" }}
+                className="cody-members-action-btn"
+                aria-label="Profile"
+                title="Profile"
+                onClick={onClose}
+              >
+                <CircleUserRound className="h-4 w-4 shrink-0" aria-hidden />
+              </Link>
+            ) : null}
+          </div>
+        ) : null}
         {onClose ? (
           <button
             type="button"

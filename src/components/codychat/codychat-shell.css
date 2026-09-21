@@ -218,10 +218,53 @@
 
 [data-codychat-shell] .cody-members-header {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.35rem 0.4rem;
   border-bottom: 1px solid var(--yz-border-purple);
-  padding: 0.45rem 0.65rem;
+  padding: 0.45rem 0.55rem 0.45rem 0.65rem;
+}
+
+[data-codychat-shell] .cody-members-header-main {
+  min-width: 4.5rem;
+}
+
+[data-codychat-shell] .cody-members-native-actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: auto;
+}
+
+[data-codychat-shell] .cody-members-action-btn {
+  display: grid;
+  height: 2.125rem;
+  width: 2.125rem;
+  min-height: 34px;
+  min-width: 34px;
+  place-items: center;
+  border-radius: 9px;
+  border: 1px solid var(--yz-border-purple);
+  background: var(--yz-bg-input);
+  color: var(--yz-text-soft);
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+[data-codychat-shell] .cody-members-action-btn:hover {
+  color: var(--yz-text);
+  border-color: var(--yz-border-purple-strong);
+  background: rgba(139, 92, 246, 0.14);
+  box-shadow: 0 0 12px -4px var(--yz-glow-purple);
+}
+
+[data-codychat-shell] .cody-members-action-btn:focus-visible {
+  outline: 2px solid var(--yz-purple);
+  outline-offset: 1px;
 }
 
 [data-codychat-shell] .cody-member-search,
@@ -286,11 +329,6 @@
   padding: 0.4rem 0.65rem;
 }
 
-[data-codychat-shell] .cody-room-header-compact {
-  padding-top: 0.3rem;
-  padding-bottom: 0.3rem;
-}
-
 [data-codychat-shell] .cody-room-header-main {
   display: flex;
   min-width: 0;
@@ -334,15 +372,6 @@
   color: var(--yz-cyan);
   background: rgba(139, 92, 246, 0.1);
   border-color: var(--yz-border-blue);
-}
-
-[data-codychat-shell] .cody-join-voice-btn {
-  border-radius: 999px;
-  background: linear-gradient(135deg, var(--yz-violet), var(--yz-purple-bright));
-  box-shadow:
-    0 0 0 1px var(--yz-border-purple-strong),
-    0 8px 24px -12px var(--yz-glow-purple);
-  color: white;
 }
 
 [data-codychat-shell] .cody-trending-bar {
@@ -614,13 +643,5 @@
 
   [data-codychat-shell] .cody-center-frame {
     padding-bottom: env(safe-area-inset-bottom, 0px);
-  }
-
-  [data-codychat-shell] .cody-room-header {
-    padding: 0.35rem 0.5rem;
-  }
-
-  [data-codychat-shell] .cody-trending-bar {
-    padding: 0.25rem 0.5rem;
   }
 }
