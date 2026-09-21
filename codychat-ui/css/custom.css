@@ -768,7 +768,7 @@ body {
   background-color: transparent;
 }
 
-/* Yaarzo Phase 3A — dark quoted message card */
+/* Yaarzo Phase 3A  dark quoted message card */
 #global_chat .cquote {
   background: var(--yz-bg-elevated) !important;
   color: var(--yz-text) !important;
@@ -782,4 +782,66 @@ body {
 
 #global_chat .cquote .cqmess {
   color: var(--yz-text-soft) !important;
+}
+
+/* Yaarzo  native actions moved to outer React shell */
+#chat_head #get_private,
+#chat_head .head_option[onclick="friendRequest();"],
+#chat_head .head_option[onclick="getNotification();"],
+#chat_head #main_mob_menu {
+    display: none !important;
+}
+
+/* Yaarzo mobile  outer React shell owns navigation chrome */
+@media screen and (max-width: 768px) {
+    #chat_head {
+        display: none !important;
+        height: 0 !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+    }
+
+    #wrap_footer,
+    #wrap_footer #my_menu {
+        display: none !important;
+        height: 0 !important;
+        min-height: 0 !important;
+        max-height: 0 !important;
+        border: 0 !important;
+    }
+}
+
+/* Yaarzo  responsive full-width composer */
+#top_chat_container .input_table {
+    display: flex !important;
+    align-items: center;
+    width: 100%;
+    table-layout: auto;
+}
+
+#top_chat_container #main_input_box.td_input {
+    display: block !important;
+    flex: 1 1 auto;
+    width: auto !important;
+    min-width: 0;
+    height: 40px;
+    padding: 0 3px;
+}
+
+#top_chat_container #content {
+    display: block;
+    width: 100% !important;
+    height: 40px;
+    box-sizing: border-box;
+}
+
+#top_chat_container .main_item {
+    flex: 0 0 40px;
+}
+
+#top_chat_container #inputt_right {
+    flex: 0 0 44px;
+    width: 44px;
+    min-width: 44px;
 }
