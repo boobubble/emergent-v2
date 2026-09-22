@@ -4,19 +4,26 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar } from "@/components/chat/Avatar";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import {
-  useCodyChatCommunity,
-  useMemberSearchFilter,
-  type CodyCommunityMember,
-} from "./use-codychat-community";
+import { useCodyChatCommunity } from "./use-codychat-community";
 import type { CodyChatAction } from "./codychat-actions";
 import { useAuth } from "@/lib/auth-store";
+import { useMemo, useState } from "react";
+import {
+  filterRosterMembersByQuery,
+  guestRosterEntryToDisplayUser,
+  mergeYaarzoRosterMembers,
+  rosterOnlineCount,
+  type CodyChatGuestRosterEntry,
+  type YaarzoRosterMember,
+} from "./codychat-roster";
+import type { User } from "@/lib/chat-types";
 
 export type { CodyChatAction };
 
 type CodyChatMemberPanelProps = {
   onClose?: () => void;
   onCodyAction?: (action: CodyChatAction) => void;
+  codyGuests?: CodyChatGuestRosterEntry[];
   forceDesktopColumn?: boolean;
   className?: string;
 };
@@ -54,13 +61,9 @@ function CodyNativeActionButton({
   );
 }
 
-function MemberRow({ member }: { member: CodyCommunityMember }) {
+function SignedInMemberRow({ member }: { member: User & { isOfficial?: boolean } }) {
   return (
-    <Link
-      to="/feed/"
-      search={{ u: member.name }}
-      className="cody-member-row"
-    >
+    <Link to="/feed/" search={{ u: member.name }} className="cody-member-row">
       <span className="relative shrink-0">
         <Avatar user={member} size={34} square={false} />
         <span className="cody-member-online-dot" aria-hidden />
@@ -81,12 +84,37 @@ function MemberRow({ member }: { member: CodyCommunityMember }) {
   );
 }
 
-function MemberSection({
+function CodyGuestRow({ guest }: { guest: Extract<YaarzoRosterMember, { kind: "guest" }> }) {
+  const displayUser = guestRosterEntryToDisplayUser(guest);
+  return (
+    <div className="cody-member-row cursor-default" aria-label={`${guest.name}, chat guest`}>
+      <span className="relative shrink-0">
+        <Avatar user={displayUser} size={34} square={false} />
+        <span className="cody-member-online-dot" aria-hidden />
+      </span>
+      <span className="min-w-0 flex-1 text-left">
+        <span className="flex min-w-0 items-center gap-1">
+          <span className="truncate text-[12px] font-semibold">{guest.name}</span>
+          <span
+            className="shrink-0 rounded px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground ring-1 ring-border/60"
+          >
+            Guest
+          </span>
+        </span>
+        <span className="block truncate text-[10px] text-muted-foreground">
+          Lv {guest.level ?? 1} · In-room guest
+        </span>
+      </span>
+    </div>
+  );
+}
+
+function RosterSection({
   title,
   members,
 }: {
   title: string;
-  members: CodyCommunityMember[];
+  members: YaarzoRosterMember[];
 }) {
   if (members.length === 0) return null;
   return (
@@ -95,9 +123,13 @@ function MemberSection({
         {title} ({members.length})
       </p>
       <div className="space-y-0.5">
-        {members.map((m) => (
-          <MemberRow key={m.id} member={m} />
-        ))}
+        {members.map((m) =>
+          m.kind === "user" ? (
+            <SignedInMemberRow key={m.member.id} member={m.member} />
+          ) : (
+            <CodyGuestRow key={`cody-guest-${m.codyUserId}`} guest={m} />
+          ),
+        )}
       </div>
     </div>
   );
@@ -106,15 +138,37 @@ function MemberSection({
 export function CodyChatMemberPanel({
   onClose,
   onCodyAction,
+  codyGuests = [],
   forceDesktopColumn,
   className,
 }: CodyChatMemberPanelProps) {
   const { user } = useAuth();
-  const { onlineMembers, onlineCount, profilesLoading } = useCodyChatCommunity();
-  const { query, setQuery, filtered } = useMemberSearchFilter(onlineMembers);
+  const { onlineMembers, profilesLoading } = useCodyChatCommunity();
+  const [query, setQuery] = useState("");
 
-  const generalOnline = filtered.filter((m) => !m.isOfficial);
-  const officialFiltered = filtered.filter((m) => m.isOfficial);
+  const rosterMembers = useMemo(
+    () => mergeYaarzoRosterMembers(onlineMembers, codyGuests),
+    [onlineMembers, codyGuests],
+  );
+  const filtered = useMemo(
+    () => filterRosterMembersByQuery(rosterMembers, query),
+    [rosterMembers, query],
+  );
+  const onlineCount = rosterOnlineCount(rosterMembers);
+
+  const officialFiltered = filtered.filter(
+    (m) => m.kind === "user" && m.member.isOfficial,
+  );
+  const liveRoomMembers = useMemo(
+    () =>
+      filtered.filter(
+        (m) =>
+          m.kind === "guest" || (m.kind === "user" && !m.member.isOfficial),
+      ),
+    [filtered],
+  );
+  const showProfilesLoading =
+    profilesLoading && onlineMembers.length === 0 && codyGuests.length === 0;
 
   return (
     <aside
@@ -194,31 +248,28 @@ export function CodyChatMemberPanel({
 
       <ScrollArea className="cody-scroll-area min-h-0 flex-1">
         <div className="space-y-4 px-3 pb-3">
-          {profilesLoading && onlineMembers.length === 0 ? (
+          {showProfilesLoading ? (
             <p className="py-6 text-center text-xs text-muted-foreground">Loading…</p>
           ) : null}
 
-          {!profilesLoading && onlineMembers.length === 0 ? (
+          {!showProfilesLoading && rosterMembers.length === 0 ? (
             <p className="py-6 text-center text-xs text-muted-foreground">
               No Yaarzo members online right now. Room chat runs inside the panel below.
             </p>
           ) : null}
 
           {query.trim() ? (
-            <MemberSection title="Results" members={filtered} />
+            <RosterSection title="Results" members={filtered} />
           ) : (
             <>
-              <MemberSection title="Official" members={officialFiltered} />
-              <MemberSection
-                title="Online"
-                members={generalOnline.length ? generalOnline : filtered}
-              />
+              <RosterSection title="Official" members={officialFiltered} />
+              <RosterSection title="Online" members={liveRoomMembers} />
             </>
           )}
 
           <p className="text-[10px] leading-snug text-muted-foreground">
-            Lists Yaarzo profiles with live presence. In-room roster and messages stay inside
-            CodyChat.
+            Lists Yaarzo profiles with live presence. In-room guests appear from CodyChat only and
+            do not have Yaarzo profile pages.
           </p>
         </div>
       </ScrollArea>
