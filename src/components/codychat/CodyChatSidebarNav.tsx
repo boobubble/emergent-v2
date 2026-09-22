@@ -1,6 +1,11 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
+  isGuestProtectedNavPath,
+  type ChatroomShellPanelId,
+} from "@/lib/chatroom-shell-panel";
+import { useAuthGate } from "@/lib/auth-gate";
+import {
   Award,
   ChevronLeft,
   Gamepad2,
@@ -44,8 +49,13 @@ function NavRow({
   active,
   onNavigate,
   hidden,
+  shellPanel,
+  shellTab,
+  onShellPanel,
+  onCloseShellPanel,
+  nativeCodyGuest,
 }: {
-  to: string;
+  to?: string;
   search?: Record<string, string>;
   icon: LucideIcon;
   label: string;
@@ -54,15 +64,17 @@ function NavRow({
   active?: boolean;
   onNavigate?: () => void;
   hidden?: boolean;
+  shellPanel?: ChatroomShellPanelId;
+  shellTab?: string;
+  onShellPanel?: (panel: ChatroomShellPanelId, tab?: string) => void;
+  onCloseShellPanel?: () => void;
+  nativeCodyGuest?: boolean;
 }) {
+  const { requireAuth } = useAuthGate();
   if (hidden) return null;
-  return (
-    <Link
-      to={to}
-      search={search}
-      onClick={onNavigate}
-      className={cn("cody-nav-row", active && "cody-nav-row-active")}
-    >
+  const rowClass = cn("cody-nav-row", active && "cody-nav-row-active");
+  const inner = (
+    <>
       <Icon className="h-4 w-4 shrink-0 opacity-80" aria-hidden />
       <span className="min-w-0 flex-1 truncate text-left">{label}</span>
       {badgeText ? (
@@ -71,12 +83,65 @@ function NavRow({
       {badge != null && badge > 0 ? (
         <span className="cody-nav-badge">{badge > 99 ? "99+" : badge}</span>
       ) : null}
+    </>
+  );
+
+  if (shellPanel && onShellPanel) {
+    return (
+      <button
+        type="button"
+        className={rowClass}
+        onClick={() => {
+          onShellPanel(shellPanel, shellTab);
+          onNavigate?.();
+        }}
+      >
+        {inner}
+      </button>
+    );
+  }
+
+  if (onCloseShellPanel && active) {
+    return (
+      <button
+        type="button"
+        className={rowClass}
+        onClick={() => {
+          onCloseShellPanel();
+          onNavigate?.();
+        }}
+      >
+        {inner}
+      </button>
+    );
+  }
+
+  if (!to) return null;
+
+  if (nativeCodyGuest && isGuestProtectedNavPath(to)) {
+    return (
+      <button
+        type="button"
+        className={rowClass}
+        onClick={() => {
+          requireAuth();
+          onNavigate?.();
+        }}
+      >
+        {inner}
+      </button>
+    );
+  }
+
+  return (
+    <Link to={to} search={search} onClick={onNavigate} className={rowClass}>
+      {inner}
     </Link>
   );
 }
 
 type NavItem = {
-  to: string;
+  to?: string;
   search?: Record<string, string>;
   icon: LucideIcon;
   label: string;
@@ -84,6 +149,9 @@ type NavItem = {
   badgeText?: string;
   active?: boolean;
   enabled?: boolean;
+  shellPanel?: ChatroomShellPanelId;
+  shellTab?: string;
+  closeChatPanel?: boolean;
 };
 
 type CodyChatSidebarNavProps = {
@@ -91,6 +159,11 @@ type CodyChatSidebarNavProps = {
   onClose?: () => void;
   onCollapse?: () => void;
   className?: string;
+  shellPanel?: ChatroomShellPanelId;
+  shellPanelTab?: string;
+  onOpenShellPanel?: (panel: ChatroomShellPanelId, opts?: { tab?: string }) => void;
+  onCloseShellPanel?: () => void;
+  nativeCodyGuest?: boolean;
 };
 
 export function CodyChatSidebarNav({
@@ -98,7 +171,20 @@ export function CodyChatSidebarNav({
   onClose,
   onCollapse,
   className,
+  shellPanel,
+  shellPanelTab,
+  onOpenShellPanel,
+  onCloseShellPanel,
+  nativeCodyGuest = false,
 }: CodyChatSidebarNavProps) {
+  const { requireAuth } = useAuthGate();
+  const isPanelActive = (item: NavItem) => {
+    if (item.closeChatPanel) return !shellPanel;
+    if (!item.shellPanel) return Boolean(item.active);
+    if (shellPanel !== item.shellPanel) return false;
+    if (item.shellTab) return item.shellTab === shellPanelTab;
+    return !shellPanelTab || shellPanelTab === "foryou";
+  };
   const { user } = useAuth();
   const mehfilLabel = useMehfilLabel();
   const { raw } = useAppSettings();
@@ -122,23 +208,35 @@ export function CodyChatSidebarNav({
   const q = search.trim().toLowerCase();
 
   const homeItems: NavItem[] = [
-    { to: "/", icon: Home, label: "Home", enabled: true },
-    { to: "/feed/", icon: Newspaper, label: "Feed", enabled: true },
-    { to: "/feed/", search: { tab: "trending" }, icon: TrendingUp, label: "Trending", enabled: true },
-    { to: "/find-friends", icon: UserPlus, label: "Find Friends", enabled: true },
+    { shellPanel: "home", icon: Home, label: "Home", enabled: true },
+    { shellPanel: "feed", icon: Newspaper, label: "Feed", enabled: true },
+    {
+      shellPanel: "feed",
+      shellTab: "trending",
+      icon: TrendingUp,
+      label: "Trending",
+      enabled: true,
+    },
+    { shellPanel: "find-friends", icon: UserPlus, label: "Find Friends", enabled: true },
   ];
 
   const communityItems: NavItem[] = [
-    { to: "/chatroom", icon: MessageSquare, label: "Chatrooms", active: true, enabled: true },
-    { to: "/poetry", icon: PenLine, label: mehfilLabel, enabled: true },
     {
-      to: "/competitions",
+      icon: MessageSquare,
+      label: "Chatrooms",
+      active: !shellPanel,
+      closeChatPanel: true,
+      enabled: true,
+    },
+    { shellPanel: "poetry", icon: PenLine, label: mehfilLabel, enabled: true },
+    {
+      shellPanel: "competitions",
       icon: Trophy,
       label: "Competitions",
       badgeText: liveCompetitions.length > 0 ? "Live" : undefined,
       enabled: true,
     },
-    { to: "/confessions", icon: MessageSquareHeart, label: "Confessions", enabled: true },
+    { shellPanel: "confessions", icon: MessageSquareHeart, label: "Confessions", enabled: true },
     { to: "/battle-hub", icon: Swords, label: "Live Arena", enabled: true },
     { to: "/leaderboard", icon: Award, label: "Leaderboard", enabled: true },
     { to: "/communities", icon: Users, label: "Communities", enabled: communitiesEnabled },
@@ -148,22 +246,22 @@ export function CodyChatSidebarNav({
 
   const socialItems: NavItem[] = [
     {
-      to: "/find-friends",
-      search: { tab: "requests" },
+      shellPanel: "find-friends",
+      shellTab: "requests",
       icon: Users,
       label: "Friend Requests",
       badge: incomingFriendCount || undefined,
       enabled: true,
     },
     {
-      to: "/feed/",
-      search: { tab: "notifications" },
+      shellPanel: "feed",
+      shellTab: "notifications",
       icon: Bell,
       label: "Notifications",
       badge: notifs?.unread,
       enabled: true,
     },
-    { to: "/feed/", icon: MessageSquare, label: "Direct Messages", enabled: true },
+    { shellPanel: "feed", icon: MessageSquare, label: "Direct Messages", enabled: true },
   ];
 
   const filterItems = (items: NavItem[]) =>
@@ -238,9 +336,17 @@ export function CodyChatSidebarNav({
               <p className="cody-section-label">Home</p>
               {filteredHome.map((item) => (
                 <NavRow
-                  key={`${item.to}-${item.label}`}
+                  key={`${item.label}-${item.shellPanel ?? item.to}`}
                   {...item}
+                  active={isPanelActive(item)}
                   onNavigate={onClose}
+                  onShellPanel={
+                    onOpenShellPanel
+                      ? (panel, tab) => onOpenShellPanel(panel, tab ? { tab } : undefined)
+                      : undefined
+                  }
+                  onCloseShellPanel={item.closeChatPanel ? onCloseShellPanel : undefined}
+                  nativeCodyGuest={nativeCodyGuest}
                 />
               ))}
             </div>
@@ -251,9 +357,17 @@ export function CodyChatSidebarNav({
               <p className="cody-section-label">Community</p>
               {filteredCommunity.map((item) => (
                 <NavRow
-                  key={`${item.to}-${item.label}`}
+                  key={`${item.label}-${item.shellPanel ?? item.to}`}
                   {...item}
+                  active={isPanelActive(item)}
                   onNavigate={onClose}
+                  onShellPanel={
+                    onOpenShellPanel
+                      ? (panel, tab) => onOpenShellPanel(panel, tab ? { tab } : undefined)
+                      : undefined
+                  }
+                  onCloseShellPanel={item.closeChatPanel ? onCloseShellPanel : undefined}
+                  nativeCodyGuest={nativeCodyGuest}
                 />
               ))}
             </div>
@@ -264,9 +378,16 @@ export function CodyChatSidebarNav({
               <p className="cody-section-label">Social</p>
               {filteredSocial.map((item) => (
                 <NavRow
-                  key={`${item.to}-${item.label}`}
+                  key={`${item.label}-${item.shellPanel ?? item.to}`}
                   {...item}
+                  active={isPanelActive(item)}
                   onNavigate={onClose}
+                  onShellPanel={
+                    onOpenShellPanel
+                      ? (panel, tab) => onOpenShellPanel(panel, tab ? { tab } : undefined)
+                      : undefined
+                  }
+                  nativeCodyGuest={nativeCodyGuest}
                 />
               ))}
             </div>
@@ -288,11 +409,17 @@ export function CodyChatSidebarNav({
 
         {user && selfUser ? (
           <div className="shrink-0 border-t border-border/40 px-2 py-2">
-            <Link
-              to="/feed/"
-              search={{ tab: "account" }}
-              onClick={onClose}
-              className="cody-mini-profile"
+            <button
+              type="button"
+              onClick={() => {
+                if (nativeCodyGuest) {
+                  requireAuth();
+                  return;
+                }
+                onOpenShellPanel?.("feed", { tab: "account" });
+                onClose?.();
+              }}
+              className="cody-mini-profile w-full text-left"
             >
               <Avatar user={selfUser} size={36} square={false} />
               <span className="min-w-0 flex-1 text-left">
@@ -303,7 +430,7 @@ export function CodyChatSidebarNav({
                 </span>
               </span>
               <Settings className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-            </Link>
+            </button>
           </div>
         ) : null}
       </div>

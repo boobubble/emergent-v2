@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { RouteErrorBoundary } from "@/components/AppErrorBoundary";
 import { AuthSessionHydrationRecovery } from "@/components/auth/AuthSessionHydrationRecovery";
@@ -16,8 +16,23 @@ import { getCodyChatNativeGuestEntryUrl } from "@/lib/codychat-public-url";
 import { useServerFn } from "@tanstack/react-start";
 import { getCodyChatSsoUrl } from "@/lib/codychat-sso.functions";
 import { isYaarzoLogoutMessage } from "@/lib/codychat-sso-messages";
+import { getCodyChatPublicBaseUrl } from "@/lib/codychat-public-url";
+import { YAARZO_CODY_GUEST_LOGIN_MESSAGE } from "@/components/codychat/codychat-actions";
+import {
+  getCodyChatMessageOrigin,
+  parseCodyChatGuestRosterMessage,
+  type CodyChatGuestRosterEntry,
+} from "@/components/codychat/codychat-roster";
+import { clearGuestChatSession } from "@/lib/visitor-session";
 import { loadRouteSeo, headFromRouteSeo } from "@/lib/seo";
 import { consumeChatFreshEntry, isChatFreshEntryPending } from "@/lib/auth-entry";
+import {
+  buildChatroomSearch,
+  isGuestProtectedShellPanel,
+  parseChatroomRouteSearch,
+  type ChatroomShellPanelId,
+} from "@/lib/chatroom-shell-panel";
+import { useAuthGate } from "@/lib/auth-gate";
 
 const YAARZO_ORIGINS = ["https://yaarzo.com", "https://www.yaarzo.com"] as const;
 
@@ -31,15 +46,32 @@ function CodyChatPage() {
     logout,
     loggingOut,
   } = useAuth();
-  const { guest: guestSearch } = Route.useSearch();
+  const routeSearch = Route.useSearch();
+  const { guest: guestSearch, yaarzo: shellPanel, tab: shellPanelTab } =
+    parseChatroomRouteSearch(routeSearch);
   const guestIntent = parseChatroomGuestIntent({ guest: guestSearch });
   const navigate = useNavigate();
+  const { requireAuth } = useAuthGate();
   const getSsoUrl = useServerFn(getCodyChatSsoUrl);
   const [chatUrl, setChatUrl] = useState<string | null>(null);
   const [ssoError, setSsoError] = useState<string | null>(null);
+  const [codyGuests, setCodyGuests] = useState<CodyChatGuestRosterEntry[]>([]);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const hydrationState = { ready, hydrationSlow, hydrationError };
+  const nativeCodyGuest = shouldUseNativeCodyChatGuestEntry(hydrationState, user, guestIntent);
+  const activeShellPanel = nativeCodyGuest ? undefined : shellPanel;
+  const activeShellPanelTab = nativeCodyGuest ? undefined : shellPanelTab;
+
+  useEffect(() => {
+    if (!nativeCodyGuest || !shellPanel) return;
+    void navigate({
+      to: "/chatroom",
+      search: buildChatroomSearch(parseChatroomRouteSearch(routeSearch), null),
+      resetScroll: false,
+      replace: true,
+    });
+  }, [nativeCodyGuest, shellPanel, navigate, routeSearch]);
 
   useEffect(() => {
     if (shouldShowAuthHydrationRecovery(hydrationState)) return;
@@ -84,9 +116,19 @@ function CodyChatPage() {
   }, [ready, hydrationSlow, hydrationError, user, guestIntent, navigate, getSsoUrl]);
 
   useEffect(() => {
+    const codyOrigin = getCodyChatMessageOrigin();
+
     const handleCodyChatMessage = (event: MessageEvent) => {
-      if (!isYaarzoLogoutMessage(event.data, event.origin, YAARZO_ORIGINS)) return;
       if (event.source !== iframeRef.current?.contentWindow) return;
+
+      const roster = parseCodyChatGuestRosterMessage(event.data);
+      if (roster !== null) {
+        if (event.origin !== codyOrigin) return;
+        setCodyGuests(roster);
+        return;
+      }
+
+      if (!isYaarzoLogoutMessage(event.data, event.origin, YAARZO_ORIGINS)) return;
       if (loggingOut || !user || user.isGuest) return;
       if (isChatFreshEntryPending()) return;
       void logout();
@@ -95,6 +137,40 @@ function CodyChatPage() {
     window.addEventListener("message", handleCodyChatMessage);
     return () => window.removeEventListener("message", handleCodyChatMessage);
   }, [logout, loggingOut, user]);
+
+  const openShellPanel = useCallback(
+    (panel: ChatroomShellPanelId, opts?: { tab?: string }) => {
+      if (nativeCodyGuest && isGuestProtectedShellPanel(panel)) {
+        requireAuth();
+        return;
+      }
+      void navigate({
+        to: "/chatroom",
+        search: buildChatroomSearch(parseChatroomRouteSearch(routeSearch), panel, opts),
+        resetScroll: false,
+      });
+    },
+    [nativeCodyGuest, requireAuth, navigate, routeSearch],
+  );
+
+  const closeShellPanel = () => {
+    void navigate({
+      to: "/chatroom",
+      search: buildChatroomSearch(parseChatroomRouteSearch(routeSearch), null),
+      resetScroll: false,
+    });
+  };
+
+  const handleNativeGuestLogout = () => {
+    try {
+      sessionStorage.removeItem("yaarzo:codychat:guest-details");
+      clearGuestChatSession();
+    } catch {
+      /* ignore */
+    }
+    setCodyGuests([]);
+    void navigate({ to: "/" });
+  };
 
   if (shouldShowAuthHydrationRecovery(hydrationState)) {
     return (
@@ -135,6 +211,16 @@ function CodyChatPage() {
       chatUrl={chatUrl}
       loading={!chatUrl}
       iframeRef={iframeRef}
+      codyGuests={codyGuests}
+      nativeCodyGuest={nativeCodyGuest}
+      shellPanel={activeShellPanel}
+      shellPanelTab={activeShellPanelTab}
+      onOpenShellPanel={openShellPanel}
+      onCloseShellPanel={closeShellPanel}
+      onSignedInLogout={() => {
+        void logout();
+      }}
+      onNativeGuestLogout={handleNativeGuestLogout}
       onIframeLoad={() => {
         consumeChatFreshEntry();
 
@@ -151,11 +237,11 @@ function CodyChatPage() {
               if (details.name && details.gender) {
                 iframeRef.current?.contentWindow?.postMessage(
                   {
-                    type: "YAARZO_CODY_GUEST_LOGIN",
+                    type: YAARZO_CODY_GUEST_LOGIN_MESSAGE,
                     name: details.name,
                     gender: details.gender,
                   },
-                  "https://chat.yaarzo.com",
+                  getCodyChatPublicBaseUrl(),
                 );
 
                 sessionStorage.removeItem("yaarzo:codychat:guest-details");
@@ -171,13 +257,7 @@ function CodyChatPage() {
 }
 
 export const Route = createFileRoute("/chatroom")({
-  validateSearch: (search: Record<string, unknown>) => {
-    const raw = search.guest;
-    if (raw === "1" || raw === 1 || raw === true) {
-      return { guest: "1" as const };
-    }
-    return {};
-  },
+  validateSearch: (search: Record<string, unknown>) => parseChatroomRouteSearch(search),
   loader: () =>
     loadRouteSeo(
       "/chatroom",

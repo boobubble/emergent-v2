@@ -645,3 +645,84 @@
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 }
+
+[data-codychat-shell] .cody-nav-row {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+[data-codychat-shell] .cody-shell-panel-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--yz-bg-base, #06101d);
+  background-image: linear-gradient(180deg, var(--yz-bg-base, #06101d) 0%, var(--yz-bg-void, #030712) 100%);
+}
+
+[data-codychat-shell] .cody-shell-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--yz-border-purple, rgba(139, 92, 246, 0.24));
+  padding: 0.35rem 0.5rem;
+  background: var(--yz-bg-surface, #0b1628);
+}
+
+[data-codychat-shell] .cody-shell-panel-body {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+[data-codychat-shell] .cody-iframe-under-panel {
+  pointer-events: none;
+}
+
+[data-codychat-shell] .chatroom-feed-mode {
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
+  padding: 0.75rem 0.625rem;
+}
+
+@media (min-width: 768px) {
+  [data-codychat-shell] .chatroom-feed-mode {
+    padding: 0.75rem 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  [data-codychat-shell] .chatroom-feed-mode {
+    padding: 0.75rem 1.5rem;
+  }
+}
+
+[data-codychat-shell] .chatroom-feed-post-list {
+  width: 100%;
+}
+
+[data-codychat-shell] .chatroom-feed-mode .feed-card {
+  width: 100%;
+  max-width: none;
+  border-radius: 0.75rem;
+}
+
+[data-codychat-shell] .chatroom-feed-injected-block {
+  width: 100%;
+  max-width: none;
+  margin: 0.25rem 0;
+}
+
+[data-codychat-shell] .chatroom-feed-injected-block .feed-card,
+[data-codychat-shell] .chatroom-feed-injected-block > div {
+  width: 100%;
+  max-width: none;
+}

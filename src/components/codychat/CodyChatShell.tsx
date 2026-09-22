@@ -29,8 +29,13 @@ import { useCodyChatCommunity } from "./use-codychat-community";
 import {
   type CodyChatAction,
   YAARZO_CODY_ACTION_MESSAGE,
+  YAARZO_CODY_LOGOUT_MESSAGE,
+  postCodyChatBridgeMessage,
   resolveCodyChatTargetOrigin,
 } from "./codychat-actions";
+import type { CodyChatGuestRosterEntry } from "./codychat-roster";
+import type { ChatroomShellPanelId } from "@/lib/chatroom-shell-panel";
+import { CodyChatShellPanelOverlay } from "./CodyChatShellPanelOverlay";
 import "./codychat-shell.css";
 
 const CHATROOM_XL_MQ = "(min-width: 1440px)";
@@ -40,6 +45,14 @@ type CodyChatShellProps = {
   loading?: boolean;
   iframeRef: RefObject<HTMLIFrameElement | null>;
   onIframeLoad?: () => void;
+  codyGuests?: CodyChatGuestRosterEntry[];
+  nativeCodyGuest?: boolean;
+  onSignedInLogout?: () => void;
+  onNativeGuestLogout?: () => void;
+  shellPanel?: ChatroomShellPanelId;
+  shellPanelTab?: string;
+  onOpenShellPanel?: (panel: ChatroomShellPanelId, opts?: { tab?: string }) => void;
+  onCloseShellPanel?: () => void;
 };
 
 export function CodyChatShell({
@@ -47,6 +60,14 @@ export function CodyChatShell({
   loading,
   iframeRef,
   onIframeLoad,
+  codyGuests = [],
+  nativeCodyGuest = false,
+  onSignedInLogout,
+  onNativeGuestLogout,
+  shellPanel,
+  shellPanelTab,
+  onOpenShellPanel,
+  onCloseShellPanel,
 }: CodyChatShellProps) {
   const shellRef = useRef<HTMLDivElement>(null);
   const sidebarPrefHydrated = useRef(false);
@@ -106,7 +127,7 @@ export function CodyChatShell({
     }
   }, []);
 
-  const sendCodyChatAction = useCallback(
+  const sendCodyIframeAction = useCallback(
     (action: CodyChatAction) => {
       const targetOrigin = resolveCodyChatTargetOrigin(chatUrl);
       if (!targetOrigin) return;
@@ -119,6 +140,45 @@ export function CodyChatShell({
     },
     [chatUrl, iframeRef],
   );
+
+  const sendCodyChatAction = useCallback(
+    (action: CodyChatAction) => {
+      if (action === "private") {
+        sendCodyIframeAction(action);
+        return;
+      }
+      if (!onOpenShellPanel) return;
+      if (action === "friends") {
+        onOpenShellPanel("find-friends");
+        return;
+      }
+      if (action === "notifications") {
+        onOpenShellPanel("feed", { tab: "notifications" });
+        return;
+      }
+      if (action === "profile") {
+        onOpenShellPanel("feed", { tab: "account" });
+      }
+    },
+    [onOpenShellPanel, sendCodyIframeAction],
+  );
+
+  const handleMemberLogout = useCallback(() => {
+    postCodyChatBridgeMessage(iframeRef, chatUrl, { type: YAARZO_CODY_LOGOUT_MESSAGE });
+    if (nativeCodyGuest) {
+      onNativeGuestLogout?.();
+      return;
+    }
+    onSignedInLogout?.();
+  }, [chatUrl, iframeRef, nativeCodyGuest, onNativeGuestLogout, onSignedInLogout]);
+
+  const memberPanelProps = {
+    onCodyAction: sendCodyChatAction,
+    onCodyLogout: handleMemberLogout,
+    codyGuests,
+    nativeCodyGuest,
+    onOpenShellPanel,
+  };
 
   const showInlineSidebar = isDesktopShell;
   const showInlineMembers = isLargeDesktop;
@@ -162,6 +222,11 @@ export function CodyChatShell({
             <CodyChatSidebarNav
               connected={chatConnected}
               onCollapse={() => setSidebarOpen(false)}
+              shellPanel={shellPanel}
+              shellPanelTab={shellPanelTab}
+              onOpenShellPanel={onOpenShellPanel}
+              onCloseShellPanel={onCloseShellPanel}
+              nativeCodyGuest={nativeCodyGuest}
             />
           </div>
         ) : null}
@@ -221,7 +286,12 @@ export function CodyChatShell({
             </>
           )}
 
-          <div className="cody-center-frame relative flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div
+            className={cn(
+              "cody-center-frame relative flex min-h-0 flex-1 flex-col overflow-hidden",
+              shellPanel && "cody-center-frame-has-panel",
+            )}
+          >
             {showSidebarFab ? (
               <Button
                 type="button"
@@ -248,16 +318,26 @@ export function CodyChatShell({
                 ref={iframeRef}
                 src={chatUrl}
                 title="Yaarzo Chat"
-                className="cody-iframe min-h-0 flex-1"
+                className={cn(
+                  "cody-iframe min-h-0 flex-1",
+                  shellPanel && "cody-iframe-under-panel",
+                )}
                 allow="camera; microphone; autoplay; clipboard-write"
                 onLoad={onIframeLoad}
               />
             )}
+            {shellPanel && onCloseShellPanel ? (
+              <CodyChatShellPanelOverlay
+                panel={shellPanel}
+                panelTab={shellPanelTab}
+                onClose={onCloseShellPanel}
+              />
+            ) : null}
           </div>
         </main>
 
         {showInlineMembers ? (
-          <CodyChatMemberPanel forceDesktopColumn onCodyAction={sendCodyChatAction} />
+          <CodyChatMemberPanel forceDesktopColumn {...memberPanelProps} />
         ) : null}
 
         {showInlineProfile ? (
@@ -276,6 +356,11 @@ export function CodyChatShell({
                 connected={chatConnected}
                 onClose={() => setMobileNavOpen(false)}
                 className="h-full w-full max-w-none"
+                shellPanel={shellPanel}
+                shellPanelTab={shellPanelTab}
+                onOpenShellPanel={onOpenShellPanel}
+                onCloseShellPanel={onCloseShellPanel}
+                nativeCodyGuest={nativeCodyGuest}
               />
             </SheetContent>
           </Sheet>
@@ -286,7 +371,7 @@ export function CodyChatShell({
             >
               <CodyChatMemberPanel
                 onClose={() => setMembersOpen(false)}
-                onCodyAction={sendCodyChatAction}
+                {...memberPanelProps}
                 className="w-full max-w-none border-l-0"
               />
             </SheetContent>
@@ -312,7 +397,7 @@ export function CodyChatShell({
             >
               <CodyChatMemberPanel
                 onClose={() => setMembersOpen(false)}
-                onCodyAction={sendCodyChatAction}
+                {...memberPanelProps}
                 className="flex w-full max-w-none border-l-0"
               />
             </SheetContent>
