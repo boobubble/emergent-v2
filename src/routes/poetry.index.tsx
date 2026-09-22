@@ -10,6 +10,7 @@ import { MehfilSearchBar } from "@/components/mehfil/MehfilSearchBar";
 import { PoemCard } from "@/components/mehfil/PoemCard";
 import { WriterRankBadge } from "@/components/mehfil/WriterRankBadge";
 import { RouteErrorBoundary } from "@/components/AppErrorBoundary";
+import { useChatroomShellPanelContext } from "@/components/codychat/chatroom-shell-panel-context";
 import type { WriterRank } from "@/lib/mehfil-types";
 
 export const Route = createFileRoute("/poetry/")({
@@ -17,12 +18,12 @@ export const Route = createFileRoute("/poetry/")({
   head: ({ loaderData }) => headFromRouteSeo(loaderData),
   component: () => (
     <RouteErrorBoundary section="Poetry">
-      <MehfilDiscoveryPage />
+      <PoetryDiscoveryView />
     </RouteErrorBoundary>
   ),
 });
 
-function MehfilDiscoveryPage() {
+export function PoetryDiscoveryView() {
   const fetchDiscovery = useServerFn(getMehfilDiscovery);
   const fetchCats = useServerFn(listMehfilCategories);
 
@@ -30,6 +31,7 @@ function MehfilDiscoveryPage() {
   const cats = useQuery({ queryKey: ["mehfil", "categories"], queryFn: () => fetchCats() });
 
   const heroPoem = useMemo(() => disc.data?.sections[0]?.poems[0] ?? null, [disc.data]);
+  const shell = useChatroomShellPanelContext();
 
   return (
     <MehfilShell>
@@ -46,9 +48,19 @@ function MehfilDiscoveryPage() {
               and rise from Fresh Writer to Hall of Fame.
             </p>
             <div className="mt-5 flex flex-wrap gap-2">
-              <Link to="/poetry/compose" className="inline-flex items-center gap-1.5 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow hover:bg-primary/90">
-                <PenLine className="h-4 w-4" /> Start Writing
-              </Link>
+              {shell?.embedded ? (
+                <button
+                  type="button"
+                  onClick={shell.openPoetryCompose}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow hover:bg-primary/90"
+                >
+                  <PenLine className="h-4 w-4" /> Start Writing
+                </button>
+              ) : (
+                <Link to="/poetry/compose" className="inline-flex items-center gap-1.5 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow hover:bg-primary/90">
+                  <PenLine className="h-4 w-4" /> Start Writing
+                </Link>
+              )}
               <Link to="/poetry/challenges" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/60 px-5 py-2.5 text-sm font-semibold hover:bg-muted">
                 <Sparkles className="h-4 w-4" /> Poetry Battles
               </Link>

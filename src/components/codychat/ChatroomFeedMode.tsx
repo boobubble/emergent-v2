@@ -3,6 +3,7 @@ import { AlertCircle, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PostCard } from "@/components/feed/PostCard";
 import { PostSkeleton } from "@/components/feed/FeedSkeletons";
+import { Composer } from "@/components/feed/Composer";
 import { useAuth } from "@/lib/auth-store";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
 import type { FeedPost } from "@/lib/feed-types";
@@ -142,6 +143,11 @@ export function ChatroomFeedMode({ tab }: ChatroomFeedModeProps) {
 
   return (
     <div className="chatroom-feed-mode w-full">
+      {meId ? (
+        <div className="mb-3">
+          <Composer authorId={meId} onPosted={() => void loadInitial()} />
+        </div>
+      ) : null}
       <div className="mb-3 flex items-center justify-between gap-2 px-1">
         <h3 className="text-sm font-semibold">{heading}</h3>
         <Button

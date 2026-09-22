@@ -15,6 +15,7 @@ import {
 import type { User } from "@/lib/chat-types";
 import { toast } from "sonner";
 import { loadRouteSeo, headFromRouteSeo } from "@/lib/seo";
+import { ChatroomShellSignInPrompt } from "@/components/codychat/chatroom-shell-auth";
 
 const FRIEND_TABS = new Set(["suggestions", "requests", "sent", "friends", "search"]);
 
@@ -47,7 +48,13 @@ function FindFriendsRoutePage() {
   return <FindFriendsView embeddedTab={tabSearch as Tab | undefined} />;
 }
 
-export function FindFriendsView({ embeddedTab }: { embeddedTab?: Tab }) {
+export function FindFriendsView({
+  embeddedTab,
+  embedded = false,
+}: {
+  embeddedTab?: Tab;
+  embedded?: boolean;
+}) {
   const { user } = useAuth();
   const { profiles } = useRemoteProfiles();
   const [tab, setTab] = useState<Tab>(() => {
@@ -175,7 +182,12 @@ export function FindFriendsView({ embeddedTab }: { embeddedTab?: Tab }) {
     return n;
   }
 
-  if (!user) return null;
+  if (!user) {
+    if (embedded) {
+      return <ChatroomShellSignInPrompt label="Sign in to find friends and manage requests." />;
+    }
+    return null;
+  }
   if (user.isGuest) {
     return (
       <GuestBlock />
@@ -191,20 +203,29 @@ export function FindFriendsView({ embeddedTab }: { embeddedTab?: Tab }) {
   ];
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-10">
-      <header className="sticky top-0 z-20 border-b border-border bg-card">
-        <div className="mx-auto flex max-w-[1100px] items-center gap-3 px-4 py-2.5">
-          <Link to="/feed" className="grid h-9 w-9 place-items-center rounded-full hover:bg-accent" aria-label="Back to feed">
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-          <h1 className="text-base font-semibold sm:text-lg">Find Friends</h1>
-          <div className="ml-auto text-xs text-muted-foreground hidden sm:block">
-            {friendsList.length} friend{friendsList.length === 1 ? "" : "s"}
+    <div className={embedded ? "bg-background text-foreground pb-6" : "min-h-screen bg-background text-foreground pb-10"}>
+      {!embedded ? (
+        <header className="sticky top-0 z-20 border-b border-border bg-card">
+          <div className="mx-auto flex max-w-[1100px] items-center gap-3 px-4 py-2.5">
+            <Link to="/feed" className="grid h-9 w-9 place-items-center rounded-full hover:bg-accent" aria-label="Back to feed">
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+            <h1 className="text-base font-semibold sm:text-lg">Find Friends</h1>
+            <div className="ml-auto text-xs text-muted-foreground hidden sm:block">
+              {friendsList.length} friend{friendsList.length === 1 ? "" : "s"}
+            </div>
           </div>
+        </header>
+      ) : (
+        <div className="mb-3 flex items-center justify-between gap-2 px-1">
+          <h3 className="text-sm font-semibold">Find Friends</h3>
+          <span className="text-xs text-muted-foreground">
+            {friendsList.length} friend{friendsList.length === 1 ? "" : "s"}
+          </span>
         </div>
-      </header>
+      )}
 
-      <div className="mx-auto max-w-[1100px] px-3 py-4 sm:px-4">
+      <div className={embedded ? "px-0" : "mx-auto max-w-[1100px] px-3 py-4 sm:px-4"}>
         {/* Tabs */}
         <div className="flex gap-1 overflow-x-auto rounded-full bg-card p-1 shadow-sm border border-border">
           {TABS.map(t => {

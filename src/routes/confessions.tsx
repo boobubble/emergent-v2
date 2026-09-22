@@ -35,13 +35,17 @@ export const Route = createFileRoute("/confessions")({
   component: ConfessionsPage,
 });
 
+export function ConfessionsView({ preferSignedInIdentity = false }: { preferSignedInIdentity?: boolean }) {
+  return <ConfessionsPage preferSignedInIdentity={preferSignedInIdentity} />;
+}
+
 function useConfig(): ConfessionsConfig {
   const fetchSettings = useServerFn(getAllSettings);
   const { data } = useQuery({ queryKey: ["app-settings"], queryFn: () => fetchSettings({}) });
   return useMemo(() => ({ ...CONFESSIONS_DEFAULTS, ...((data?.confessions as Partial<ConfessionsConfig>) ?? {}) }), [data]);
 }
 
-function ConfessionsPage() {
+function ConfessionsPage({ preferSignedInIdentity = false }: { preferSignedInIdentity?: boolean }) {
   const cfg = useConfig();
   const { user } = useAuth();
   const [sort, setSort] = useState<"recent" | "trending" | "most_liked" | "most_replied">("trending");
@@ -87,7 +91,11 @@ function ConfessionsPage() {
             </DialogTrigger>
             <DialogContent className="max-w-lg">
               <DialogHeader><DialogTitle>New confession</DialogTitle></DialogHeader>
-              <Composer cfg={cfg} onPosted={() => { setComposerOpen(false); refetch(); }} />
+              <Composer
+                cfg={cfg}
+                preferSignedInIdentity={preferSignedInIdentity}
+                onPosted={() => { setComposerOpen(false); refetch(); }}
+              />
             </DialogContent>
           </Dialog>
         </div>
@@ -170,12 +178,34 @@ function EmptyState({ onCompose }: { onCompose: () => void }) {
 }
 
 /* =================== Composer =================== */
-function Composer({ cfg, onPosted }: { cfg: ConfessionsConfig; onPosted: () => void }) {
+function defaultConfessionDisplayMode(
+  enabledModes: ConfessionDisplayMode[],
+  preferSignedInIdentity: boolean,
+  signedIn: boolean,
+): ConfessionDisplayMode {
+  if (preferSignedInIdentity && signedIn && enabledModes.includes("username")) {
+    return "username";
+  }
+  return enabledModes[0] ?? "fully_anonymous";
+}
+
+function Composer({
+  cfg,
+  onPosted,
+  preferSignedInIdentity = false,
+}: {
+  cfg: ConfessionsConfig;
+  onPosted: () => void;
+  preferSignedInIdentity?: boolean;
+}) {
+  const { user } = useAuth();
   const { requireAuth } = useAuthGate();
   const enabledKinds = (Object.keys(cfg.kinds) as ConfessionKind[]).filter((k) => cfg.kinds[k]);
   const enabledModes = (Object.keys(cfg.anonymousModes) as ConfessionDisplayMode[]).filter((m) => cfg.anonymousModes[m]);
   const [kind, setKind] = useState<ConfessionKind>(enabledKinds[0] ?? "text");
-  const [mode, setMode] = useState<ConfessionDisplayMode>(enabledModes[0] ?? "fully_anonymous");
+  const [mode, setMode] = useState<ConfessionDisplayMode>(() =>
+    defaultConfessionDisplayMode(enabledModes, preferSignedInIdentity, Boolean(user)),
+  );
   const [category, setCategory] = useState(cfg.categories[0]?.key ?? "secrets");
   const [text, setText] = useState("");
   const [imageUrl, setImageUrl] = useState("");

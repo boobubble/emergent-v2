@@ -11,6 +11,7 @@ import { useAuth } from "@/lib/auth-store";
 import { AuthScreen } from "@/components/auth/AuthScreen";
 import { gamify } from "@/lib/gamification-emit";
 import { isNavigableSlug } from "@/lib/route-slug";
+import { useChatroomShellPanelContext } from "@/components/codychat/chatroom-shell-panel-context";
 
 export const Route = createFileRoute("/poetry/compose")({
   head: () => ({
@@ -20,7 +21,7 @@ export const Route = createFileRoute("/poetry/compose")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: ComposePage,
+  component: PoetryComposeView,
 });
 
 const THEMES = [
@@ -32,9 +33,11 @@ const THEMES = [
   { key: "sage",    label: "Sage",     css: "linear-gradient(135deg,#d9f99d 0%,#a7f3d0 100%)" },
 ];
 
-function ComposePage() {
+export function PoetryComposeView({ embeddedInShell = false }: { embeddedInShell?: boolean }) {
   const { user } = useAuth();
   const nav = useNavigate();
+  const shell = useChatroomShellPanelContext();
+  const embedded = embeddedInShell || Boolean(shell?.embedded);
   const fetchCats = useServerFn(listMehfilCategories);
   const publish = useServerFn(publishPoem);
 
@@ -84,6 +87,10 @@ function ComposePage() {
       if (poem.status === "published") {
         gamify("poetry_publish", 1, { poem_id: poem.id, category: categorySlug });
         toast.success(optInBattle ? "Published & entered active battle" : "Poem published to Poetry Hub");
+        if (embedded) {
+          shell?.closePoetryCompose();
+          return;
+        }
         if (isNavigableSlug(poem.slug)) {
           nav({ to: "/poetry/$slug", params: { slug: poem.slug } });
         } else {
@@ -91,6 +98,10 @@ function ComposePage() {
         }
       } else {
         toast.success("Saved as draft");
+        if (embedded) {
+          shell?.closePoetryCompose();
+          return;
+        }
         nav({ to: "/poetry" });
       }
     },
@@ -124,7 +135,18 @@ function ComposePage() {
             <h1 className="font-serif text-3xl font-bold">Write a Poem</h1>
             <p className="text-xs text-muted-foreground">Draft, publish and share with the Poetry Hub community.</p>
           </div>
-          <Link to="/poetry" className="rounded-md p-2 hover:bg-muted" aria-label="Close"><X className="h-4 w-4" /></Link>
+          {embedded ? (
+            <button
+              type="button"
+              className="rounded-md p-2 hover:bg-muted"
+              aria-label="Close"
+              onClick={() => shell?.closePoetryCompose()}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          ) : (
+            <Link to="/poetry" className="rounded-md p-2 hover:bg-muted" aria-label="Close"><X className="h-4 w-4" /></Link>
+          )}
         </div>
 
         <div className="grid gap-4 md:grid-cols-[1fr_260px]">

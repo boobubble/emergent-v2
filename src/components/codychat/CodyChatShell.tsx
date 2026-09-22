@@ -331,6 +331,7 @@ export function CodyChatShell({
                 panel={shellPanel}
                 panelTab={shellPanelTab}
                 onClose={onCloseShellPanel}
+                onOpenShellPanel={onOpenShellPanel}
               />
             ) : null}
           </div>

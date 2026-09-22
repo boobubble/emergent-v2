@@ -70,6 +70,19 @@ function useSupabaseReady() {
   return ready;
 }
 
+/** Shared signed-in data providers used by app routes and chatroom shell panels. */
+export function AuthenticatedSurfaceProviders({ children }: { children: ReactNode }) {
+  return (
+    <SocialGraphProvider>
+      <NotificationsProvider>
+        <FeedPrefsProvider>
+          <IgnoreProvider>{children}</IgnoreProvider>
+        </FeedPrefsProvider>
+      </NotificationsProvider>
+    </SocialGraphProvider>
+  );
+}
+
 export function AuthenticatedAppShell({
   username,
   authUserId,
@@ -86,26 +99,20 @@ export function AuthenticatedAppShell({
   const ready = useSupabaseReady();
   if (!ready) return null;
   const inner = (
-    <SocialGraphProvider>
-      <NotificationsProvider>
-        <FeedPrefsProvider>
-          <IgnoreProvider>
-            <BroadcasterAnnouncementsRunner />
-            <TrioInvitesListener />
-            <HeadFootScripts />
-            <AdsAutoLoader />
-            <SessionConflictBanner />
-            <FaviconSwitcher />
-            <SubscriptionGate />
-            <LicenseGuard />
-            <AuthenticatedHooks userId={authUserId} />
-            {children}
-            <Sonner />
-            <RealtimeDebugOverlay />
-          </IgnoreProvider>
-        </FeedPrefsProvider>
-      </NotificationsProvider>
-    </SocialGraphProvider>
+    <AuthenticatedSurfaceProviders>
+      <BroadcasterAnnouncementsRunner />
+      <TrioInvitesListener />
+      <HeadFootScripts />
+      <AdsAutoLoader />
+      <SessionConflictBanner />
+      <FaviconSwitcher />
+      <SubscriptionGate />
+      <LicenseGuard />
+      <AuthenticatedHooks userId={authUserId} />
+      {children}
+      <Sonner />
+      <RealtimeDebugOverlay />
+    </AuthenticatedSurfaceProviders>
   );
   if (!requireChat) return inner;
   return (
