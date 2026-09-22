@@ -2,11 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { loadRouteSeo, headFromRouteSeo } from "@/lib/seo";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
-  Heart, MessageCircle, Plus, Pin, Sparkles, Send, Flag, Loader2, Shield, ChevronLeft,
+  MessageCircle, Plus, Pin, Sparkles, Send, Flag, Loader2, Shield, ChevronLeft,
 } from "lucide-react";
+import { RouteErrorBoundary } from "@/components/AppErrorBoundary";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,10 +30,41 @@ import {
 import { useAuth } from "@/lib/auth-store";
 import { useAuthGate } from "@/lib/auth-gate";
 
+function mergeConfessionsConfig(partial?: Partial<ConfessionsConfig> | null): ConfessionsConfig {
+  const p = partial ?? {};
+  return {
+    ...CONFESSIONS_DEFAULTS,
+    ...p,
+    anonymousModes: { ...CONFESSIONS_DEFAULTS.anonymousModes, ...(p.anonymousModes ?? {}) },
+    kinds: { ...CONFESSIONS_DEFAULTS.kinds, ...(p.kinds ?? {}) },
+    reactions: { ...CONFESSIONS_DEFAULTS.reactions, ...(p.reactions ?? {}) },
+    categories:
+      Array.isArray(p.categories) && p.categories.length > 0
+        ? p.categories
+        : CONFESSIONS_DEFAULTS.categories,
+    coins: { ...CONFESSIONS_DEFAULTS.coins, ...(p.coins ?? {}) },
+    level: { ...CONFESSIONS_DEFAULTS.level, ...(p.level ?? {}) },
+    moderation: { ...CONFESSIONS_DEFAULTS.moderation, ...(p.moderation ?? {}) },
+    expiry: { ...CONFESSIONS_DEFAULTS.expiry, ...(p.expiry ?? {}) },
+    leaderboards: { ...CONFESSIONS_DEFAULTS.leaderboards, ...(p.leaderboards ?? {}) },
+    seo: { ...CONFESSIONS_DEFAULTS.seo, ...(p.seo ?? {}) },
+  };
+}
+
+function ConfessionsRoutePage() {
+  const { user } = useAuth();
+  const preferSignedInIdentity = Boolean(user && !user.isGuest);
+  return (
+    <RouteErrorBoundary section="Confessions">
+      <ConfessionsPage preferSignedInIdentity={preferSignedInIdentity} />
+    </RouteErrorBoundary>
+  );
+}
+
 export const Route = createFileRoute("/confessions")({
   loader: () => loadRouteSeo("/confessions", "Confessions", "A safe space to share secrets and connect anonymously."),
   head: ({ loaderData }) => headFromRouteSeo(loaderData),
-  component: ConfessionsPage,
+  component: ConfessionsRoutePage,
 });
 
 export function ConfessionsView({ preferSignedInIdentity = false }: { preferSignedInIdentity?: boolean }) {
@@ -42,7 +74,10 @@ export function ConfessionsView({ preferSignedInIdentity = false }: { preferSign
 function useConfig(): ConfessionsConfig {
   const fetchSettings = useServerFn(getAllSettings);
   const { data } = useQuery({ queryKey: ["app-settings"], queryFn: () => fetchSettings({}) });
-  return useMemo(() => ({ ...CONFESSIONS_DEFAULTS, ...((data?.confessions as Partial<ConfessionsConfig>) ?? {}) }), [data]);
+  return useMemo(
+    () => mergeConfessionsConfig(data?.confessions as Partial<ConfessionsConfig> | undefined),
+    [data],
+  );
 }
 
 function ConfessionsPage({ preferSignedInIdentity = false }: { preferSignedInIdentity?: boolean }) {
@@ -398,7 +433,7 @@ function ConfessionCard({ item, cfg, viewerIsAuthor }: { item: any; cfg: Confess
         {item.kind === "poll" && item.poll && (
           <div className="space-y-1.5 rounded-xl bg-accent/40 p-3">
             <p className="text-sm font-bold">📊 {item.poll.question}</p>
-            {(item.poll.options as string[]).map((opt, i) => (
+            {(Array.isArray(item.poll.options) ? item.poll.options : []).map((opt, i) => (
               <div key={i} className="rounded-lg border border-border bg-background px-3 py-2 text-sm">{opt}</div>
             ))}
           </div>
@@ -408,7 +443,7 @@ function ConfessionCard({ item, cfg, viewerIsAuthor }: { item: any; cfg: Confess
         <div className="flex flex-wrap items-center gap-1.5">
           {enabledReactions.map((r) => {
             const meta = REACTION_META[r];
-            const active = (item.myReactions as string[]).includes(r);
+            const active = Array.isArray(item.myReactions) && item.myReactions.includes(r);
             return (
               <button
                 key={r}
