@@ -1,0 +1,18 @@
+{
+  "name": "Yaarzo (BooBubble)",
+  "user": "ubuntu",
+  "install": "bash .cursor/install.sh",
+  "terminals": [
+    {
+      "name": "dev",
+      "command": "export PATH=\"$HOME/.bun/bin:$PATH\" && bun run dev",
+      "description": "Vite dev server (TanStack Start SSR) on http://localhost:8080. Uses the Node 22 shim installed by .cursor/install.sh. Needs Supabase env vars (see .env.example) for data-backed routes."
+    }
+  ],
+  "ports": [
+    {
+      "name": "vite-dev",
+      "port": 8080
+    }
+  ]
+}
