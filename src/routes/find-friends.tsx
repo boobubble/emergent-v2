@@ -18,13 +18,20 @@ import { loadRouteSeo, headFromRouteSeo } from "@/lib/seo";
 
 const FRIEND_TABS = new Set(["suggestions", "requests", "sent", "friends", "search"]);
 
+type Tab = "suggestions" | "requests" | "sent" | "friends" | "search";
+
+export function parseFindFriendsTab(raw?: string): Tab | undefined {
+  if (raw && FRIEND_TABS.has(raw)) return raw as Tab;
+  return undefined;
+}
+
 export const Route = createFileRoute("/find-friends")({
   validateSearch: (search: Record<string, unknown>) => ({
     tab: typeof search.tab === "string" && FRIEND_TABS.has(search.tab) ? search.tab : undefined,
   }),
   loader: () => loadRouteSeo("/find-friends", "Find Friends", "Discover people, accept requests, and grow your network."),
   head: ({ loaderData }) => headFromRouteSeo(loaderData),
-  component: FindFriendsPage,
+  component: FindFriendsRoutePage,
 });
 
 type FriendshipRow = {
@@ -35,19 +42,24 @@ type FriendshipRow = {
   created_at: string;
 };
 
-type Tab = "suggestions" | "requests" | "sent" | "friends" | "search";
-
-function FindFriendsPage() {
+function FindFriendsRoutePage() {
   const { tab: tabSearch } = Route.useSearch();
+  return <FindFriendsView embeddedTab={tabSearch as Tab | undefined} />;
+}
+
+export function FindFriendsView({ embeddedTab }: { embeddedTab?: Tab }) {
   const { user } = useAuth();
   const { profiles } = useRemoteProfiles();
-  const [tab, setTab] = useState<Tab>("suggestions");
+  const [tab, setTab] = useState<Tab>(() => {
+    if (embeddedTab && FRIEND_TABS.has(embeddedTab)) return embeddedTab;
+    return "suggestions";
+  });
 
   useEffect(() => {
-    if (tabSearch && FRIEND_TABS.has(tabSearch)) {
-      setTab(tabSearch as Tab);
+    if (embeddedTab && FRIEND_TABS.has(embeddedTab)) {
+      setTab(embeddedTab);
     }
-  }, [tabSearch]);
+  }, [embeddedTab]);
   const [q, setQ] = useState("");
   const meId = user?.id ?? "";
   const { friendships: rows, friendshipsLoaded: loading } = useSocialGraph();
