@@ -301,7 +301,8 @@ function AuthGate() {
   }
 
 
-  const requireChatProvider = !isCommunityNonChatPath(path) && !isIrcChatroomPath(path);
+  // /chatroom uses CodyChat for public rooms; ChatProvider powers Yaarzo Supabase DMs.
+  const requireChatProvider = !isCommunityNonChatPath(path);
   return (
     <Suspense fallback={null}>
       <AuthenticatedAppShell

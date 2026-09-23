@@ -55,6 +55,7 @@ function normalizeRoomGameConfig(game?: RoomGameConfig): RoomGameConfig | undefi
 import { runCommand } from "./commands";
 import { evaluateBadges, todayKey, daysBetween } from "./achievements";
 import { supabase } from "@/integrations/supabase/client";
+import { loadBrowserSupabase } from "@/integrations/supabase/load-browser";
 import { rtLog } from "./realtime-debug";
 import { sanitizeRemoteReplyToId } from "./message-list-model";
 import { computeDmUnreadCount, isPeerDmUnread, peerDmUnreadMessageCount } from "./global-unread";
@@ -159,6 +160,7 @@ import { markDmConversationRead } from "./dm-read";
 import {
   AUTH_SEND_NETWORK_ERROR,
   applyHydrateLookupResult,
+  appendPlannedRemoteUserMessage,
   collectPendingSendIds,
   confirmMessages,
   failMessages,
@@ -167,6 +169,7 @@ import {
   settleAuthenticatedSendWithRecover,
   type AuthenticatedInsertRow,
   type MessageLookupResult,
+  type SettleInsertOutcome,
 } from "./chat-optimistic";
 import {
   lobbyIrcTransport,
@@ -298,21 +301,37 @@ function settleRemoteOutgoing(outs: AuthenticatedOutgoing[], authorId: string) {
   });
 }
 
-function maybeSendIrc(out: AuthenticatedOutgoing, ircSentIds: Set<string>): void {
-  if (
-    !usesIrcLive(out.channelId) ||
-    (out.kind !== "text" && out.kind !== "me")
-  ) {
-    return;
+/** Ensures the browser Supabase client is ready, then runs authenticated INSERT settlement. */
+export async function commitAuthenticatedRemoteSend(
+  outs: AuthenticatedOutgoing[],
+  authorId: string,
+): Promise<SettleInsertOutcome> {
+  if (import.meta.env.DEV) {
+    const kind = outs.every((out) => out.channelId.startsWith("dm:")) ? "dm" : "mixed";
+    rtLog("dm", "send-insert", `rows=${outs.length} · kind=${kind}`);
   }
-  if (ircSentIds.has(out.id)) return;
-  if (!lobbyIrcTransport.connected) return;
-  if (!lobbyIrcTransport.send(out.id, out.text, out.channelId)) return;
-  ircSentIds.add(out.id);
+  await loadBrowserSupabase();
+  return settleRemoteOutgoing(outs, authorId);
 }
 
-function releaseIrcSentIds(ircSentIds: Set<string>, ids: Iterable<string>): void {
-  for (const id of ids) ircSentIds.delete(id);
+function applyAuthenticatedSendOutcome(
+  ids: string[],
+  outcome: SettleInsertOutcome,
+  patchState: (fn: (s: State) => State) => void,
+): void {
+  if (import.meta.env.DEV) {
+    rtLog("dm", "send-settled", outcome.action === "confirm" ? "confirm" : "fail");
+  }
+  if (outcome.action === "fail") {
+    console.error("send failed", outcome.error);
+    rtLog("error", "send-failed", outcome.error);
+    patchState((s) => ({
+      ...s,
+      messages: failMessages(s.messages, ids, outcome.error),
+    }));
+    return;
+  }
+  patchState((s) => ({ ...s, messages: confirmMessages(s.messages, ids, outcome.tsById) }));
 }
 
 function rowToMessage(row: { id: string; channel_id: string; author_id: string; text: string; kind: string | null; attachment: unknown; reply_to_id: string | null; created_at: string }, meAuthUuid: string | null): Message {
@@ -334,6 +353,27 @@ function newUuid(): string {
     const r = (Math.random() * 16) | 0;
     return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
   });
+}
+
+/** Pre-assign one remote user-message UUID per send (must run outside React updaters). */
+export function planRemoteUserOutgoing(
+  authUserId: string | null,
+  channelId: string,
+  trimmed: string,
+  attachment: Attachment | undefined,
+  replyToId: string | undefined,
+  idFactory: () => string = newUuid,
+): AuthenticatedOutgoing | null {
+  if (!authUserId || !isRemoteChannel(channelId, authUserId)) return null;
+  const kind = trimmed.startsWith("/me ") ? "me" : "text";
+  return {
+    id: idFactory(),
+    channelId,
+    text: trimmed,
+    kind,
+    attachment: attachment ?? null,
+    replyToId: sanitizeRemoteReplyToId(replyToId),
+  };
 }
 
 function storageKeyFor(username: string) {
@@ -2300,41 +2340,23 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     }
 
     const activeCh = channelOverride || stateRef.current.activeChannel;
-    if (isIrcPmChannel(activeCh)) {
-      const recipientNick = parseIrcPmChannel(activeCh);
-      if (!recipientNick || !trimmed) return;
-      const messageId = newUuid();
-      const peerId = ircPmPeerId(recipientNick);
-      const msg: Message = {
-        id: messageId,
-        channelId: activeCh,
-        authorId: guestVisitorId || authUserId || "me",
-        text: trimmed,
-        ts: Date.now(),
-        kind: "text",
-        sendStatus: lobbyIrcTransport.connected ? "sending" : "failed",
-      };
-      setState((s) => ({
-        ...s,
-        messages: {
-          ...s.messages,
-          [activeCh]: [...(s.messages[activeCh] || []), msg],
-        },
-      }));
-      if (lobbyIrcTransport.sendPm(recipientNick, messageId, trimmed)) {
-        setState((s) => ({
-          ...s,
-          messages: confirmMessages(s.messages, [messageId], { [messageId]: msg.ts }).messages,
-        }));
-      }
-      setReplyingTo(null);
-      return;
-    }
-
     if (isGuest) {
       return;
     }
     type Outgoing = AuthenticatedOutgoing;
+    const channelIdForSend = channelOverride || stateRef.current.activeChannel;
+    const plannedUserOutgoing = planRemoteUserOutgoing(
+      authUserId,
+      channelIdForSend,
+      trimmed,
+      attachment,
+      replyToId,
+    );
+    if (plannedUserOutgoing) {
+      seenRemoteMsgIds.current.add(plannedUserOutgoing.id);
+    }
+    let remoteUserMsgCommitted = false;
+    let commandOutgoing: Outgoing[] = [];
     let outgoingRemotes: Outgoing[] = [];
     flushSync(() => {
     setState(s => {
@@ -2440,24 +2462,26 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
         }
       }
       const remote = authUserId && isRemoteChannel(channelId, authUserId);
-      const msgId = remote ? newUuid() : uid();
-      const userMsg: Message = {
-        id: msgId, channelId, authorId: "me",
-        text: trimmed, ts: Date.now(),
-        kind: trimmed.startsWith("/me ") ? "me" : "text",
-        attachment, replyToId,
-        ...(remote ? { sendStatus: "sending" as const } : {}),
-      };
-      if (remote) {
-        seenRemoteMsgIds.current.add(msgId);
-        outgoing.push({
-          id: msgId, channelId, text: trimmed,
-          kind: userMsg.kind ?? "text",
-          attachment: attachment ?? null,
-          replyToId: sanitizeRemoteReplyToId(replyToId),
-        });
+      const planned =
+        plannedUserOutgoing && plannedUserOutgoing.channelId === channelId
+          ? plannedUserOutgoing
+          : null;
+      let messagesWithUser = s.messages;
+      if (planned) {
+        const appended = appendPlannedRemoteUserMessage(s.messages, planned, { attachment, replyToId });
+        messagesWithUser = appended.messages;
+        remoteUserMsgCommitted = appended.appended;
+      } else {
+        const msgId = uid();
+        const userMsg: Message = {
+          id: msgId, channelId, authorId: "me",
+          text: trimmed, ts: Date.now(),
+          kind: trimmed.startsWith("/me ") ? "me" : "text",
+          attachment, replyToId,
+        };
+        const existingLocal = s.messages[channelId] || [];
+        messagesWithUser = { ...s.messages, [channelId]: [...existingLocal, userMsg] };
       }
-      const existing = s.messages[channelId] || [];
       const meXp = (s.me.xp ?? 0) + 1;
       const meMsgCount = (s.me.messageCount ?? 0) + 1;
       const meCmdCount = (s.me.commandCount ?? 0) + (isCmd ? 1 : 0);
@@ -2471,7 +2495,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
         ...s,
         me: { ...s.me, xp: meXp, level: meNext.level, messageCount: meMsgCount, commandCount: meCmdCount },
         users: { ...s.users, me: meNext },
-        messages: { ...s.messages, [channelId]: [...existing, userMsg] },
+        messages: messagesWithUser,
       };
       // Block ALL bot commands inside user DMs (non-bot) — commands only work in chatrooms
       const dmPeerId = channelId.startsWith("dm:") ? channelId.slice(3) : null;
@@ -2646,72 +2670,73 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       }
       return badged.state;
       } finally {
-        outgoingRemotes = outgoing;
+        commandOutgoing = outgoing;
       }
     });
     });
+    outgoingRemotes = [
+      ...(remoteUserMsgCommitted && plannedUserOutgoing ? [plannedUserOutgoing] : []),
+      ...commandOutgoing,
+    ];
     if (outgoingRemotes.length && authUserId) {
       const safeRemotes = outgoingRemotes.filter((out) => isRemoteChannel(out.channelId, authUserId));
-      const ircConfirmedIds = new Set<string>();
-
       for (const out of safeRemotes) {
         rtLog(out.channelId.startsWith("dm:") ? "dm" : "msg", "out", `${out.channelId} · ${out.text.slice(0, 30)}`);
-        const wasAlreadyIrcSent = ircSentMsgIds.current.has(out.id);
-        maybeSendIrc(out, ircSentMsgIds.current);
-        if (!wasAlreadyIrcSent && ircSentMsgIds.current.has(out.id)) {
-          ircConfirmedIds.add(out.id);
-        }
       }
       if (safeRemotes.length) {
-      if (ircConfirmedIds.size) {
-        const ircTsById: Record<string, number> = {};
-        for (const id of ircConfirmedIds) ircTsById[id] = Date.now();
-        setState((s) => ({ ...s, messages: confirmMessages(s.messages, [...ircConfirmedIds], ircTsById) }));
-        releaseIrcSentIds(ircSentMsgIds.current, ircConfirmedIds);
-      }
-      const ids = safeRemotes.map((out) => out.id);
-      void settleRemoteOutgoing(safeRemotes, authUserId).then((outcome) => {
-        if (outcome.action === "fail") {
-          console.error("send failed", outcome.error);
-          rtLog("error", "send-failed", outcome.error);
-          setState((s) => ({
-            ...s,
-            messages: failMessages(
-              s.messages,
-              ids.filter((id) => !ircConfirmedIds.has(id)),
-              outcome.error,
-            ),
-          }));
-          return;
+        const ids = safeRemotes.map((out) => out.id);
+        void commitAuthenticatedRemoteSend(safeRemotes, authUserId)
+          .then((outcome) => {
+            applyAuthenticatedSendOutcome(ids, outcome, setState);
+            if (outcome.action === "fail") return;
+            // Fire-and-forget AI chatbot reply for chatroom messages
+            for (const out of safeRemotes) {
+              if (out.channelId.startsWith("dm:") || out.kind === "system") continue;
+              // AI chatbots only respond when explicitly @mentioned (validated server-side too).
+              if (/@\w/.test(out.text)) {
+                import("@/lib/ai-chatbots.functions").then(({ aiChatbotReply }) => {
+                  aiChatbotReply({ data: { channel_id: out.channelId, text: out.text } }).catch(() => {});
+                }).catch(() => {});
+              }
+              // BooBubble ChatGPT lobby reply — trigger on any "boobubble" mention (case-insensitive)
+              if (out.kind === "text" && /boobubble/i.test(out.text)) {
+                import("@/lib/boobubble.functions").then(({ askBoobubbleInLobby }) => {
+                  askBoobubbleInLobby({ data: { channel_id: out.channelId, text: out.text } }).catch(() => {});
+                }).catch(() => {});
+              }
+            }
+          })
+          .catch((err: unknown) => {
+            const message = err instanceof Error && err.message ? err.message : "Failed to send";
+            console.error("send failed", err);
+            rtLog("error", "send-failed", message);
+            setState((s) => ({
+              ...s,
+              messages: failMessages(s.messages, ids, message),
+            }));
+          });
+      } else {
+        const orphanIds = outgoingRemotes.map((out) => out.id);
+        if (import.meta.env.DEV) {
+          console.warn("[dm-send] remote outgoing dropped by channel classification", {
+            count: orphanIds.length,
+            channels: [...new Set(outgoingRemotes.map((out) => out.channelId))],
+          });
         }
-        setState((s) => ({ ...s, messages: confirmMessages(s.messages, ids, outcome.tsById) }));
-        releaseIrcSentIds(ircSentMsgIds.current, ids);
-        // Fire-and-forget AI chatbot reply for chatroom messages
-        for (const out of safeRemotes) {
-          if (out.channelId.startsWith("dm:") || out.kind === "system") continue;
-          // AI chatbots only respond when explicitly @mentioned (validated server-side too).
-          if (/@\w/.test(out.text)) {
-            import("@/lib/ai-chatbots.functions").then(({ aiChatbotReply }) => {
-              aiChatbotReply({ data: { channel_id: out.channelId, text: out.text } }).catch(() => {});
-            }).catch(() => {});
-          }
-          // BooBubble ChatGPT lobby reply — trigger on any "boobubble" mention (case-insensitive)
-          if (out.kind === "text" && /boobubble/i.test(out.text)) {
-            import("@/lib/boobubble.functions").then(({ askBoobubbleInLobby }) => {
-              askBoobubbleInLobby({ data: { channel_id: out.channelId, text: out.text } }).catch(() => {});
-            }).catch(() => {});
-          }
-        }
-      }).catch((err: unknown) => {
-        const message = err instanceof Error && err.message ? err.message : "Failed to send";
-        console.error("send failed", err);
-        rtLog("error", "send-failed", message);
         setState((s) => ({
           ...s,
-          messages: failMessages(s.messages, ids, message),
+          messages: failMessages(s.messages, orphanIds, "Send unavailable"),
         }));
-      });
       }
+    } else if (outgoingRemotes.length) {
+      const orphanIds = outgoingRemotes.map((out) => out.id);
+      if (import.meta.env.DEV) {
+        console.warn("[dm-send] remote outgoing skipped — missing auth UUID", { count: orphanIds.length });
+      }
+      setState((s) => ({
+        ...s,
+        messages: failMessages(s.messages, orphanIds, "Send unavailable"),
+      }));
     }
     setReplyingTo(null);
   }, [authUserId, isGuest]);
@@ -2740,20 +2765,20 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     };
     setState((s) => ({ ...s, messages: markMessagesSending(s.messages, [messageId]) }));
     rtLog(out.channelId.startsWith("dm:") ? "dm" : "msg", "retry", `${out.channelId} · ${out.text.slice(0, 30)}`);
-    maybeSendIrc(out, ircSentMsgIds.current);
-    void settleRemoteOutgoing([out], authUserId).then((outcome) => {
-      if (outcome.action === "fail") {
-        console.error("retry send failed", outcome.error);
-        rtLog("error", "retry-failed", outcome.error);
-        setState((s) => ({
-          ...s,
-          messages: failMessages(s.messages, [out.id], outcome.error),
-        }));
-        return;
-      }
-      setState((s) => ({ ...s, messages: confirmMessages(s.messages, [out.id], outcome.tsById) }));
-      releaseIrcSentIds(ircSentMsgIds.current, [out.id]);
-    }).catch((err: unknown) => {
+    void commitAuthenticatedRemoteSend([out], authUserId)
+      .then((outcome) => {
+        if (outcome.action === "fail") {
+          console.error("retry send failed", outcome.error);
+          rtLog("error", "retry-failed", outcome.error);
+          setState((s) => ({
+            ...s,
+            messages: failMessages(s.messages, [out.id], outcome.error),
+          }));
+          return;
+        }
+        setState((s) => ({ ...s, messages: confirmMessages(s.messages, [out.id], outcome.tsById) }));
+      })
+      .catch((err: unknown) => {
       const message = err instanceof Error && err.message ? err.message : "Failed to send";
       console.error("retry send failed", err);
       rtLog("error", "retry-failed", message);

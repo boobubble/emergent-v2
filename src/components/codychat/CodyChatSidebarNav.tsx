@@ -37,6 +37,7 @@ import { Avatar } from "@/components/chat/Avatar";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
 import { useCodyChatCommunity } from "./use-codychat-community";
 import { CodyChatRadioWidget } from "./CodyChatRadioWidget";
+import { openYaarzoDmInbox } from "@/lib/yaarzo-dm-events";
 import type { LucideIcon } from "lucide-react";
 
 function NavRow({
@@ -54,6 +55,7 @@ function NavRow({
   onShellPanel,
   onCloseShellPanel,
   nativeCodyGuest,
+  onCustomClick,
 }: {
   to?: string;
   search?: Record<string, string>;
@@ -69,6 +71,7 @@ function NavRow({
   onShellPanel?: (panel: ChatroomShellPanelId, tab?: string) => void;
   onCloseShellPanel?: () => void;
   nativeCodyGuest?: boolean;
+  onCustomClick?: () => void;
 }) {
   const { requireAuth } = useAuthGate();
   if (hidden) return null;
@@ -85,6 +88,23 @@ function NavRow({
       ) : null}
     </>
   );
+
+  if (onCustomClick) {
+    return (
+      <button
+        type="button"
+        className={rowClass}
+        onClick={() => {
+          requireAuth(() => {
+            onCustomClick();
+            onNavigate?.();
+          });
+        }}
+      >
+        {inner}
+      </button>
+    );
+  }
 
   if (shellPanel && onShellPanel) {
     return (
@@ -152,6 +172,7 @@ type NavItem = {
   shellPanel?: ChatroomShellPanelId;
   shellTab?: string;
   closeChatPanel?: boolean;
+  onCustomClick?: () => void;
 };
 
 type CodyChatSidebarNavProps = {
@@ -261,7 +282,12 @@ export function CodyChatSidebarNav({
       badge: notifs?.unread,
       enabled: true,
     },
-    { shellPanel: "feed", icon: MessageSquare, label: "Direct Messages", enabled: true },
+    {
+      icon: MessageSquare,
+      label: "Direct Messages",
+      onCustomClick: openYaarzoDmInbox,
+      enabled: true,
+    },
   ];
 
   const filterItems = (items: NavItem[]) =>

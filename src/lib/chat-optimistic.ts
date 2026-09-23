@@ -7,7 +7,7 @@
  * they still receive the row via the normal Realtime INSERT path.
  */
 
-import type { Message } from "./chat-types";
+import type { Attachment, Message } from "./chat-types";
 
 export type SendStatus = "sending" | "failed";
 
@@ -124,6 +124,42 @@ export type AuthenticatedInsertResult = {
 export type SettleInsertOutcome =
   | { action: "confirm"; tsById: Record<string, number> }
   | { action: "fail"; error: string };
+
+export type PlannedRemoteUserOutgoing = {
+  id: string;
+  channelId: string;
+  text: string;
+  kind: string;
+  attachment: Attachment | null;
+  replyToId: string | null;
+};
+
+/** Idempotent optimistic append for a pre-planned remote UUID (StrictMode-safe). */
+export function appendPlannedRemoteUserMessage(
+  messages: Record<string, Message[]>,
+  planned: PlannedRemoteUserOutgoing,
+  opts: { attachment?: Message["attachment"]; replyToId?: string; ts?: number },
+): { messages: Record<string, Message[]>; appended: boolean } {
+  const existing = messages[planned.channelId] || [];
+  if (existing.some((m) => m.id === planned.id)) {
+    return { messages, appended: true };
+  }
+  const userMsg: Message = {
+    id: planned.id,
+    channelId: planned.channelId,
+    authorId: "me",
+    text: planned.text,
+    ts: opts.ts ?? Date.now(),
+    kind: (planned.kind as Message["kind"]) || "text",
+    attachment: opts.attachment,
+    replyToId: opts.replyToId,
+    sendStatus: "sending",
+  };
+  return {
+    messages: { ...messages, [planned.channelId]: [...existing, userMsg] },
+    appended: true,
+  };
+}
 
 export function withTimeout<T>(
   promise: PromiseLike<T>,

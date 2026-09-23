@@ -371,6 +371,7 @@ describe("ChatProviderInner send pipeline wiring", () => {
 
   it("settles authenticated INSERT with timeout/catch and does not wait for realtime", () => {
     expect(src).toContain("settleAuthenticatedSendWithRecover");
+    expect(src).toContain("commitAuthenticatedRemoteSend");
     expect(src).toContain("settleRemoteOutgoing");
     expect(src).toContain("applyHydrateLookupResult");
     expect(src).toContain(".catch((err: unknown)");
@@ -378,8 +379,8 @@ describe("ChatProviderInner send pipeline wiring", () => {
     const sendAt = src.indexOf("const send = useCallback");
     const retryAt = src.indexOf("const retrySend = useCallback");
     const realtimeAt = src.indexOf('event: "INSERT", schema: "public", table: "messages"');
-    const sendSettleAt = src.indexOf("settleRemoteOutgoing", sendAt);
-    const retrySettleAt = src.indexOf("settleRemoteOutgoing", retryAt);
+    const sendSettleAt = src.indexOf("commitAuthenticatedRemoteSend", sendAt);
+    const retrySettleAt = src.indexOf("commitAuthenticatedRemoteSend", retryAt);
     expect(sendAt).toBeGreaterThan(-1);
     expect(sendSettleAt).toBeGreaterThan(sendAt);
     expect(sendSettleAt).toBeLessThan(retryAt);
@@ -395,6 +396,8 @@ describe("ChatProviderInner send pipeline wiring", () => {
 
   it("schedules INSERT from outgoing collected after a flushed send reducer", () => {
     expect(src).toContain("flushSync");
-    expect(src).toMatch(/outgoingRemotes = outgoing/);
+    expect(src).toContain("plannedUserOutgoing");
+    expect(src).toContain("remoteUserMsgCommitted");
+    expect(src).not.toMatch(/outgoingRemotes = outgoing/);
   });
 });

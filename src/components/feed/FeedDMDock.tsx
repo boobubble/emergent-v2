@@ -4,7 +4,10 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useChat } from "@/lib/chat-store";
 import { ChatErrorBoundary } from "@/components/ChatErrorBoundary";
+import { ChatProfilePopupHost } from "@/components/chat/ChatProfilePopupHost";
+import { YouTubePlayerProvider } from "@/components/chat/youtube-player-context";
 import { isRemoteDmChannel, isUuid, parseDmChannel, resolveDmTargetId } from "@/lib/dm-utils";
+import { ProfilePopupProvider } from "@/lib/profile-popup-context";
 import { Avatar } from "@/components/chat/Avatar";
 import { FrameAvatar, CosmeticName } from "@/components/cosmetics/CosmeticBits";
 import { MessageList } from "@/components/chat/MessageList";
@@ -24,7 +27,12 @@ interface Props {
 export function FeedDMDock(props: Props) {
   return (
     <ChatErrorBoundary label="feed-dm">
-      <FeedDMDockInner {...props} />
+      <ProfilePopupProvider>
+        <YouTubePlayerProvider>
+          <FeedDMDockInner {...props} />
+          <ChatProfilePopupHost />
+        </YouTubePlayerProvider>
+      </ProfilePopupProvider>
     </ChatErrorBoundary>
   );
 }

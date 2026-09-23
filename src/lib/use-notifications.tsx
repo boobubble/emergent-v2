@@ -11,6 +11,7 @@ import {
 import type { NavigateOptions } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-store";
+import { parseDmChannel } from "@/lib/dm-utils";
 import { isNavigableSlug } from "@/lib/route-slug";
 import type { User } from "@/lib/chat-types";
 import { DM_CONVERSATION_READ_EVENT } from "@/lib/dm-read";
@@ -345,14 +346,17 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
 
   const markDmChannelRead = useCallback((channelId: string) => {
     if (!channelId) return;
+    const { peerId } = parseDmChannel(channelId, meId);
     setItems(prev =>
       prev.map(i =>
-        !i.read && i.target_type === "dm" && i.target_id === channelId
+        !i.read &&
+        i.target_type === "dm" &&
+        (i.target_id === channelId || (!!peerId && i.actor_id === peerId))
           ? { ...i, read: true }
           : i,
       ),
     );
-  }, []);
+  }, [meId]);
 
   useEffect(() => {
     function onDmRead(e: Event) {

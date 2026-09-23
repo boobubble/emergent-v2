@@ -337,10 +337,7 @@ function MiniDMWindow({
 }
 
 /** Helper for callers to open a mini DM (or fall back to full-page on mobile). */
-export function openMiniDM(peerId: string) {
-  if (typeof window === "undefined") return;
-  window.dispatchEvent(new CustomEvent("palrgo:openMiniDM", { detail: { peerId } }));
-}
+export { openMiniDM } from "@/lib/yaarzo-dm-events";
 
 // Marker icon export so tree-shake keeps MessageCircle if not used elsewhere
 export const _MiniDMIcon = MessageCircle;

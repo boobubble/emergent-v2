@@ -36,6 +36,7 @@ import {
 import type { CodyChatGuestRosterEntry } from "./codychat-roster";
 import type { ChatroomShellPanelId } from "@/lib/chatroom-shell-panel";
 import { CodyChatShellPanelOverlay } from "./CodyChatShellPanelOverlay";
+import { ChatroomYaarzoDmHost } from "./ChatroomYaarzoDmHost";
 import "./codychat-shell.css";
 
 const CHATROOM_XL_MQ = "(min-width: 1440px)";
@@ -416,6 +417,8 @@ export function CodyChatShell({
           </Sheet>
         </>
       )}
+
+      <ChatroomYaarzoDmHost />
     </div>
   );
 }

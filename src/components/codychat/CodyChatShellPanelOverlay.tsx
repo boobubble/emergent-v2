@@ -12,7 +12,6 @@ import { ConfessionsView } from "@/routes/confessions";
 import { PoetryDiscoveryView } from "@/routes/poetry.index";
 import { PoetryComposeView } from "@/routes/poetry.compose";
 import { useAuth } from "@/lib/auth-store";
-import { ChatProvider } from "@/lib/chat-store";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
 import { FeedNotificationPanel } from "@/components/feed/FeedNotifications";
 import { ChatroomFeedMode } from "./ChatroomFeedMode";
@@ -44,19 +43,6 @@ function lazyRouteComponent(
 }
 
 const CompetitionsPanel = lazyRouteComponent(() => import("@/routes/competitions.index"));
-
-/** Account panel uses useChat; /chatroom has no root ChatProvider. */
-function ChatroomShellChatProviders({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
-  if (!user || user.isGuest) {
-    return <>{children}</>;
-  }
-  return (
-    <ChatProvider username={user.username} authUserId={user.id} isGuest={false}>
-      {children}
-    </ChatProvider>
-  );
-}
 
 function ChatroomShellNotifications() {
   const { user } = useAuth();
@@ -95,17 +81,15 @@ function PanelBody({
       if (panelTab === "account") {
         return (
           <ChatroomShellAuthenticatedSurface requireSignedInUser>
-            <ChatroomShellChatProviders>
-              <Suspense
-                fallback={
-                  <div className="flex justify-center py-16">
-                    <Loader2 className="h-6 w-6 animate-spin text-primary/80" aria-hidden />
-                  </div>
-                }
-              >
-                <AccountPanel />
-              </Suspense>
-            </ChatroomShellChatProviders>
+            <Suspense
+              fallback={
+                <div className="flex justify-center py-16">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary/80" aria-hidden />
+                </div>
+              }
+            >
+              <AccountPanel />
+            </Suspense>
           </ChatroomShellAuthenticatedSurface>
         );
       }

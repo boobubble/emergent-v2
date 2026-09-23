@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { isRemoteDmChannel, isUuid } from "@/lib/dm-utils";
+import { isRemoteDmChannel, isUuid, parseDmChannel } from "@/lib/dm-utils";
 
 export const DM_CONVERSATION_READ_EVENT = "palrgo:dm-conversation-read";
 
@@ -28,6 +28,9 @@ export async function markDmConversationRead(
 ): Promise<MarkDmConversationReadResult | null> {
   if (!isUuid(userId) || !isRemoteDmChannel(channelId, userId)) return null;
 
+  const { peerId } = parseDmChannel(channelId, userId);
+  if (!peerId || !isUuid(peerId)) return null;
+
   const lastReadAt = opts?.lastReadAt ?? new Date().toISOString();
 
   const { error: readErr } = await supabase
@@ -41,12 +44,13 @@ export async function markDmConversationRead(
     return null;
   }
 
+  // notifications.target_id is UUID — never pass dm:{uuid}:{uuid} channel strings.
   const { data: updated, error: notifErr } = await supabase
     .from("notifications")
     .update({ read: true })
     .eq("user_id", userId)
     .eq("target_type", "dm")
-    .eq("target_id", channelId)
+    .eq("actor_id", peerId)
     .eq("read", false)
     .select("id");
 
