@@ -17,17 +17,30 @@ import { useServerFn } from "@tanstack/react-start";
 import { getCodyChatSsoUrl } from "@/lib/codychat-sso.functions";
 import { isYaarzoLogoutMessage } from "@/lib/codychat-sso-messages";
 import { getCodyChatPublicBaseUrl } from "@/lib/codychat-public-url";
-import { YAARZO_CODY_GUEST_LOGIN_MESSAGE } from "@/components/codychat/codychat-actions";
+import {
+  isYaarzoCodyGuestLoginOkMessage,
+  YAARZO_CODY_GUEST_LOGIN_MESSAGE,
+} from "@/components/codychat/codychat-actions";
+import {
+  clearCodyGuestLoginSession,
+  completeCodyGuestLogin,
+  isCodyGuestLoginComplete,
+  readCodyGuestDetails,
+  shouldDispatchCodyGuestLogin,
+} from "@/lib/codychat-guest-session";
 import {
   getCodyChatMessageOrigin,
   parseCodyChatGuestRosterMessage,
   type CodyChatGuestRosterEntry,
 } from "@/components/codychat/codychat-roster";
+import { isCodyChatOpenDmMessageEvent } from "@/components/codychat/codychat-dm-bridge";
+import { openYaarzoDmPeer } from "@/lib/yaarzo-dm-events";
 import { clearGuestChatSession } from "@/lib/visitor-session";
 import { loadRouteSeo, headFromRouteSeo } from "@/lib/seo";
 import { consumeChatFreshEntry, isChatFreshEntryPending } from "@/lib/auth-entry";
 import {
   buildChatroomSearch,
+  chatroomDedicatedPageForLegacyPanel,
   isGuestProtectedShellPanel,
   parseChatroomRouteSearch,
   type ChatroomShellPanelId,
@@ -72,6 +85,14 @@ function CodyChatPage() {
       replace: true,
     });
   }, [nativeCodyGuest, shellPanel, navigate, routeSearch]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const legacyPanel = new URLSearchParams(window.location.search).get("yaarzo");
+    const dedicated = chatroomDedicatedPageForLegacyPanel(legacyPanel);
+    if (!dedicated) return;
+    void navigate({ to: dedicated, replace: true });
+  }, [navigate, shellPanel]);
 
   useEffect(() => {
     if (shouldShowAuthHydrationRecovery(hydrationState)) return;
@@ -128,6 +149,26 @@ function CodyChatPage() {
         return;
       }
 
+      if (isYaarzoCodyGuestLoginOkMessage(event.data)) {
+        if (event.origin !== codyOrigin) return;
+        completeCodyGuestLogin();
+        return;
+      }
+
+      const dmPeerId = isCodyChatOpenDmMessageEvent(
+        event,
+        iframeRef.current?.contentWindow,
+      );
+      if (dmPeerId) {
+        const openDm = () => openYaarzoDmPeer(dmPeerId);
+        if (!user?.id || user.isGuest) {
+          requireAuth(openDm);
+        } else {
+          openDm();
+        }
+        return;
+      }
+
       if (!isYaarzoLogoutMessage(event.data, event.origin, YAARZO_ORIGINS)) return;
       if (loggingOut || !user || user.isGuest) return;
       if (isChatFreshEntryPending()) return;
@@ -136,7 +177,7 @@ function CodyChatPage() {
 
     window.addEventListener("message", handleCodyChatMessage);
     return () => window.removeEventListener("message", handleCodyChatMessage);
-  }, [logout, loggingOut, user]);
+  }, [logout, loggingOut, requireAuth, user]);
 
   const openShellPanel = useCallback(
     (panel: ChatroomShellPanelId, opts?: { tab?: string }) => {
@@ -163,7 +204,7 @@ function CodyChatPage() {
 
   const handleNativeGuestLogout = () => {
     try {
-      sessionStorage.removeItem("yaarzo:codychat:guest-details");
+      clearCodyGuestLoginSession();
       clearGuestChatSession();
     } catch {
       /* ignore */
@@ -171,6 +212,53 @@ function CodyChatPage() {
     setCodyGuests([]);
     void navigate({ to: "/" });
   };
+
+  const dispatchGuestLoginToIframe = useCallback(() => {
+    if (!guestIntent || !shouldDispatchCodyGuestLogin()) {
+      return;
+    }
+
+    const details = readCodyGuestDetails();
+    if (!details) {
+      return;
+    }
+
+    const iframeWindow = iframeRef.current?.contentWindow;
+    if (!iframeWindow) {
+      return;
+    }
+
+    iframeWindow.postMessage(
+      {
+        type: YAARZO_CODY_GUEST_LOGIN_MESSAGE,
+        name: details.name,
+        gender: details.gender,
+      },
+      getCodyChatPublicBaseUrl(),
+    );
+  }, [guestIntent]);
+
+  useEffect(() => {
+    if (!guestIntent || !chatUrl || isCodyGuestLoginComplete()) {
+      return;
+    }
+    if (!readCodyGuestDetails()) {
+      return;
+    }
+
+    dispatchGuestLoginToIframe();
+    const retryTimer = window.setInterval(() => {
+      if (isCodyGuestLoginComplete()) {
+        window.clearInterval(retryTimer);
+        return;
+      }
+      dispatchGuestLoginToIframe();
+    }, 800);
+
+    return () => {
+      window.clearInterval(retryTimer);
+    };
+  }, [guestIntent, chatUrl, dispatchGuestLoginToIframe]);
 
   if (shouldShowAuthHydrationRecovery(hydrationState)) {
     return (
@@ -223,34 +311,7 @@ function CodyChatPage() {
       onNativeGuestLogout={handleNativeGuestLogout}
       onIframeLoad={() => {
         consumeChatFreshEntry();
-
-        if (guestIntent) {
-          const rawGuestDetails = sessionStorage.getItem("yaarzo:codychat:guest-details");
-
-          if (rawGuestDetails) {
-            try {
-              const details = JSON.parse(rawGuestDetails) as {
-                name?: string;
-                gender?: "male" | "female" | "other";
-              };
-
-              if (details.name && details.gender) {
-                iframeRef.current?.contentWindow?.postMessage(
-                  {
-                    type: YAARZO_CODY_GUEST_LOGIN_MESSAGE,
-                    name: details.name,
-                    gender: details.gender,
-                  },
-                  getCodyChatPublicBaseUrl(),
-                );
-
-                sessionStorage.removeItem("yaarzo:codychat:guest-details");
-              }
-            } catch {
-              sessionStorage.removeItem("yaarzo:codychat:guest-details");
-            }
-          }
-        }
+        dispatchGuestLoginToIframe();
       }}
     />
   );
