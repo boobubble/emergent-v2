@@ -8,7 +8,6 @@ import { useAuth } from "@/lib/auth-store";
 import { useAuthGate } from "@/lib/auth-gate";
 import { useGuestChat } from "@/lib/guest-chat-context";
 import { GUEST_LOBBY_CHANNEL_ID } from "@/lib/guest-chat-config";
-import { GAMES_CHANNEL_ID } from "@/lib/chat-bot-channels";
 import { useMyRoles } from "@/lib/use-my-role";
 import { useRoomOnlineCounts } from "@/lib/use-room-online-counts";
 import { BrandText, useBrandingMap } from "@/components/BrandMark";
@@ -70,10 +69,7 @@ export function Sidebar({ onCollapse, onSelectDiscoveryChannel }: Props) {
 
   const uniqueRoomOrder = useMemo(() => {
     const seen = new Set<string>();
-    return [...state.roomOrder].sort((a, b) => {
-      const rank = (id: string) => id === GUEST_LOBBY_CHANNEL_ID ? 0 : id === GAMES_CHANNEL_ID ? 1 : 2;
-      return rank(a) - rank(b);
-    }).filter((id) => {
+    return state.roomOrder.filter((id) => {
       if (!state.rooms[id] || seen.has(id)) return false;
       seen.add(id);
       return true;

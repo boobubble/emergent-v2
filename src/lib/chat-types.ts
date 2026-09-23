@@ -93,6 +93,10 @@ export interface Room {
   communityId?: string;
   /** When true, messages use Supabase with id as channel_id. */
   dbBacked?: boolean;
+  /** Platform registry channel (slug is messages.channel_id). */
+  platformRegistry?: boolean;
+  /** Registry channel_number for display (#1 Global, etc.). */
+  platformChannelNumber?: number;
 }
 
 export interface GameState {
